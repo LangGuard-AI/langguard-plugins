@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "langguard-plugins",
+  "owner": {
+    "name": "LangGuard",
+    "email": "support@langguard.ai"
+  },
+  "metadata": {
+    "description": "Official Claude Code plugins for LangGuard — AI governance, policy enforcement, and agent compliance.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "langguard",
+      "source": "./langguard",
+      "description": "Connects Claude Code to your LangGuard control plane. Provides 25 governance MCP tools, policy/compliance/audit skills, and a session-start hook that loads governance instructions tailored to your role (compliance-enforcer or operations-agent).",
+      "category": "ai-governance",
+      "tags": ["governance", "compliance", "policy", "observability", "mcp"]
+    }
+  ]
+}

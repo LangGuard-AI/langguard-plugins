@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "langguard",
+  "version": "0.1.0",
+  "description": "Connects Claude Code to your LangGuard control plane for AI governance — policy enforcement, violation monitoring, entity catalog, and trace audit. Exposes 25 governance MCP tools and three skills (rules, compliance, audit).",
+  "author": {
+    "name": "LangGuard",
+    "email": "support@langguard.ai",
+    "url": "https://langguard.ai"
+  },
+  "homepage": "https://langguard.ai",
+  "repository": "https://github.com/LangGuard-AI/langguard-plugins",
+  "license": "MIT",
+  "keywords": ["langguard", "governance", "compliance", "policy", "ai-governance", "mcp"],
+  "userConfig": {
+    "api_endpoint": {
+      "type": "string",
+      "description": "Your LangGuard instance URL (no trailing slash). For LangGuard Cloud, use https://app.langguard.ai. For self-hosted, use your custom URL.",
+      "default": "https://app.langguard.ai",
+      "required": true
+    },
+    "api_key": {
+      "type": "string",
+      "description": "LangGuard API key. Create one at <api_endpoint>/settings/api-keys. Stored securely in your OS keychain.",
+      "sensitive": true,
+      "required": true
+    },
+    "governance_mode": {
+      "type": "string",
+      "description": "How agents should interact with LangGuard. 'compliance' = read-only, agents enforce active policies as mandatory guardrails. 'operations' = read-write, agents can create policies, tag entities, and resolve violations on your behalf.",
+      "enum": ["compliance", "operations"],
+      "default": "compliance",
+      "required": true
+    }
+  }
+}
