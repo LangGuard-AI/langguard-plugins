@@ -23,7 +23,7 @@ Installing the `langguard` plugin adds the following to Claude Code:
 In Claude Code:
 
 ```
-/plugin marketplace add langguard/langguard-plugins
+/plugin marketplace add LangGuard-AI/langguard-plugins
 /plugin install langguard@langguard-plugins
 ```
 
@@ -74,5 +74,5 @@ instance URL (no trailing slash). The plugin uses the standard
 ## Support
 
 - Docs: <https://langguard.ai/docs>
-- Issues: <https://github.com/langguard/langguard-plugins/issues>
+- Issues: <https://github.com/LangGuard-AI/langguard-plugins/issues>
 - Email: <support@langguard.ai>

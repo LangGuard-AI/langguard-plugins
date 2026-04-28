@@ -9,7 +9,7 @@
     "url": "https://langguard.ai"
   },
   "homepage": "https://langguard.ai",
-  "repository": "https://github.com/langguard/langguard-plugins",
+  "repository": "https://github.com/LangGuard-AI/langguard-plugins",
   "license": "MIT",
   "keywords": ["langguard", "governance", "compliance", "policy", "ai-governance", "mcp"],
   "userConfig": {
