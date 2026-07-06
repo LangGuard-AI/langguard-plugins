@@ -1,0 +1,23 @@
+{
+  "name": "langguard-arbiter",
+  "version": "0.1.0",
+  "description": "LangGuard Arbiter — in-harness agent policy enforcement for OpenAI Codex. Screens, enforces, and evidences every MCP tool call against your LangGuard policies at the pre-action seam (PreToolUse). Deterministic ALLOW / DENY — ESCALATE collapses to DENY (Codex has no interactive approval path from a hook); escalation and approval happen in LangGuard. No LLM in the enforcement loop.",
+  "author": {
+    "name": "LangGuard",
+    "url": "https://langguard.ai"
+  },
+  "homepage": "https://langguard.ai/arbiter",
+  "repository": "https://github.com/LangGuard-AI/langguard",
+  "license": "Apache-2.0",
+  "keywords": [
+    "langguard",
+    "arbiter",
+    "policy",
+    "enforcement",
+    "mcp",
+    "codex-plugin",
+    "compliance",
+    "security"
+  ],
+  "hooks": "./hooks/hooks.json"
+}

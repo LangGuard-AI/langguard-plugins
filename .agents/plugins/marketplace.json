@@ -1,0 +1,18 @@
+{
+  "name": "langguard-plugins",
+  "interface": {
+    "displayName": "LangGuard Plugins"
+  },
+  "plugins": [
+    {
+      "name": "langguard-arbiter",
+      "source": "./langguard-arbiter-codex",
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "ai-governance",
+      "description": "In-harness agent policy enforcement for OpenAI Codex. Screens, enforces, and evidences every MCP tool call at the pre-action seam (PreToolUse) against your LangGuard policies — deterministic ALLOW / DENY via a session-local policy daemon, no LLM in the enforcement loop. ESCALATE collapses to DENY (Codex has no interactive approval path from a hook); escalation and approval happen in LangGuard. Requires Codex CLI 0.124.0+ and Node.js on PATH.",
+      "keywords": ["governance", "policy", "enforcement", "security", "compliance", "mcp"]
+    }
+  ]
+}
