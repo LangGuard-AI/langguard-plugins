@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "SessionStart":     [{ "hooks": [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" screen",   "commandWindows": "node \"${PLUGIN_ROOT}\\bin\\hook.mjs\" screen",   "timeout": 30, "statusMessage": "LangGuard Arbiter: loading session context" }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" screen",   "commandWindows": "node \"${PLUGIN_ROOT}\\bin\\hook.mjs\" screen",   "timeout": 30, "statusMessage": "LangGuard Arbiter: refreshing context" }] }],
+    "PreToolUse":       [{ "matcher": "^mcp__", "hooks": [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" enforce", "commandWindows": "node \"${PLUGIN_ROOT}\\bin\\hook.mjs\" enforce", "timeout": 30, "statusMessage": "LangGuard Arbiter: checking MCP tool" }] }],
+    "PostToolUse":      [{ "hooks": [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" evidence", "commandWindows": "node \"${PLUGIN_ROOT}\\bin\\hook.mjs\" evidence", "timeout": 30, "statusMessage": "LangGuard Arbiter: recording evidence" }] }],
+    "Stop":             [{ "hooks": [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" verify",   "commandWindows": "node \"${PLUGIN_ROOT}\\bin\\hook.mjs\" verify",   "timeout": 30, "statusMessage": "LangGuard Arbiter: verifying turn" }] }],
+    "SubagentStop":     [{ "hooks": [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" verify",   "commandWindows": "node \"${PLUGIN_ROOT}\\bin\\hook.mjs\" verify",   "timeout": 30, "statusMessage": "LangGuard Arbiter: verifying subagent" }] }]
+  }
+}
