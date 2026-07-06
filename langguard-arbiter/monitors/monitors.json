@@ -1,0 +1,9 @@
+{
+  "monitors": [
+    {
+      "name": "arbiter-daemon",
+      "when": "always",
+      "command": "node \"${CLAUDE_PLUGIN_ROOT}/monitor/launch.mjs\" --host \"${CLAUDE_PLUGIN_OPTION_HOST}\" --data-dir \"${CLAUDE_PLUGIN_DATA}\" --enforcement-mode \"${CLAUDE_PLUGIN_OPTION_ENFORCEMENT_MODE}\""
+    }
+  ]
+}

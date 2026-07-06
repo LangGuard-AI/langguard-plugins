@@ -1,0 +1,45 @@
+{
+  "name": "langguard-arbiter",
+  "version": "0.1.0",
+  "description": "LangGuard Arbiter — in-harness agent policy enforcement for Claude Code. Screens, enforces, and evidences every MCP tool call against your LangGuard policies at the pre-action seam (PreToolUse). Deterministic ALLOW / DENY / ESCALATE — no LLM in the enforcement loop.",
+  "author": {
+    "name": "LangGuard",
+    "url": "https://langguard.ai"
+  },
+  "homepage": "https://langguard.ai/arbiter",
+  "repository": "https://github.com/LangGuard-AI/langguard",
+  "license": "Apache-2.0",
+  "keywords": [
+    "langguard",
+    "arbiter",
+    "policy",
+    "enforcement",
+    "mcp",
+    "claude-code-plugin",
+    "compliance",
+    "security"
+  ],
+  "hooks": "./hooks/hooks.json",
+  "experimental": { "monitors": "./monitors/monitors.json" },
+  "userConfig": {
+    "host": {
+      "type": "string",
+      "default": "https://app.langguard.ai",
+      "title": "LangGuard host",
+      "description": "Your LangGuard server (prod SaaS or self-hosted). https:// required unless loopback."
+    },
+    "api_token": {
+      "type": "string",
+      "sensitive": true,
+      "required": true,
+      "title": "LangGuard API key (lgr_…)",
+      "description": "An lgr_ API key. Stored by Claude Code (macOS Keychain / file 0600). Used as the sync/audit bearer AND the loopback daemon bearer."
+    },
+    "enforcement_mode": {
+      "type": "string",
+      "default": "cooperative",
+      "title": "Enforcement mode",
+      "description": "cooperative (default): fails OPEN if the local daemon dies or the key is revoked, so a session is never locked out. strict: hard-enforce — those failures are DENIED (fail-closed) once past a short cold-start grace. Recommended: strict for managed/enterprise."
+    }
+  }
+}
