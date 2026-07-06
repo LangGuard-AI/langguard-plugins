@@ -13977,7 +13977,7 @@ var require_snapshot_recorder = __commonJS({
   "node_modules/undici/lib/mock/snapshot-recorder.js"(exports, module) {
     "use strict";
     var { writeFile, readFile, mkdir } = __require("node:fs/promises");
-    var { dirname: dirname3, resolve } = __require("node:path");
+    var { dirname: dirname4, resolve } = __require("node:path");
     var { setTimeout: setTimeout2, clearTimeout: clearTimeout2 } = __require("node:timers");
     var { InvalidArgumentError, UndiciError } = require_errors();
     var { hashId, isUrlExcludedFactory, normalizeHeaders, createHeaderFilters } = require_snapshot_utils();
@@ -14208,7 +14208,7 @@ var require_snapshot_recorder = __commonJS({
           throw new InvalidArgumentError("Snapshot path is required");
         }
         const resolvedPath = resolve(path);
-        await mkdir(dirname3(resolvedPath), { recursive: true });
+        await mkdir(dirname4(resolvedPath), { recursive: true });
         const data = Array.from(this.#snapshots.entries()).map(([hash, snapshot]) => ({
           hash,
           snapshot
@@ -30140,6 +30140,24 @@ var init_schema = __esm({
        */
       unknownVerdict: external_exports.enum(["ALLOW", "BLOCK", "ESCALATE"]).default("ESCALATE"),
       /**
+       * Failure posture — how the enforce path behaves when it CANNOT get a fresh
+       * authoritative verdict (revoked/expired credential, or — at the shim — a
+       * dead/never-started daemon), AFTER the plugin is enabled and configured.
+       *
+       *  - 'cooperative' (default): bias toward availability. A no-credential/401
+       *    fails OPEN (ALLOW) and a dead/never-started daemon fails OPEN, so a crashed
+       *    daemon or a bad key never bricks a session. Genuine engine-unreachable and a
+       *    wedged-but-alive daemon still fail CLOSED.
+       *  - 'strict': hard-enforce. A no-credential/401 fails CLOSED (routed to the same
+       *    ESCALATE path as engine-unreachable — never a silent ALLOW), and the shim
+       *    treats a dead/never-started daemon (past a bounded cold-start grace) as a
+       *    BLOCK. Recommended default for managed/enterprise rollout. Trade-off: if the
+       *    daemon genuinely cannot start (no Node, OPA download fails) the user is
+       *    blocked from mcp__* calls until it is fixed — the bounded startup grace only
+       *    covers a normal cold start, not a persistent failure.
+       */
+      enforcementMode: external_exports.enum(["cooperative", "strict"]).default("cooperative"),
+      /**
        * When true, native tools (non-mcp__) get SCREEN+EVIDENCE+auto-ALLOW
        * (rule 5 in composeVerdict). Can only be tightened by project config.
        */
@@ -30172,7 +30190,15 @@ var init_schema = __esm({
        * over this field (see resolveServerApiKey). Never written to .claude/settings.json.
        * Distinct from the loopback daemon's arbd_ lockfile bearer (local hook auth only).
        */
-      apiKey: external_exports.string().min(1).optional()
+      apiKey: external_exports.string().min(1).optional(),
+      /**
+       * LangGuard server host (prod SaaS or self-hosted), e.g. https://app.langguard.ai.
+       * Env var LANGGUARD_HOST takes precedence over this field (see resolveServerHost);
+       * when neither is set the SaaS default applies. The schema deliberately validates
+       * only non-emptiness — the https-required-except-loopback law is enforced at
+       * use-site via assertSecureUrl (monitor-assembly), same as the Claude launcher.
+       */
+      host: external_exports.string().min(1).optional()
     });
     DEFAULT_CONFIG = ArbiterConfigSchema.parse({});
   }
@@ -30190,10 +30216,10 @@ function deriveAiAppId(harness, sessionId) {
   return `${harness || "unknown"}:${sessionId || "unknown"}`;
 }
 async function runGate(input, deps) {
-  const { store, remoteClient, localOpa, grail, config, hookEvent } = deps;
+  const { store, remoteClient, localOpa, grail, config: config2, hookEvent } = deps;
   const ts = deps.now?.() ?? (/* @__PURE__ */ new Date()).toISOString();
   const isNativeTool = checkIsNativeTool(input.tool);
-  const isCatastrophic = input.catastrophicInput === true || checkIsCatastrophic(input.tool, input.rawTool, config.catastrophicDenyList);
+  const isCatastrophic = input.catastrophicInput === true || checkIsCatastrophic(input.tool, input.rawTool, config2.catastrophicDenyList);
   if (isCatastrophic || isNativeTool) {
     const composed = composeVerdict({
       approval_status: "approved",
@@ -30203,7 +30229,7 @@ async function runGate(input, deps) {
       isCatastrophic,
       violations: [],
       engineUnreachable: false,
-      mode: config.nativeAutoAllow ? "permissive" : "enforce"
+      mode: config2.nativeAutoAllow ? "permissive" : "enforce"
     });
     const out2 = {
       verdict: composed.verdict,
@@ -30263,7 +30289,7 @@ async function runGate(input, deps) {
       isCatastrophic: false,
       violations: localResult.violations,
       engineUnreachable: false,
-      mode: config.unknownVerdict === "BLOCK" ? "enforce" : "permissive"
+      mode: config2.unknownVerdict === "BLOCK" ? "enforce" : "permissive"
     };
     const composed = composeVerdict(composeInput);
     const isConfident = composed.appliedRule === "enforce_violation" || composed.appliedRule === "scope_high";
@@ -30285,6 +30311,17 @@ async function runGate(input, deps) {
   } catch (err) {
     if (err instanceof NoCredential) {
       deps.onNoCredential?.();
+      if (deps.config.enforcementMode === "strict") {
+        const out4 = {
+          verdict: "ESCALATE",
+          reason: "No arbiter credential (strict enforcement) \u2014 cannot verify; escalating",
+          appliedRule: "no_credential_fail_closed",
+          evaluated: "error",
+          violations: []
+        };
+        recordAndAudit(input, "ESCALATE", out4.appliedRule, out4, store, grail ?? null, hookEvent, ts);
+        return out4;
+      }
       const out3 = {
         verdict: "ALLOW",
         // FAIL-OPEN — cooperative posture.
@@ -30376,6 +30413,34 @@ var init_gate = __esm({
 });
 
 // arbiter-core/src/lifecycle/lockfile.ts
+import { readFileSync, writeFileSync, unlinkSync, mkdirSync, mkdtempSync, renameSync } from "node:fs";
+import { chmodSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { homedir } from "node:os";
+function defaultLockfilePath() {
+  return join(homedir(), ".config", "arbiter", "daemon.json");
+}
+function writeLockfile(data, filePath = defaultLockfilePath()) {
+  const dir = dirname(filePath);
+  mkdirSync(dir, { recursive: true });
+  const tmpDir = mkdtempSync(join(dir, ".arbiter-lock-tmp-"));
+  const tmpFile = join(tmpDir, "daemon.json");
+  const content = JSON.stringify(data, null, 2);
+  writeFileSync(tmpFile, content, { mode: 384 });
+  renameSync(tmpFile, filePath);
+  try {
+    chmodSync(filePath, 384);
+  } catch {
+  }
+}
+function removeLockfile(filePath = defaultLockfilePath()) {
+  try {
+    unlinkSync(filePath);
+  } catch (err) {
+    const code = err.code;
+    if (code !== "ENOENT") throw err;
+  }
+}
 var init_lockfile = __esm({
   "arbiter-core/src/lifecycle/lockfile.ts"() {
     "use strict";
@@ -30451,6 +30516,10 @@ var init_src = __esm({
 // arbiter-claude/src/hook-map.ts
 function str(v) {
   return typeof v === "string" ? v : void 0;
+}
+function harnessFromBody(body, registered) {
+  const v = body?.arbiter_harness;
+  return typeof v === "string" && HARNESS_WHITELIST.has(v) ? v : registered;
 }
 function isCatastrophicMatch(toolName, toolInput, denyList) {
   const candidate = `${toolName} ${JSON.stringify(toolInput)}`;
@@ -30625,7 +30694,8 @@ async function enforceInner(ctx, deps, localOpa) {
       bundleRevision,
       // Identity enrichment: harness literal + daemon-resolved identity. aiAppId is
       // left to the gate's deriveAiAppId(harness, sessionId) when deps.aiAppId is unset.
-      agentName: "claude",
+      // Registered harness 'claude'; a whitelisted shim stamp overrides (plan D3).
+      agentName: harnessFromBody(body, "claude"),
       userId: deps.userId,
       aiAppId: deps.aiAppId,
       department: deps.department,
@@ -30761,11 +30831,13 @@ function registerClaudeHooks(handle, deps) {
   handle.registerHookHandler("evidence", makeEvidenceHandler(deps));
   handle.registerHookHandler("verify", makeVerifyHandler(deps));
 }
+var HARNESS_WHITELIST;
 var init_hook_map = __esm({
   "arbiter-claude/src/hook-map.ts"() {
     "use strict";
     init_src();
     init_tool_normalize();
+    HARNESS_WHITELIST = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "shell"]);
   }
 });
 
@@ -30785,21 +30857,21 @@ var init_src2 = __esm({
 
 // arbiter-claude/plugin/monitor/launch.mjs
 import { parseArgs } from "node:util";
-import { appendFileSync, mkdirSync as mkdirSync5, readFileSync as readFileSync4 } from "node:fs";
-import { join as join6, dirname as dirname2 } from "node:path";
+import { appendFileSync, mkdirSync as mkdirSync6, readFileSync as readFileSync5 } from "node:fs";
+import { join as join7, dirname as dirname3 } from "node:path";
 import { fileURLToPath } from "node:url";
-import { homedir as homedir4 } from "node:os";
+import { homedir as homedir5 } from "node:os";
 
 // arbiter-core/src/daemon/monitor-assembly.ts
 init_server();
 import {
-  writeFileSync as writeFileSync3,
-  mkdirSync as mkdirSync3,
-  mkdtempSync as mkdtempSync3,
-  renameSync as renameSync2,
+  writeFileSync as writeFileSync4,
+  mkdirSync as mkdirSync4,
+  mkdtempSync as mkdtempSync4,
+  renameSync as renameSync3,
   rmSync
 } from "node:fs";
-import { join as join4 } from "node:path";
+import { join as join5 } from "node:path";
 
 // arbiter-core/src/daemon/wire-claude-hooks.ts
 init_remote_client();
@@ -30927,17 +30999,17 @@ import { createHash as createHash2 } from "node:crypto";
 
 // arbiter-core/src/bundle/bundle-cache.ts
 import {
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-  renameSync,
+  readFileSync as readFileSync2,
+  writeFileSync as writeFileSync2,
+  mkdirSync as mkdirSync2,
+  renameSync as renameSync2,
   existsSync,
-  mkdtempSync
+  mkdtempSync as mkdtempSync2
 } from "node:fs";
-import { join, dirname } from "node:path";
-import { homedir } from "node:os";
+import { join as join2, dirname as dirname2 } from "node:path";
+import { homedir as homedir2 } from "node:os";
 function defaultBundleBaseDir() {
-  return join(homedir(), ".config", "arbiter", "bundle");
+  return join2(homedir2(), ".config", "arbiter", "bundle");
 }
 function assertSafeTenant(tenant) {
   if (typeof tenant !== "string" || tenant.trim() === "") {
@@ -30951,28 +31023,28 @@ function assertSafeTenant(tenant) {
 }
 function tenantDir(tenant, baseDir) {
   assertSafeTenant(tenant);
-  return join(baseDir, tenant);
+  return join2(baseDir, tenant);
 }
 function bundleFile(tenant, baseDir) {
-  return join(tenantDir(tenant, baseDir), "bundle.tar.gz");
+  return join2(tenantDir(tenant, baseDir), "bundle.tar.gz");
 }
 function etagFile(tenant, baseDir) {
-  return join(tenantDir(tenant, baseDir), "bundle.etag");
+  return join2(tenantDir(tenant, baseDir), "bundle.etag");
 }
 function revisionFile(tenant, baseDir) {
-  return join(tenantDir(tenant, baseDir), "bundle.revision");
+  return join2(tenantDir(tenant, baseDir), "bundle.revision");
 }
 function atomicWrite(destPath, data) {
-  const dir = dirname(destPath);
-  mkdirSync(dir, { recursive: true });
-  const tmpDir = mkdtempSync(join(dir, ".arbiter-cache-tmp-"));
-  const tmpFile = join(tmpDir, "tmp");
+  const dir = dirname2(destPath);
+  mkdirSync2(dir, { recursive: true });
+  const tmpDir = mkdtempSync2(join2(dir, ".arbiter-cache-tmp-"));
+  const tmpFile = join2(tmpDir, "tmp");
   if (typeof data === "string") {
-    writeFileSync(tmpFile, data, "utf8");
+    writeFileSync2(tmpFile, data, "utf8");
   } else {
-    writeFileSync(tmpFile, data);
+    writeFileSync2(tmpFile, data);
   }
-  renameSync(tmpFile, destPath);
+  renameSync2(tmpFile, destPath);
 }
 function writeBundleCache(tenant, entry, baseDir = defaultBundleBaseDir()) {
   atomicWrite(bundleFile(tenant, baseDir), entry.bundleBytes);
@@ -30982,7 +31054,7 @@ function writeBundleCache(tenant, entry, baseDir = defaultBundleBaseDir()) {
 function getCachedEtag(tenant, baseDir = defaultBundleBaseDir()) {
   const ef = etagFile(tenant, baseDir);
   try {
-    return readFileSync(ef, "utf8").trim();
+    return readFileSync2(ef, "utf8").trim();
   } catch {
     return "";
   }
@@ -30990,7 +31062,7 @@ function getCachedEtag(tenant, baseDir = defaultBundleBaseDir()) {
 function getCachedRevision(tenant, baseDir = defaultBundleBaseDir()) {
   const rf = revisionFile(tenant, baseDir);
   try {
-    return readFileSync(rf, "utf8").trim();
+    return readFileSync2(rf, "utf8").trim();
   } catch {
     return "";
   }
@@ -31103,13 +31175,13 @@ var BundleSync = class {
 // arbiter-core/src/bundle/opa-sidecar.ts
 var import_undici5 = __toESM(require_undici(), 1);
 import { spawn } from "node:child_process";
-import { writeFileSync as writeFileSync2, mkdtempSync as mkdtempSync2 } from "node:fs";
-import { join as join2 } from "node:path";
-import { homedir as homedir2, tmpdir } from "node:os";
+import { writeFileSync as writeFileSync3, mkdtempSync as mkdtempSync3 } from "node:fs";
+import { join as join3 } from "node:path";
+import { homedir as homedir3, tmpdir } from "node:os";
 function resolveOpaBinary(override) {
   if (override) return override;
   if (process.env["ARBITER_OPA_PATH"]) return process.env["ARBITER_OPA_PATH"];
-  const local = join2(homedir2(), ".config", "arbiter", "bin", "opa");
+  const local = join3(homedir3(), ".config", "arbiter", "bin", "opa");
   return local;
 }
 function generateOpaConfig(bundlePath, port) {
@@ -31147,8 +31219,8 @@ async function startOpaSidecar(opts = {}) {
   const maxRestarts = opts.maxRestarts ?? 5;
   const log2 = opts.log ?? ((msg) => console.log(`[opa-sidecar] ${msg}`));
   const opaBin = resolveOpaBinary(opts.opaPath);
-  const tmpDir = mkdtempSync2(join2(tmpdir(), "arbiter-opa-"));
-  const configFile = join2(tmpDir, "opa-config.yaml");
+  const tmpDir = mkdtempSync3(join3(tmpdir(), "arbiter-opa-"));
+  const configFile = join3(tmpDir, "opa-config.yaml");
   let bundlePath = opts.bundlePath ?? "";
   const args = [
     "run",
@@ -31160,7 +31232,7 @@ async function startOpaSidecar(opts = {}) {
     args.push(bundlePath);
   } else {
     const cfgContent = generateOpaConfig("", port);
-    writeFileSync2(configFile, cfgContent, "utf8");
+    writeFileSync3(configFile, cfgContent, "utf8");
     args.push("--config-file", configFile);
   }
   let child = null;
@@ -31211,9 +31283,9 @@ async function startOpaSidecar(opts = {}) {
 }
 
 // arbiter-core/src/config/config-loader.ts
-import { readFileSync as readFileSync2 } from "node:fs";
-import { join as join3 } from "node:path";
-import { homedir as homedir3 } from "node:os";
+import { readFileSync as readFileSync3 } from "node:fs";
+import { join as join4 } from "node:path";
+import { homedir as homedir4 } from "node:os";
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 var __create2 = Object.create;
@@ -33621,14 +33693,14 @@ function mergeConfigs(global, project) {
 
 // arbiter-core/src/config/config-loader.ts
 function globalConfigPath() {
-  return process.env["ARBITER_GLOBAL_CONFIG"] ?? join3(homedir3(), ".config", "arbiter", "config.yaml");
+  return process.env["ARBITER_GLOBAL_CONFIG"] ?? join4(homedir4(), ".config", "arbiter", "config.yaml");
 }
 function projectConfigPath(cwd = process.cwd()) {
-  return process.env["ARBITER_PROJECT_CONFIG"] ?? join3(cwd, ".arbiter.yaml");
+  return process.env["ARBITER_PROJECT_CONFIG"] ?? join4(cwd, ".arbiter.yaml");
 }
 function loadYamlFile(filePath) {
   try {
-    const text = readFileSync2(filePath, "utf8");
+    const text = readFileSync3(filePath, "utf8");
     return load(text) ?? {};
   } catch (err) {
     const code = err.code;
@@ -33656,15 +33728,16 @@ function loadConfig(opts = {}) {
 
 // arbiter-core/src/daemon/monitor-assembly.ts
 init_secure_url();
+init_lockfile();
 function daemonStatePath(dataDir2) {
-  return join4(dataDir2, "daemon-state.json");
+  return join5(dataDir2, "daemon-state.json");
 }
 function writeDaemonState(dataDir2, state) {
-  mkdirSync3(dataDir2, { recursive: true });
-  const tmpDir = mkdtempSync3(join4(dataDir2, ".arbiter-state-tmp-"));
-  const tmpFile = join4(tmpDir, "daemon-state.json");
-  writeFileSync3(tmpFile, JSON.stringify(state, null, 2), "utf8");
-  renameSync2(tmpFile, daemonStatePath(dataDir2));
+  mkdirSync4(dataDir2, { recursive: true });
+  const tmpDir = mkdtempSync4(join5(dataDir2, ".arbiter-state-tmp-"));
+  const tmpFile = join5(tmpDir, "daemon-state.json");
+  writeFileSync4(tmpFile, JSON.stringify(state, null, 2), "utf8");
+  renameSync3(tmpFile, daemonStatePath(dataDir2));
   try {
     rmSync(tmpDir, { recursive: true, force: true });
   } catch {
@@ -33682,6 +33755,10 @@ async function assembleMonitor(opts) {
     makeBundleSync: opts.deps?.makeBundleSync ?? ((o) => new BundleSync(o)),
     writeState: opts.deps?.writeState ?? writeDaemonState,
     loadConfig: opts.deps?.loadConfig ?? loadConfig,
+    // Default lockfile path honors the ARBITER_LOCKFILE env seam the shims already read
+    // (tests / parallel installs); production leaves it unset → ~/.config/arbiter/daemon.json.
+    writeLockfile: opts.deps?.writeLockfile ?? ((d) => writeLockfile(d, (opts.env ?? process.env)["ARBITER_LOCKFILE"] ?? void 0)),
+    removeLockfile: opts.deps?.removeLockfile ?? (() => removeLockfile((opts.env ?? process.env)["ARBITER_LOCKFILE"] ?? void 0)),
     now: opts.deps?.now ?? (() => Date.now())
   };
   const port = opts.port ?? 52746;
@@ -33747,77 +33824,113 @@ async function assembleMonitor(opts) {
     }
   };
   writeOwnerState({ ready: false, opaProvisioning: true });
-  let opaBin = null;
   try {
-    opaBin = await deps.ensureOpaBinary();
-  } catch (err) {
-    log2(`OPA provisioning failed (continuing remote-only): ${String(err?.message ?? err)}`);
-    opaBin = null;
-  }
-  let sidecar = null;
-  if (opaBin) {
-    try {
-      sidecar = await deps.startOpaSidecar({ opaPort, opaPath: opaBin, log: log2 });
-    } catch (err) {
-      log2(`OPA sidecar failed (continuing remote-only): ${String(err?.message ?? err)}`);
-      sidecar = null;
-    }
-  }
-  const config = deps.loadConfig();
-  let cachedRevision = "";
-  try {
-    cachedRevision = getCachedRevision(tenant, bundleCacheDir);
-  } catch {
-    cachedRevision = "";
-  }
-  const childEnv = {
-    ...env,
-    ARBITER_SERVER_URL: opts.host,
-    ARBITER_OPA_PORT: String(opaPort),
-    ARBITER_GRAIL_ENDPOINT: opts.host,
-    ...opaBin ? { ARBITER_OPA_PATH: opaBin } : {}
-  };
-  const runtime = await deps.registerArbiterClaudeHooks({
-    handle,
-    lockfile: { bearer: opts.apiToken, bundle_revision: cachedRevision },
-    store: new SessionStore({ stopBlockCap: config.stopBlockCap }),
-    config,
-    env: childEnv,
-    log: log2,
-    warn: log2,
-    // The seam that swaps the entire OAuth stack for a constant provider (§2a).
-    tokenProviderOverride: async () => opts.apiToken
-  });
-  let bundleSync = null;
-  try {
-    bundleSync = deps.makeBundleSync({
-      serverUrl: opts.host,
-      bearer: opts.apiToken,
-      tenant,
-      bundleCacheDir,
-      ...opts.pollIntervalMs !== void 0 ? { pollIntervalMs: opts.pollIntervalMs } : {},
-      onActivate: (p, r) => log2(`[bundle] activated revision=${r} (${p})`),
-      log: log2
-    });
-    bundleSync.start();
+    deps.writeLockfile({ port, pid: process.pid, bundle_revision: "", bearer: opts.apiToken });
   } catch (e) {
-    log2(`bundle sync disabled: ${String(e)}`);
-    bundleSync = null;
+    log2(`lockfile publish failed (attach-by-lockfile disabled): ${String(e)}`);
   }
-  writeOwnerState({ ready: true, opaProvisioning: false });
+  let opaBin = null;
+  let sidecar = null;
+  let bundleSync = null;
+  let runtime;
+  let hbTimer;
   let stopped = false;
-  const hbTimer = setInterval(() => {
-    if (stopped) return;
+  try {
+    try {
+      opaBin = await deps.ensureOpaBinary();
+    } catch (err) {
+      log2(`OPA provisioning failed (continuing remote-only): ${String(err?.message ?? err)}`);
+      opaBin = null;
+    }
+    if (opaBin) {
+      try {
+        sidecar = await deps.startOpaSidecar({ opaPort, opaPath: opaBin, log: log2 });
+      } catch (err) {
+        log2(`OPA sidecar failed (continuing remote-only): ${String(err?.message ?? err)}`);
+        sidecar = null;
+      }
+    }
+    const config2 = opts.enforcementMode ? { ...deps.loadConfig(), enforcementMode: opts.enforcementMode } : deps.loadConfig();
+    let cachedRevision = "";
+    try {
+      cachedRevision = getCachedRevision(tenant, bundleCacheDir);
+    } catch {
+      cachedRevision = "";
+    }
+    const childEnv = {
+      ...env,
+      ARBITER_SERVER_URL: opts.host,
+      ARBITER_OPA_PORT: String(opaPort),
+      ARBITER_GRAIL_ENDPOINT: opts.host,
+      ...opaBin ? { ARBITER_OPA_PATH: opaBin } : {}
+    };
+    runtime = await deps.registerArbiterClaudeHooks({
+      handle,
+      lockfile: { bearer: opts.apiToken, bundle_revision: cachedRevision },
+      store: new SessionStore({ stopBlockCap: config2.stopBlockCap }),
+      config: config2,
+      env: childEnv,
+      log: log2,
+      warn: log2,
+      // The seam that swaps the entire OAuth stack for a constant provider (§2a).
+      tokenProviderOverride: async () => opts.apiToken
+    });
+    try {
+      bundleSync = deps.makeBundleSync({
+        serverUrl: opts.host,
+        bearer: opts.apiToken,
+        tenant,
+        bundleCacheDir,
+        ...opts.pollIntervalMs !== void 0 ? { pollIntervalMs: opts.pollIntervalMs } : {},
+        onActivate: (p, r) => log2(`[bundle] activated revision=${r} (${p})`),
+        log: log2
+      });
+      bundleSync.start();
+    } catch (e) {
+      log2(`bundle sync disabled: ${String(e)}`);
+      bundleSync = null;
+    }
     writeOwnerState({ ready: true, opaProvisioning: false });
-  }, heartbeatIntervalMs);
-  if (typeof hbTimer.unref === "function") hbTimer.unref();
+    hbTimer = setInterval(() => {
+      if (stopped) return;
+      writeOwnerState({ ready: true, opaProvisioning: false });
+    }, heartbeatIntervalMs);
+    if (typeof hbTimer.unref === "function") hbTimer.unref();
+  } catch (err) {
+    const reason = `monitor init failed after bind: ${String(err?.message ?? err)}`;
+    log2(reason);
+    writeErrorState(reason);
+    if (hbTimer) clearInterval(hbTimer);
+    try {
+      deps.removeLockfile();
+    } catch {
+    }
+    try {
+      sidecar?.stop();
+    } catch {
+    }
+    try {
+      bundleSync?.stop();
+    } catch {
+    }
+    try {
+      await handle.close();
+    } catch {
+    }
+    throw err;
+  }
   const stop = async () => {
     if (stopped) return;
     stopped = true;
     clearInterval(hbTimer);
     writeOwnerState({ ready: false, opaProvisioning: false, error: "stopped" });
     try {
-      await runtime.stop();
+      deps.removeLockfile();
+    } catch (e) {
+      log2(`lockfile remove error: ${String(e)}`);
+    }
+    try {
+      await runtime?.stop();
     } catch (e) {
       log2(`runtime.stop error: ${String(e)}`);
     }
@@ -33844,15 +33957,15 @@ async function assembleMonitor(opts) {
 // arbiter-core/src/bundle/opa-provision.ts
 import {
   existsSync as existsSync2,
-  readFileSync as readFileSync3,
-  writeFileSync as writeFileSync4,
-  mkdirSync as mkdirSync4,
-  mkdtempSync as mkdtempSync4,
-  renameSync as renameSync3,
+  readFileSync as readFileSync4,
+  writeFileSync as writeFileSync5,
+  mkdirSync as mkdirSync5,
+  mkdtempSync as mkdtempSync5,
+  renameSync as renameSync4,
   rmSync as rmSync2,
-  chmodSync
+  chmodSync as chmodSync2
 } from "node:fs";
-import { join as join5 } from "node:path";
+import { join as join6 } from "node:path";
 import { createHash as createHash3 } from "node:crypto";
 function opaAssetName(platform, arch) {
   const a = arch === "x64" ? "amd64" : arch === "arm64" ? "arm64" : arch;
@@ -33872,16 +33985,16 @@ function opaAssetName(platform, arch) {
 }
 function readMarker(markerPath) {
   try {
-    return readFileSync3(markerPath, "utf8").trim();
+    return readFileSync4(markerPath, "utf8").trim();
   } catch {
     return null;
   }
 }
 function writeMarker(markerPath, version) {
-  writeFileSync4(markerPath, version, "utf8");
+  writeFileSync5(markerPath, version, "utf8");
 }
 function sha256File(filePath) {
-  return createHash3("sha256").update(readFileSync3(filePath)).digest("hex");
+  return createHash3("sha256").update(readFileSync4(filePath)).digest("hex");
 }
 async function ensureOpaBinary(opts) {
   const platform = opts.platform ?? process.platform;
@@ -33902,10 +34015,10 @@ async function ensureOpaBinary(opts) {
       `opa-provision: no checksum for asset "${asset}" in checksums v${version} \u2014 cannot verify a download`
     );
   }
-  const binDir = join5(opts.dataDir, "bin");
+  const binDir = join6(opts.dataDir, "bin");
   const binName = platform === "win32" ? "opa.exe" : "opa";
-  const target = join5(binDir, binName);
-  const marker = join5(binDir, "opa.version");
+  const target = join6(binDir, binName);
+  const marker = join6(binDir, "opa.version");
   if (existsSync2(target)) {
     const have = readMarker(marker);
     let bytesOk = false;
@@ -33940,17 +34053,17 @@ async function ensureOpaBinary(opts) {
       `opa-provision: SHA-256 mismatch for ${asset} \u2014 expected ${expectedSha}, got ${actualSha}. Refusing to install an unverified OPA binary.`
     );
   }
-  mkdirSync4(binDir, { recursive: true });
-  const tmpDir = mkdtempSync4(join5(binDir, ".opa-tmp-"));
-  const tmpFile = join5(tmpDir, binName);
-  writeFileSync4(tmpFile, bytes);
+  mkdirSync5(binDir, { recursive: true });
+  const tmpDir = mkdtempSync5(join6(binDir, ".opa-tmp-"));
+  const tmpFile = join6(tmpDir, binName);
+  writeFileSync5(tmpFile, bytes);
   if (platform !== "win32") {
     try {
-      chmodSync(tmpFile, 493);
+      chmodSync2(tmpFile, 493);
     } catch {
     }
   }
-  renameSync3(tmpFile, target);
+  renameSync4(tmpFile, target);
   try {
     rmSync2(tmpDir, { recursive: true, force: true });
   } catch {
@@ -33969,23 +34082,26 @@ function installGlobalProxyDispatcher() {
 }
 
 // arbiter-claude/plugin/monitor/launch.mjs
-var __dirname = dirname2(fileURLToPath(import.meta.url));
+init_schema();
+var __dirname = dirname3(fileURLToPath(import.meta.url));
 var { values: argv } = parseArgs({
   args: process.argv.slice(2),
   options: {
     host: { type: "string" },
     "opa-path": { type: "string" },
-    "data-dir": { type: "string" }
+    "data-dir": { type: "string" },
+    "enforcement-mode": { type: "string" }
   },
   strict: false
 });
-var dataDir = argv["data-dir"] ?? process.env.CLAUDE_PLUGIN_DATA ?? join6(homedir4(), ".config", "arbiter", "plugin-data");
+var dataDir = argv["data-dir"] ?? process.env.CLAUDE_PLUGIN_DATA ?? join7(homedir5(), ".config", "arbiter", "plugin-data");
 var host = argv["host"] ?? process.env.CLAUDE_PLUGIN_OPTION_HOST ?? "https://app.langguard.ai";
 var apiToken = process.env.CLAUDE_PLUGIN_OPTION_API_TOKEN ?? "";
+var enforcementMode = (argv["enforcement-mode"] ?? process.env.CLAUDE_PLUGIN_OPTION_ENFORCEMENT_MODE) === "strict" ? "strict" : "cooperative";
 var opaBinName = process.platform === "win32" ? "opa.exe" : "opa";
-var opaPath = argv["opa-path"] ? join6(dirname2(argv["opa-path"]), opaBinName) : join6(dataDir, "bin", opaBinName);
-mkdirSync5(dataDir, { recursive: true });
-var logFile = join6(dataDir, "arbiter-monitor.log");
+var opaPath = argv["opa-path"] ? join7(dirname3(argv["opa-path"]), opaBinName) : join7(dataDir, "bin", opaBinName);
+mkdirSync6(dataDir, { recursive: true });
+var logFile = join7(dataDir, "arbiter-monitor.log");
 function log(msg) {
   try {
     appendFileSync(logFile, `[${(/* @__PURE__ */ new Date()).toISOString()}] ${msg}
@@ -34003,13 +34119,20 @@ if (!apiToken) {
     "WARNING: CLAUDE_PLUGIN_OPTION_API_TOKEN is empty (sensitive userConfig not injected \u2014 e.g. anthropics/claude-code#62442). Daemon will bind so hooks stay non-blocking, but remote sync/verdict/audit will fail-open until a token is available."
   );
 }
+var config;
+try {
+  config = loadConfig();
+} catch (e) {
+  log(`config load failed (running on defaults): ${String(e?.message ?? e)}`);
+  config = DEFAULT_CONFIG;
+}
 try {
   installGlobalProxyDispatcher();
 } catch (e) {
   log(`proxy dispatcher init failed (continuing): ${String(e)}`);
 }
 var checksums = JSON.parse(
-  readFileSync4(join6(__dirname, "..", "opa", "opa-checksums.json"), "utf8")
+  readFileSync5(join7(__dirname, "..", "opa", "opa-checksums.json"), "utf8")
 );
 async function download(url) {
   const res = await fetch(url, { redirect: "follow" });
@@ -34024,6 +34147,7 @@ var ensureOpa = async () => {
     return null;
   }
 };
+var portOverride = Number(process.env.ARBITER_HOOK_DAEMON_PORT) || void 0;
 var monitor;
 try {
   monitor = await assembleMonitor({
@@ -34031,9 +34155,13 @@ try {
     apiToken,
     dataDir,
     opaPath,
+    enforcementMode,
+    ...portOverride ? { port: portOverride } : {},
     env: process.env,
     log,
-    deps: { ensureOpaBinary: ensureOpa }
+    // loadConfig: reuse the launcher's loaded-or-defaulted config (FIX-0 — see above);
+    // the real loader must never run again after the port is bound.
+    deps: { ensureOpaBinary: ensureOpa, loadConfig: () => config }
   });
   log(`monitor assembled: mode=${monitor.mode} port=${monitor.port}`);
 } catch (e) {
