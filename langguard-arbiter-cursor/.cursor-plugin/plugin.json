@@ -1,0 +1,23 @@
+{
+  "name": "langguard-arbiter",
+  "version": "0.1.0",
+  "description": "LangGuard Arbiter — in-harness agent policy enforcement for Cursor. Screens, enforces, and evidences every MCP tool call against your LangGuard policies at the pre-action seam (beforeMCPExecution). Deterministic ALLOW / DENY / ESCALATE — ESCALATE surfaces as Cursor's native Ask approval prompt. Native shell gets a best-effort catastrophic-command deny (beforeShellExecution); afterMCPExecution and stop are advisory. No LLM in the enforcement loop. Disclosure: the bundled hook shim spawns a local background policy daemon (loopback port 52746, shared with the LangGuard Claude Code and Codex plugins) and on first run downloads a SHA-256-pinned Open Policy Agent binary (checksums bundled in opa/opa-checksums.json); policy logic stays server-side in your LangGuard tenant.",
+  "author": {
+    "name": "LangGuard",
+    "url": "https://langguard.ai"
+  },
+  "homepage": "https://langguard.ai/arbiter",
+  "repository": "https://github.com/LangGuard-AI/langguard",
+  "license": "Apache-2.0",
+  "keywords": [
+    "langguard",
+    "arbiter",
+    "policy",
+    "enforcement",
+    "mcp",
+    "cursor-plugin",
+    "hooks",
+    "compliance",
+    "security"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart":         [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" screen",   "timeout": 30 }],
+    "beforeMCPExecution":   [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" enforce",  "timeout": 30 }],
+    "beforeShellExecution": [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" enforce",  "timeout": 30 }],
+    "afterMCPExecution":    [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" evidence", "timeout": 30 }],
+    "stop":                 [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" verify",   "timeout": 30 }]
+  }
+}

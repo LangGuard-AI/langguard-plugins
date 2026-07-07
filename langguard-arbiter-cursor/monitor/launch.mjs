@@ -30855,7 +30855,7 @@ var init_src2 = __esm({
   }
 });
 
-// arbiter-codex/plugin/monitor/launch.mjs
+// arbiter-cursor/plugin/monitor/launch.mjs
 import { parseArgs } from "node:util";
 import { appendFileSync, mkdirSync as mkdirSync6, readFileSync as readFileSync5 } from "node:fs";
 import { join as join8, dirname as dirname3 } from "node:path";
@@ -34080,7 +34080,7 @@ function installGlobalProxyDispatcher() {
   );
 }
 
-// arbiter-codex/plugin/monitor/launch.mjs
+// arbiter-cursor/plugin/monitor/launch.mjs
 init_schema();
 
 // arbiter-core/src/config/server-credential.ts
@@ -34422,16 +34422,16 @@ function registerCodexHooks(handle, deps, opts = {}) {
   handle.registerHookHandler("verify", makeVerifyHandler2(deps));
 }
 
-// arbiter-codex/plugin/lib/daemon-paths.mjs
+// arbiter-cursor/plugin/lib/daemon-paths.mjs
 import { join as join7 } from "node:path";
 import { homedir as homedir5 } from "node:os";
 function resolveDataDir(env = process.env) {
-  const fromEnv = typeof env.PLUGIN_DATA === "string" ? env.PLUGIN_DATA.trim() : "";
+  const fromEnv = typeof env.ARBITER_DATA_DIR === "string" ? env.ARBITER_DATA_DIR.trim() : "";
   if (fromEnv) return fromEnv;
   return join7(homedir5(), ".config", "arbiter");
 }
 
-// arbiter-codex/plugin/monitor/launch.mjs
+// arbiter-cursor/plugin/monitor/launch.mjs
 var __dirname = dirname3(fileURLToPath(import.meta.url));
 var { values: argv } = parseArgs({
   args: process.argv.slice(2),
@@ -34469,7 +34469,7 @@ try {
 }
 var host = argv["host"] ?? resolveServerHost(config, process.env);
 var apiToken = resolveServerApiKey(config, process.env) ?? "";
-var enforcementMode = argv["enforcement-mode"] === "strict" || config.enforcementMode === "strict" || process.env.ARBITER_CODEX_ENFORCE === "1" ? "strict" : "cooperative";
+var enforcementMode = argv["enforcement-mode"] === "strict" || config.enforcementMode === "strict" || process.env.ARBITER_ENFORCE === "1" ? "strict" : "cooperative";
 if (!apiToken) {
   log(
     "WARNING: no LangGuard API key resolved (env LANGGUARD_API_KEY / config.yaml apiKey). Daemon will bind so hooks stay non-blocking, but remote sync/verdict/audit will fail-open until a key is configured (config heredoc on the Arbiter Hooks page)."
@@ -34496,28 +34496,32 @@ var ensureOpa = async () => {
     return null;
   }
 };
-async function registerArbiterCodexHooks(opts) {
+async function registerArbiterCursorHooks(opts) {
   const wireLog = opts.log ?? log;
   const env = opts.env ?? process.env;
   const { engine, localOpa, grail, serverUrl, tokenProvider } = buildRemoteWiring(opts);
   grail.start();
   const identity = resolveArbiterIdentity(env);
-  registerCodexHooks(opts.handle, {
-    engine,
-    sessions: opts.store,
-    config: opts.config,
-    piiSignal: () => ({ found: false, count: 0 }),
-    // ARBITER-INTERIM: parity with wire-claude-hooks
-    localOpa,
-    grail,
-    getBundleRevision: () => opts.lockfile.bundle_revision,
-    tenantId: env["ARBITER_TENANT_ID"] ?? "",
-    userId: identity.userId,
-    aiAppId: identity.aiAppId,
-    department: identity.department,
-    environment: identity.environment
-  });
-  wireLog(`[arbiter] Codex hooks registered (server: ${serverUrl})`);
+  registerCodexHooks(
+    opts.handle,
+    {
+      engine,
+      sessions: opts.store,
+      config: opts.config,
+      piiSignal: () => ({ found: false, count: 0 }),
+      // ARBITER-INTERIM: parity with wire-claude-hooks
+      localOpa,
+      grail,
+      getBundleRevision: () => opts.lockfile.bundle_revision,
+      tenantId: env["ARBITER_TENANT_ID"] ?? "",
+      userId: identity.userId,
+      aiAppId: identity.aiAppId,
+      department: identity.department,
+      environment: identity.environment
+    },
+    { registeredHarness: "cursor" }
+  );
+  wireLog(`[arbiter] Cursor hooks registered (shared CC-shaped adapter, server: ${serverUrl})`);
   process.once("beforeExit", () => {
     grail.stop().catch(() => {
     });
@@ -34538,7 +34542,7 @@ try {
     log,
     deps: {
       ensureOpaBinary: ensureOpa,
-      registerArbiterClaudeHooks: registerArbiterCodexHooks,
+      registerArbiterClaudeHooks: registerArbiterCursorHooks,
       // FIX-0 (crash-loop → frozen opaProvisioning:true): reuse the config THIS launcher
       // already loaded-or-defaulted above. assembleMonitor must never re-invoke the real
       // loader — a malformed config.yaml would throw AFTER the port is bound and the
