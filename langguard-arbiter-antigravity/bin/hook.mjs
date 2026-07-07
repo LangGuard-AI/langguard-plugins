@@ -787,6 +787,7 @@ function clearStrictMarker() {
   }
 }
 var screenMarkerFile = () => join2(dataDir, ".arbiter-screen-injected.json");
+var UNKNOWN_SESSION_SENTINEL = "unknown";
 function readScreenMarker() {
   try {
     const data = JSON.parse(readFileSync(screenMarkerFile(), "utf8"));
@@ -796,9 +797,11 @@ function readScreenMarker() {
   return {};
 }
 function screenAlreadyPosted(sessionId) {
+  if (sessionId === UNKNOWN_SESSION_SENTINEL) return false;
   return Boolean(readScreenMarker()[sessionId]);
 }
 function stampScreenPosted(sessionId) {
+  if (sessionId === UNKNOWN_SESSION_SENTINEL) return;
   try {
     const map = readScreenMarker();
     map[sessionId] = Date.now();
