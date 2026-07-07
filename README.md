@@ -488,9 +488,11 @@ Updating means re-running the `agy plugin install` command (or re-dropping the
 folder) and restarting your session; whether `agy` upgrades strictly in place is
 pending live verification. The `setup-arbiter` skill reports the installed plugin
 version, so you can check what a machine is actually running. If you run several
-harness plugins on one machine, update them together — a stale sibling plugin's
-daemon fails an Antigravity ESCALATE closed (deny, never allow) instead of
-rendering `force_ask`.
+harness plugins on one machine, update them together — a stale **Codex- or
+shell-owned** sibling daemon fails an Antigravity ESCALATE closed (deny, never
+allow) instead of rendering `force_ask` (its whitelist predates `antigravity`,
+so the stamp falls back to its own non-ask-capable harness). Claude- and
+Cursor-owned siblings render `force_ask` even when stale.
 
 ## Enterprise / managed rollout
 
