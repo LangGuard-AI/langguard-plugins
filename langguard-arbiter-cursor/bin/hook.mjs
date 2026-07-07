@@ -32,7 +32,7 @@ var RUNNER_SLUG_DENYLIST = /* @__PURE__ */ new Set([
 ]);
 var TOOLNAME_PREFIX_SEPARATORS = ["-", "_"];
 function isSlugLike(s) {
-  return /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(s);
+  return /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(s) && !s.includes("__") && !s.endsWith("_");
 }
 function serverFromUrl(url) {
   let host;
@@ -128,7 +128,8 @@ function isShellEvent(body) {
 function toCanonicalMcpToolName(input) {
   const { server, action, degenerate } = normalizeCursorTool(input);
   if (!degenerate) return `mcp__${server}__${action}`;
-  return `mcp__${(input.toolName ?? "").trim()}`;
+  const sanitized = (input.toolName ?? "").trim().replaceAll(".", "_").replace(/_{2,}/g, "_");
+  return `mcp__${sanitized}`;
 }
 function translateInbound(phase2, body) {
   if (typeof body !== "object" || body === null || Array.isArray(body)) return null;
@@ -672,7 +673,14 @@ function classifyGrace(state, now) {
   const started = Date.parse(state.startedAt);
   const withinStartupGrace = Number.isFinite(started) && now - started < STARTUP_GRACE_MS;
   if (state.opaProvisioning === true) {
-    return { verdict: "warming", category: "transient", reason: "OPA binary still provisioning (first-run download)" };
+    if (ownerAlive(state)) {
+      return { verdict: "warming", category: "transient", reason: "OPA binary still provisioning (first-run download)" };
+    }
+    return {
+      verdict: "warming",
+      category: "no-daemon",
+      reason: `owner pid ${state.pid ?? "(none)"} died during OPA provisioning \u2192 stale warming state`
+    };
   }
   if (state.ready !== true) {
     return {
