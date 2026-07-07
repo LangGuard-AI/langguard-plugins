@@ -1,0 +1,17 @@
+{
+  "_comment": "Antigravity hook wiring (antigravity-plugin plan D5). PreToolUse matcher is '*' ON PURPOSE: ONE event covers shell + MCP + everything and the shim classifies (plan D6) — a matcher-scoped hook would silently never fire if the MCP wrapper name drifts (a total fail-open before our code runs). The command-path form (${PLUGIN_ROOT} substitution) and hooks.json-at-plugin-root placement are V6-gated: the shim self-derives its plugin root from import.meta.url once invoked, so only these command strings depend on the V6 answer. Stop is audit-only in v1 (no {decision:'continue'}); PostInvocation is deliberately unwired.",
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "*", "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" enforce", "timeout": 30 }
+    ],
+    "PostToolUse": [
+      { "matcher": "*", "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" evidence", "timeout": 30 }
+    ],
+    "PreInvocation": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" screen", "timeout": 30 }
+    ],
+    "Stop": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" verify", "timeout": 30 }
+    ]
+  }
+}
