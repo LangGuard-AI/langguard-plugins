@@ -30837,7 +30837,7 @@ var init_hook_map = __esm({
     "use strict";
     init_src();
     init_tool_normalize();
-    HARNESS_WHITELIST = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "shell"]);
+    HARNESS_WHITELIST = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "shell", "antigravity"]);
   }
 });
 
