@@ -30837,7 +30837,7 @@ var init_hook_map = __esm({
     "use strict";
     init_src();
     init_tool_normalize();
-    HARNESS_WHITELIST = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "shell"]);
+    HARNESS_WHITELIST = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "shell", "antigravity"]);
   }
 });
 
@@ -34120,10 +34120,38 @@ function normalizeToolName2(rawToolName) {
 function str2(v) {
   return typeof v === "string" ? v : void 0;
 }
-var HARNESS_WHITELIST2 = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "shell"]);
+var HARNESS_WHITELIST2 = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "shell", "antigravity"]);
 function harnessFromBody2(body, registered) {
   const v = body?.arbiter_harness;
   return typeof v === "string" && HARNESS_WHITELIST2.has(v) ? v : registered;
+}
+var HARNESS_LABEL = {
+  claude: "Claude Code",
+  cursor: "Cursor",
+  codex: "Codex",
+  antigravity: "Antigravity"
+};
+var ASK_PROMPT_PHRASE = {
+  claude: "human approval needed",
+  cursor: "requires approval \u2014 Cursor will prompt (Ask)"
+};
+function escalationScreenLine(harness, tools) {
+  const label = HARNESS_LABEL[harness];
+  if (label !== void 0 && ASK_CAPABLE.has(harness)) {
+    const phrase = ASK_PROMPT_PHRASE[harness] ?? `requires approval \u2014 ${label} will prompt`;
+    return `ESCALATE-required tools (${phrase}): ${tools.join(", ")}`;
+  }
+  if (label !== void 0) {
+    return `RESTRICTED tools (will be DENIED \u2014 ${label} has no human-approval path): ${tools.join(", ")}`;
+  }
+  return `RESTRICTED tools (will be DENIED \u2014 this harness has no human-approval path): ${tools.join(", ")}`;
+}
+function internalErrorDenyReason(harness) {
+  const label = HARNESS_LABEL[harness];
+  if (label !== void 0 && !ASK_CAPABLE.has(harness)) {
+    return `Arbiter internal error \u2014 denying (fail-CLOSED; ${label} has no human-escalation path)`;
+  }
+  return "Arbiter internal error \u2014 denying (fail-CLOSED)";
 }
 function isCatastrophicMatch2(toolName, toolInput, denyList) {
   const candidate = `${toolName} ${JSON.stringify(toolInput)}`;
@@ -34141,11 +34169,11 @@ function screenEventName2(body) {
   if (name === "UserPromptSubmit" || name === "SessionStart") return name;
   return typeof body?.prompt === "string" ? "UserPromptSubmit" : "SessionStart";
 }
-function makeScreenHandler2(deps) {
+function makeScreenHandler2(deps, registeredHarness) {
   return async (ctx) => {
     const body = ctx.body;
     const sessionId = str2(body?.session_id) ?? "unknown";
-    const harness = harnessFromBody2(body, "codex");
+    const harness = harnessFromBody2(body, registeredHarness);
     const sessionTools = Array.isArray(body?.mcp_tools) ? body.mcp_tools.filter((t) => typeof t === "string") : void 0;
     const req = { session_id: sessionId, session_tools: sessionTools };
     let contextResult;
@@ -34160,11 +34188,7 @@ function makeScreenHandler2(deps) {
       lines.push(`BLOCKED tools (do NOT call): ${contextResult.banned.join(", ")}`);
     }
     if (contextResult.requires_escalation.length > 0) {
-      if (harness === "claude") {
-        lines.push(`ESCALATE-required tools (human approval needed): ${contextResult.requires_escalation.join(", ")}`);
-      } else {
-        lines.push(`RESTRICTED tools (will be DENIED \u2014 Codex has no human-approval path): ${contextResult.requires_escalation.join(", ")}`);
-      }
+      lines.push(escalationScreenLine(harness, contextResult.requires_escalation));
     }
     const { posture } = contextResult;
     const postureItems = [];
@@ -34189,17 +34213,19 @@ function makeScreenHandler2(deps) {
     ctx.reply(200, output);
   };
 }
-function makeEnforceHandler2(deps) {
+function makeEnforceHandler2(deps, registeredHarness) {
   const localOpa = deps.localOpa ?? new LocalOpaClient({ baseUrl: "http://127.0.0.1:1" });
   return async (ctx) => {
     try {
-      await enforceInner2(ctx, deps, localOpa);
+      await enforceInner2(ctx, deps, localOpa, registeredHarness);
     } catch (_err) {
       const output = {
         hookSpecificOutput: {
           hookEventName: "PreToolUse",
           permissionDecision: "deny",
-          permissionDecisionReason: "Arbiter internal error \u2014 denying (fail-CLOSED; Codex has no human-escalation path)"
+          // Reason derives from the D10 table (harness-neutral for ask-capable /
+          // unknown harnesses); the DECISION is a hard deny for EVERY harness.
+          permissionDecisionReason: internalErrorDenyReason(harnessFromBody2(ctx.body, registeredHarness))
         }
       };
       if (!ctx.req.socket?.destroyed) {
@@ -34208,11 +34234,11 @@ function makeEnforceHandler2(deps) {
     }
   };
 }
-async function enforceInner2(ctx, deps, localOpa) {
+async function enforceInner2(ctx, deps, localOpa, registeredHarness) {
   const body = ctx.body;
   const sessionId = str2(body?.session_id) ?? "unknown";
   const rawToolName = str2(body?.tool_name) ?? "";
-  const harness = harnessFromBody2(body, "codex");
+  const harness = harnessFromBody2(body, registeredHarness);
   const toolInput = typeof body?.tool_input === "object" && body.tool_input !== null ? body.tool_input : {};
   const { normalized, isNativeTool } = normalizeToolName2(rawToolName);
   if (!isNativeTool && !normalized.includes(".")) {
@@ -34225,11 +34251,12 @@ async function enforceInner2(ctx, deps, localOpa) {
       applied_rule: "malformed_mcp_name",
       ts
     });
+    const permissionDecision2 = verdictToPermission2("ESCALATE", harness);
     const output2 = {
       hookSpecificOutput: {
         hookEventName: "PreToolUse",
-        permissionDecision: "deny",
-        permissionDecisionReason: `Malformed MCP tool name "${rawToolName}" \u2014 denying (ESCALATE has no human path in Codex)`
+        permissionDecision: permissionDecision2,
+        permissionDecisionReason: permissionDecision2 === "ask" ? `Malformed MCP tool name "${rawToolName}" \u2014 escalating to human` : `Malformed MCP tool name "${rawToolName}" \u2014 denying (ESCALATE has no human path in this harness)`
       }
     };
     ctx.reply(200, output2);
@@ -34293,7 +34320,8 @@ async function enforceInner2(ctx, deps, localOpa) {
       tenantId,
       bundleRevision,
       // Identity enrichment: harness literal + daemon-resolved identity.
-      // Registered harness 'codex'; a whitelisted shim stamp overrides (plan D3).
+      // Registered harness ('codex' default, 'cursor' via the launcher seam);
+      // a whitelisted shim stamp overrides (plan D3).
       agentName: harness,
       userId: deps.userId,
       aiAppId: deps.aiAppId,
@@ -34396,6 +34424,7 @@ function makeVerifyHandler2(deps) {
     ctx.reply(200, {});
   };
 }
+var ASK_CAPABLE = /* @__PURE__ */ new Set(["claude", "cursor", "antigravity"]);
 function verdictToPermission2(verdict, harness = "codex") {
   switch (verdict) {
     case "ALLOW":
@@ -34403,15 +34432,16 @@ function verdictToPermission2(verdict, harness = "codex") {
     case "BLOCK":
       return "deny";
     case "ESCALATE":
-      return harness === "claude" ? "ask" : "deny";
-    // no 'ask' in Codex → fail-CLOSED deny
+      return ASK_CAPABLE.has(harness) ? "ask" : "deny";
+    // no native ask → fail-CLOSED deny
     default:
       return "deny";
   }
 }
-function registerCodexHooks(handle, deps) {
-  handle.registerHookHandler("screen", makeScreenHandler2(deps));
-  handle.registerHookHandler("enforce", makeEnforceHandler2(deps));
+function registerCodexHooks(handle, deps, opts = {}) {
+  const registeredHarness = opts.registeredHarness ?? "codex";
+  handle.registerHookHandler("screen", makeScreenHandler2(deps, registeredHarness));
+  handle.registerHookHandler("enforce", makeEnforceHandler2(deps, registeredHarness));
   handle.registerHookHandler("evidence", makeEvidenceHandler2(deps));
   handle.registerHookHandler("verify", makeVerifyHandler2(deps));
 }

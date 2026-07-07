@@ -4238,19 +4238,19 @@ var require_infra = __commonJS({
     function parseJSONFromBytes(bytes) {
       return JSON.parse(utf8DecodeBytes(bytes));
     }
-    function removeASCIIWhitespace(str2, leading = true, trailing = true) {
-      return removeChars(str2, leading, trailing, isASCIIWhitespace);
+    function removeASCIIWhitespace(str3, leading = true, trailing = true) {
+      return removeChars(str3, leading, trailing, isASCIIWhitespace);
     }
-    function removeChars(str2, leading, trailing, predicate) {
+    function removeChars(str3, leading, trailing, predicate) {
       let lead = 0;
-      let trail = str2.length - 1;
+      let trail = str3.length - 1;
       if (leading) {
-        while (lead < str2.length && predicate(str2.charCodeAt(lead))) lead++;
+        while (lead < str3.length && predicate(str3.charCodeAt(lead))) lead++;
       }
       if (trailing) {
-        while (trail > 0 && predicate(str2.charCodeAt(trail))) trail--;
+        while (trail > 0 && predicate(str3.charCodeAt(trail))) trail--;
       }
-      return lead === 0 && trail === str2.length - 1 ? str2 : str2.slice(lead, trail + 1);
+      return lead === 0 && trail === str3.length - 1 ? str3 : str3.slice(lead, trail + 1);
     }
     function serializeJavascriptValueToJSONString(value) {
       const result = JSON.stringify(value);
@@ -4501,8 +4501,8 @@ var require_data_url = __commonJS({
     function isHTTPWhiteSpace(char) {
       return char === 13 || char === 10 || char === 9 || char === 32;
     }
-    function removeHTTPWhitespace(str2, leading = true, trailing = true) {
-      return removeChars(str2, leading, trailing, isHTTPWhiteSpace);
+    function removeHTTPWhitespace(str3, leading = true, trailing = true) {
+      return removeChars(str3, leading, trailing, isHTTPWhiteSpace);
     }
     function minimizeSupportedMimeType(mimeType) {
       switch (mimeType.essence) {
@@ -6604,7 +6604,7 @@ var require_body = __commonJS({
         const boundary = `----formdata-undici-0${`${random(1e11)}`.padStart(11, "0")}`;
         const prefix = `--${boundary}\r
 Content-Disposition: form-data`;
-        const formdataEscape = (str2) => str2.replace(/\n/g, "%0A").replace(/\r/g, "%0D").replace(/"/g, "%22");
+        const formdataEscape = (str3) => str3.replace(/\n/g, "%0A").replace(/\r/g, "%0D").replace(/"/g, "%22");
         const normalizeLinefeeds = (value) => value.replace(/\r?\n|\r/g, "\r\n");
         const blobParts = [];
         const rn = new Uint8Array([13, 10]);
@@ -22306,9 +22306,9 @@ var require_cookies = __commonJS({
       webidl.argumentLengthCheck(arguments, 2, "setCookie");
       brandChecks(headers);
       cookie = webidl.converters.Cookie(cookie);
-      const str2 = stringify(cookie);
-      if (str2) {
-        headers.append("set-cookie", str2, true);
+      const str3 = stringify(cookie);
+      if (str3) {
+        headers.append("set-cookie", str3, true);
       }
     }
     webidl.converters.DeleteCookieAttributes = webidl.dictionaryConverter([
@@ -30855,12 +30855,11 @@ var init_src2 = __esm({
   }
 });
 
-// arbiter-claude/plugin/monitor/launch.mjs
+// arbiter-cursor/plugin/monitor/launch.mjs
 import { parseArgs } from "node:util";
 import { appendFileSync, mkdirSync as mkdirSync6, readFileSync as readFileSync5 } from "node:fs";
-import { join as join7, dirname as dirname3 } from "node:path";
+import { join as join8, dirname as dirname3 } from "node:path";
 import { fileURLToPath } from "node:url";
-import { homedir as homedir5 } from "node:os";
 
 // arbiter-core/src/daemon/monitor-assembly.ts
 init_server();
@@ -33254,8 +33253,8 @@ var require_dumper = /* @__PURE__ */ __commonJSMin(((exports, module) => {
   function generateNextLine(state, level) {
     return "\n" + common.repeat(" ", state.indent * level);
   }
-  function testImplicitResolving(state, str2) {
-    for (let index = 0, length = state.implicitTypes.length; index < length; index += 1) if (state.implicitTypes[index].resolve(str2)) return true;
+  function testImplicitResolving(state, str3) {
+    for (let index = 0, length = state.implicitTypes.length; index < length; index += 1) if (state.implicitTypes[index].resolve(str3)) return true;
     return false;
   }
   function isWhitespace(c) {
@@ -34081,8 +34080,382 @@ function installGlobalProxyDispatcher() {
   );
 }
 
-// arbiter-claude/plugin/monitor/launch.mjs
+// arbiter-cursor/plugin/monitor/launch.mjs
 init_schema();
+
+// arbiter-core/src/config/server-credential.ts
+function resolveServerApiKey(config2, env = process.env) {
+  const fromEnv = env["LANGGUARD_API_KEY"]?.trim();
+  if (fromEnv) return fromEnv;
+  return config2.apiKey;
+}
+var DEFAULT_SERVER_HOST = "https://app.langguard.ai";
+function resolveServerHost(config2, env = process.env) {
+  const fromEnv = env["LANGGUARD_HOST"]?.trim();
+  if (fromEnv) return fromEnv;
+  return config2.host ?? DEFAULT_SERVER_HOST;
+}
+
+// arbiter-codex/src/hook-map.ts
+init_src();
+
+// arbiter-codex/src/tool-normalize.ts
+var MCP_PREFIX2 = "mcp__";
+var MCP_SEP2 = "__";
+function normalizeToolName2(rawToolName) {
+  if (!rawToolName.startsWith(MCP_PREFIX2)) {
+    return { normalized: rawToolName, isNativeTool: true };
+  }
+  const rest = rawToolName.slice(MCP_PREFIX2.length);
+  const sep = rest.indexOf(MCP_SEP2);
+  if (sep === -1) {
+    return { normalized: rest, isNativeTool: false, server: rest };
+  }
+  const server = rest.slice(0, sep);
+  const action = rest.slice(sep + MCP_SEP2.length);
+  return { normalized: `${server}.${action}`, isNativeTool: false, server, action };
+}
+
+// arbiter-codex/src/hook-map.ts
+function str2(v) {
+  return typeof v === "string" ? v : void 0;
+}
+var HARNESS_WHITELIST2 = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "shell", "antigravity"]);
+function harnessFromBody2(body, registered) {
+  const v = body?.arbiter_harness;
+  return typeof v === "string" && HARNESS_WHITELIST2.has(v) ? v : registered;
+}
+var HARNESS_LABEL = {
+  claude: "Claude Code",
+  cursor: "Cursor",
+  codex: "Codex",
+  antigravity: "Antigravity"
+};
+var ASK_PROMPT_PHRASE = {
+  claude: "human approval needed",
+  cursor: "requires approval \u2014 Cursor will prompt (Ask)"
+};
+function escalationScreenLine(harness, tools) {
+  const label = HARNESS_LABEL[harness];
+  if (label !== void 0 && ASK_CAPABLE.has(harness)) {
+    const phrase = ASK_PROMPT_PHRASE[harness] ?? `requires approval \u2014 ${label} will prompt`;
+    return `ESCALATE-required tools (${phrase}): ${tools.join(", ")}`;
+  }
+  if (label !== void 0) {
+    return `RESTRICTED tools (will be DENIED \u2014 ${label} has no human-approval path): ${tools.join(", ")}`;
+  }
+  return `RESTRICTED tools (will be DENIED \u2014 this harness has no human-approval path): ${tools.join(", ")}`;
+}
+function internalErrorDenyReason(harness) {
+  const label = HARNESS_LABEL[harness];
+  if (label !== void 0 && !ASK_CAPABLE.has(harness)) {
+    return `Arbiter internal error \u2014 denying (fail-CLOSED; ${label} has no human-escalation path)`;
+  }
+  return "Arbiter internal error \u2014 denying (fail-CLOSED)";
+}
+function isCatastrophicMatch2(toolName, toolInput, denyList) {
+  const candidate = `${toolName} ${JSON.stringify(toolInput)}`;
+  return denyList.some((entry) => candidate.includes(entry));
+}
+function emitAudit2(audit, rec) {
+  if (!audit) return;
+  try {
+    audit(rec);
+  } catch {
+  }
+}
+function screenEventName2(body) {
+  const name = str2(body?.hook_event_name);
+  if (name === "UserPromptSubmit" || name === "SessionStart") return name;
+  return typeof body?.prompt === "string" ? "UserPromptSubmit" : "SessionStart";
+}
+function makeScreenHandler2(deps, registeredHarness) {
+  return async (ctx) => {
+    const body = ctx.body;
+    const sessionId = str2(body?.session_id) ?? "unknown";
+    const harness = harnessFromBody2(body, registeredHarness);
+    const sessionTools = Array.isArray(body?.mcp_tools) ? body.mcp_tools.filter((t) => typeof t === "string") : void 0;
+    const req = { session_id: sessionId, session_tools: sessionTools };
+    let contextResult;
+    try {
+      contextResult = await deps.engine.context(req);
+    } catch {
+      ctx.reply(200, {});
+      return;
+    }
+    const lines = ["[LangGuard Arbiter \u2014 session context]"];
+    if (contextResult.banned.length > 0) {
+      lines.push(`BLOCKED tools (do NOT call): ${contextResult.banned.join(", ")}`);
+    }
+    if (contextResult.requires_escalation.length > 0) {
+      lines.push(escalationScreenLine(harness, contextResult.requires_escalation));
+    }
+    const { posture } = contextResult;
+    const postureItems = [];
+    if (posture.enforce_not_approved) postureItems.push("enforce_not_approved=true");
+    if (posture.compliance_regimes.length > 0) {
+      postureItems.push(`compliance=${posture.compliance_regimes.join(",")}`);
+    }
+    postureItems.push(`scope_default_tier=${posture.scope_default_tier}`);
+    lines.push(`Posture: ${postureItems.join("; ")}`);
+    if (contextResult.guardrails.length > 0) {
+      lines.push("Active guardrails:");
+      for (const g of contextResult.guardrails.slice(0, 5)) {
+        lines.push(`  - ${g}`);
+      }
+    }
+    const output = {
+      hookSpecificOutput: {
+        hookEventName: screenEventName2(body),
+        additionalContext: lines.join("\n")
+      }
+    };
+    ctx.reply(200, output);
+  };
+}
+function makeEnforceHandler2(deps, registeredHarness) {
+  const localOpa = deps.localOpa ?? new LocalOpaClient({ baseUrl: "http://127.0.0.1:1" });
+  return async (ctx) => {
+    try {
+      await enforceInner2(ctx, deps, localOpa, registeredHarness);
+    } catch (_err) {
+      const output = {
+        hookSpecificOutput: {
+          hookEventName: "PreToolUse",
+          permissionDecision: "deny",
+          // Reason derives from the D10 table (harness-neutral for ask-capable /
+          // unknown harnesses); the DECISION is a hard deny for EVERY harness.
+          permissionDecisionReason: internalErrorDenyReason(harnessFromBody2(ctx.body, registeredHarness))
+        }
+      };
+      if (!ctx.req.socket?.destroyed) {
+        ctx.reply(200, output);
+      }
+    }
+  };
+}
+async function enforceInner2(ctx, deps, localOpa, registeredHarness) {
+  const body = ctx.body;
+  const sessionId = str2(body?.session_id) ?? "unknown";
+  const rawToolName = str2(body?.tool_name) ?? "";
+  const harness = harnessFromBody2(body, registeredHarness);
+  const toolInput = typeof body?.tool_input === "object" && body.tool_input !== null ? body.tool_input : {};
+  const { normalized, isNativeTool } = normalizeToolName2(rawToolName);
+  if (!isNativeTool && !normalized.includes(".")) {
+    const ts = (/* @__PURE__ */ new Date()).toISOString();
+    emitAudit2(deps.audit, {
+      session_id: sessionId,
+      tool: normalized || rawToolName,
+      hook_event: "enforce",
+      verdict: "ESCALATE",
+      applied_rule: "malformed_mcp_name",
+      ts
+    });
+    const permissionDecision2 = verdictToPermission2("ESCALATE", harness);
+    const output2 = {
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: permissionDecision2,
+        permissionDecisionReason: permissionDecision2 === "ask" ? `Malformed MCP tool name "${rawToolName}" \u2014 escalating to human` : `Malformed MCP tool name "${rawToolName}" \u2014 denying (ESCALATE has no human path in this harness)`
+      }
+    };
+    ctx.reply(200, output2);
+    return;
+  }
+  const catastrophic = isCatastrophicMatch2(rawToolName, toolInput, deps.config.catastrophicDenyList);
+  if (isNativeTool) {
+    const result = composeVerdict({
+      approval_status: "approved",
+      // native not resolver-checked
+      scope_tier: null,
+      isNativeTool: true,
+      isCatastrophic: catastrophic,
+      violations: [],
+      engineUnreachable: false,
+      mode: deps.config.unknownVerdict === "BLOCK" ? "enforce" : "permissive"
+    });
+    const permissionDecision2 = verdictToPermission2(result.verdict, harness);
+    const ts = (/* @__PURE__ */ new Date()).toISOString();
+    const action = { tool: normalized, phase: "enforce", verdict: result.verdict, ts };
+    deps.sessions.recordAction(sessionId, action);
+    deps.sessions.resetStopGuard(sessionId);
+    emitAudit2(deps.audit, {
+      session_id: sessionId,
+      tool: normalized,
+      hook_event: "enforce",
+      verdict: result.verdict,
+      applied_rule: result.appliedRule,
+      ts
+    });
+    const output2 = {
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: permissionDecision2,
+        ...result.reason ? { permissionDecisionReason: result.reason } : {}
+      }
+    };
+    ctx.reply(200, output2);
+    return;
+  }
+  const bundleRevision = deps.getBundleRevision?.() ?? "";
+  const tenantId = deps.tenantId ?? "";
+  const gateDeps = {
+    store: deps.sessions,
+    remoteClient: deps.engine,
+    localOpa,
+    grail: deps.grail,
+    config: deps.config,
+    hookEvent: "enforce"
+  };
+  const gateResult = await runGate(
+    {
+      sessionId,
+      tool: normalized,
+      rawTool: rawToolName,
+      phase: "enforce",
+      // Fix 4: per-args cache key + args-aware catastrophic match honored
+      // inside the gate (before its cache lookup) for MCP tools too.
+      argsHash: hashArgs(toolInput),
+      catastrophicInput: catastrophic,
+      tenantId,
+      bundleRevision,
+      // Identity enrichment: harness literal + daemon-resolved identity.
+      // Registered harness ('codex' default, 'cursor' via the launcher seam);
+      // a whitelisted shim stamp overrides (plan D3).
+      agentName: harness,
+      userId: deps.userId,
+      aiAppId: deps.aiAppId,
+      department: deps.department,
+      environment: deps.environment
+    },
+    gateDeps
+  );
+  if (deps.audit) {
+    emitAudit2(deps.audit, {
+      session_id: sessionId,
+      tool: normalized,
+      hook_event: "enforce",
+      verdict: gateResult.verdict,
+      applied_rule: gateResult.appliedRule,
+      ts: (/* @__PURE__ */ new Date()).toISOString()
+    });
+  }
+  const permissionDecision = verdictToPermission2(gateResult.verdict, harness);
+  const output = {
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision,
+      ...gateResult.reason ? { permissionDecisionReason: gateResult.reason } : {}
+    }
+  };
+  ctx.reply(200, output);
+}
+function makeEvidenceHandler2(deps) {
+  return async (ctx) => {
+    const body = ctx.body;
+    const sessionId = str2(body?.session_id) ?? "unknown";
+    const rawToolName = str2(body?.tool_name) ?? "";
+    const { normalized } = normalizeToolName2(rawToolName);
+    const toolResponse = body?.tool_response;
+    const pii = deps.piiSignal(toolResponse);
+    const ts = (/* @__PURE__ */ new Date()).toISOString();
+    if (pii.found) {
+      const action2 = { tool: normalized, phase: "evidence", verdict: "BLOCK", ts };
+      deps.sessions.recordAction(sessionId, action2);
+      deps.sessions.resetStopGuard(sessionId);
+      emitAudit2(deps.audit, {
+        session_id: sessionId,
+        tool: normalized,
+        hook_event: "evidence",
+        verdict: "BLOCK",
+        applied_rule: "pii_hard_violation",
+        ts
+      });
+      const output = {
+        decision: "block",
+        reason: `PII detected in tool response (${pii.count} item${pii.count !== 1 ? "s" : ""})`
+      };
+      ctx.reply(200, output);
+      return;
+    }
+    const action = { tool: normalized, phase: "evidence", verdict: "ALLOW", ts };
+    deps.sessions.recordAction(sessionId, action);
+    deps.sessions.resetStopGuard(sessionId);
+    emitAudit2(deps.audit, {
+      session_id: sessionId,
+      tool: normalized,
+      hook_event: "evidence",
+      verdict: "ALLOW",
+      ts
+    });
+    ctx.reply(200, {});
+  };
+}
+function makeVerifyHandler2(deps) {
+  return async (ctx) => {
+    const body = ctx.body;
+    const sessionId = str2(body?.session_id) ?? "unknown";
+    const ts = (/* @__PURE__ */ new Date()).toISOString();
+    const hasMismatch = false;
+    if (hasMismatch && deps.sessions.shouldBlockStop(sessionId)) {
+      emitAudit2(deps.audit, {
+        session_id: sessionId,
+        tool: "__stop__",
+        hook_event: "verify",
+        verdict: "BLOCK",
+        applied_rule: "verify_mismatch",
+        ts
+      });
+      const output = {
+        decision: "block",
+        reason: "Claimed tool usage does not match observed actions. Please verify."
+      };
+      ctx.reply(200, output);
+      return;
+    }
+    emitAudit2(deps.audit, {
+      session_id: sessionId,
+      tool: "__stop__",
+      hook_event: "verify",
+      verdict: "ALLOW",
+      applied_rule: "verify_release",
+      ts
+    });
+    ctx.reply(200, {});
+  };
+}
+var ASK_CAPABLE = /* @__PURE__ */ new Set(["claude", "cursor", "antigravity"]);
+function verdictToPermission2(verdict, harness = "codex") {
+  switch (verdict) {
+    case "ALLOW":
+      return "allow";
+    case "BLOCK":
+      return "deny";
+    case "ESCALATE":
+      return ASK_CAPABLE.has(harness) ? "ask" : "deny";
+    // no native ask → fail-CLOSED deny
+    default:
+      return "deny";
+  }
+}
+function registerCodexHooks(handle, deps, opts = {}) {
+  const registeredHarness = opts.registeredHarness ?? "codex";
+  handle.registerHookHandler("screen", makeScreenHandler2(deps, registeredHarness));
+  handle.registerHookHandler("enforce", makeEnforceHandler2(deps, registeredHarness));
+  handle.registerHookHandler("evidence", makeEvidenceHandler2(deps));
+  handle.registerHookHandler("verify", makeVerifyHandler2(deps));
+}
+
+// arbiter-cursor/plugin/lib/daemon-paths.mjs
+import { join as join7 } from "node:path";
+import { homedir as homedir5 } from "node:os";
+function resolveDataDir(env = process.env) {
+  const fromEnv = typeof env.ARBITER_DATA_DIR === "string" ? env.ARBITER_DATA_DIR.trim() : "";
+  if (fromEnv) return fromEnv;
+  return join7(homedir5(), ".config", "arbiter");
+}
+
+// arbiter-cursor/plugin/monitor/launch.mjs
 var __dirname = dirname3(fileURLToPath(import.meta.url));
 var { values: argv } = parseArgs({
   args: process.argv.slice(2),
@@ -34094,14 +34467,11 @@ var { values: argv } = parseArgs({
   },
   strict: false
 });
-var dataDir = argv["data-dir"] ?? process.env.CLAUDE_PLUGIN_DATA ?? join7(homedir5(), ".config", "arbiter", "plugin-data");
-var host = argv["host"] ?? process.env.CLAUDE_PLUGIN_OPTION_HOST ?? "https://app.langguard.ai";
-var apiToken = process.env.CLAUDE_PLUGIN_OPTION_API_TOKEN ?? "";
-var enforcementMode = (argv["enforcement-mode"] ?? process.env.CLAUDE_PLUGIN_OPTION_ENFORCEMENT_MODE) === "strict" ? "strict" : "cooperative";
+var dataDir = argv["data-dir"] ?? resolveDataDir(process.env);
 var opaBinName = process.platform === "win32" ? "opa.exe" : "opa";
-var opaPath = argv["opa-path"] ? join7(dirname3(argv["opa-path"]), opaBinName) : join7(dataDir, "bin", opaBinName);
+var opaPath = argv["opa-path"] ? join8(dirname3(argv["opa-path"]), opaBinName) : join8(dataDir, "bin", opaBinName);
 mkdirSync6(dataDir, { recursive: true });
-var logFile = join7(dataDir, "arbiter-monitor.log");
+var logFile = join8(dataDir, "arbiter-monitor.log");
 function log(msg) {
   try {
     appendFileSync(logFile, `[${(/* @__PURE__ */ new Date()).toISOString()}] ${msg}
@@ -34114,11 +34484,6 @@ console.info = (...a) => log(a.map(String).join(" "));
 console.debug = (...a) => log(a.map(String).join(" "));
 console.warn = (...a) => log(a.map(String).join(" "));
 console.error = (...a) => log(a.map(String).join(" "));
-if (!apiToken) {
-  log(
-    "WARNING: CLAUDE_PLUGIN_OPTION_API_TOKEN is empty (sensitive userConfig not injected \u2014 e.g. anthropics/claude-code#62442). Daemon will bind so hooks stay non-blocking, but remote sync/verdict/audit will fail-open until a token is available."
-  );
-}
 var config;
 try {
   config = loadConfig();
@@ -34126,13 +34491,21 @@ try {
   log(`config load failed (running on defaults): ${String(e?.message ?? e)}`);
   config = DEFAULT_CONFIG;
 }
+var host = argv["host"] ?? resolveServerHost(config, process.env);
+var apiToken = resolveServerApiKey(config, process.env) ?? "";
+var enforcementMode = argv["enforcement-mode"] === "strict" || config.enforcementMode === "strict" || process.env.ARBITER_ENFORCE === "1" ? "strict" : "cooperative";
+if (!apiToken) {
+  log(
+    "WARNING: no LangGuard API key resolved (env LANGGUARD_API_KEY / config.yaml apiKey). Daemon will bind so hooks stay non-blocking, but remote sync/verdict/audit will fail-open until a key is configured (config heredoc on the Arbiter Hooks page)."
+  );
+}
 try {
   installGlobalProxyDispatcher();
 } catch (e) {
   log(`proxy dispatcher init failed (continuing): ${String(e)}`);
 }
 var checksums = JSON.parse(
-  readFileSync5(join7(__dirname, "..", "opa", "opa-checksums.json"), "utf8")
+  readFileSync5(join8(__dirname, "..", "opa", "opa-checksums.json"), "utf8")
 );
 async function download(url) {
   const res = await fetch(url, { redirect: "follow" });
@@ -34147,6 +34520,38 @@ var ensureOpa = async () => {
     return null;
   }
 };
+async function registerArbiterCursorHooks(opts) {
+  const wireLog = opts.log ?? log;
+  const env = opts.env ?? process.env;
+  const { engine, localOpa, grail, serverUrl, tokenProvider } = buildRemoteWiring(opts);
+  grail.start();
+  const identity = resolveArbiterIdentity(env);
+  registerCodexHooks(
+    opts.handle,
+    {
+      engine,
+      sessions: opts.store,
+      config: opts.config,
+      piiSignal: () => ({ found: false, count: 0 }),
+      // ARBITER-INTERIM: parity with wire-claude-hooks
+      localOpa,
+      grail,
+      getBundleRevision: () => opts.lockfile.bundle_revision,
+      tenantId: env["ARBITER_TENANT_ID"] ?? "",
+      userId: identity.userId,
+      aiAppId: identity.aiAppId,
+      department: identity.department,
+      environment: identity.environment
+    },
+    { registeredHarness: "cursor" }
+  );
+  wireLog(`[arbiter] Cursor hooks registered (shared CC-shaped adapter, server: ${serverUrl})`);
+  process.once("beforeExit", () => {
+    grail.stop().catch(() => {
+    });
+  });
+  return { serverUrl, tokenProvider, stop: () => grail.stop() };
+}
 var portOverride = Number(process.env.ARBITER_HOOK_DAEMON_PORT) || void 0;
 var monitor;
 try {
@@ -34159,9 +34564,15 @@ try {
     ...portOverride ? { port: portOverride } : {},
     env: process.env,
     log,
-    // loadConfig: reuse the launcher's loaded-or-defaulted config (FIX-0 — see above);
-    // the real loader must never run again after the port is bound.
-    deps: { ensureOpaBinary: ensureOpa, loadConfig: () => config }
+    deps: {
+      ensureOpaBinary: ensureOpa,
+      registerArbiterClaudeHooks: registerArbiterCursorHooks,
+      // FIX-0 (crash-loop → frozen opaProvisioning:true): reuse the config THIS launcher
+      // already loaded-or-defaulted above. assembleMonitor must never re-invoke the real
+      // loader — a malformed config.yaml would throw AFTER the port is bound and the
+      // warming state is written, wedging the shim grace table into permanent fail-open.
+      loadConfig: () => config
+    }
   });
   log(`monitor assembled: mode=${monitor.mode} port=${monitor.port}`);
 } catch (e) {
