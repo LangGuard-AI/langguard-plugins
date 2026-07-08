@@ -25535,7 +25535,7 @@ function buildOtlpPayload(records) {
   const logRecords = records.map((r) => ({
     timeUnixNano: String(BigInt(new Date(r.ts).getTime()) * 1000000n),
     observedTimeUnixNano: String(BigInt(Date.now()) * 1000000n),
-    severityNumber: r.verdict === "BLOCK" ? 17 : r.verdict === "ESCALATE" ? 13 : 9,
+    severityNumber: r.verdict === "BLOCK" ? 17 : r.verdict === "ASK" ? 13 : 9,
     severityText: r.verdict,
     body: { stringValue: JSON.stringify({ verdict: r.verdict, tool: r.tool, reason: r.reason }) },
     attributes: [
@@ -25581,7 +25581,7 @@ var init_grail_reporter = __esm({
       batchSize;
       dispatcher;
       log;
-      // Priority lane: BLOCK + ESCALATE (never dropped before ALLOWs)
+      // Priority lane: BLOCK + ASK (never dropped before ALLOWs)
       priorityQueue = [];
       // Normal lane: ALLOW events (ring buffer — oldest dropped on overflow)
       allowRing = [];
@@ -25609,7 +25609,7 @@ var init_grail_reporter = __esm({
         const n = (this.seqBySession.get(record.session_id) ?? 0) + 1;
         this.seqBySession.set(record.session_id, n);
         record.seq = n;
-        if (record.verdict === "BLOCK" || record.verdict === "ESCALATE") {
+        if (record.verdict === "BLOCK" || record.verdict === "ASK") {
           this.priorityQueue.push(record);
         } else {
           if (this.allowRing.length >= this.ringBufferSize) {
@@ -25635,7 +25635,7 @@ var init_grail_reporter = __esm({
        * Stop the flush timer and FULLY drain the buffered tail (§2d — monitor teardown).
        *
        * The old stop() flushed a SINGLE batch (≤batchSize=50), so a monitor torn down at
-       * session end silently lost any BLOCK/ESCALATE tail beyond the first 50 records. This
+       * session end silently lost any BLOCK/ASK tail beyond the first 50 records. This
        * loops flushAsync() until both lanes are empty, bounded by ≤5s / ≤1000 iterations, and
        * breaks early on no-progress (no credential / persistent network failure) so it never
        * busy-spins. The tail may still be lost on a genuinely-unreachable server (best-effort),
@@ -25743,10 +25743,10 @@ var init_grail_reporter = __esm({
         }
       }
       // ── Diagnostics ─────────────────────────────────────────────────────────────
-      /** Re-queue a failed batch, keeping ALLOW records in the ring (bounded) and BLOCK/ESCALATE in priority. */
+      /** Re-queue a failed batch, keeping ALLOW records in the ring (bounded) and BLOCK/ASK in priority. */
       requeueBatch(batch) {
         for (const rec of batch) {
-          if (rec.verdict === "BLOCK" || rec.verdict === "ESCALATE") {
+          if (rec.verdict === "BLOCK" || rec.verdict === "ASK") {
             this.priorityQueue.unshift(rec);
           } else {
             if (this.allowRing.length >= this.ringBufferSize) {
@@ -25959,7 +25959,7 @@ function composeVerdict(input) {
     mode
   } = input;
   if (engineUnreachable) {
-    return { verdict: "ESCALATE", reason: "Policy engine unreachable", appliedRule: "engine_unreachable" };
+    return { verdict: "ASK", reason: "Policy engine unreachable", appliedRule: "engine_unreachable" };
   }
   if (isCatastrophic) {
     return { verdict: "BLOCK", reason: "Tool matches catastrophic deny-list", appliedRule: "catastrophic_deny_list" };
@@ -25979,16 +25979,16 @@ function composeVerdict(input) {
     if (mode === "enforce") {
       return { verdict: "BLOCK", reason: "Critical-risk tool in enforce mode", appliedRule: "scope_critical" };
     }
-    return { verdict: "ESCALATE", reason: "Critical-risk tool requires human review", appliedRule: "scope_critical" };
+    return { verdict: "ASK", reason: "Critical-risk tool requires human review", appliedRule: "scope_critical" };
   }
   if (scope_tier === "high") {
-    return { verdict: "ESCALATE", reason: "High-risk tool requires human review", appliedRule: "scope_high" };
+    return { verdict: "ASK", reason: "High-risk tool requires human review", appliedRule: "scope_high" };
   }
   if (approval_status === "not_approved" || approval_status === "unresolved") {
-    return { verdict: "ESCALATE", reason: "Tool is not approved", appliedRule: "not_approved" };
+    return { verdict: "ASK", reason: "Tool is not approved", appliedRule: "not_approved" };
   }
   if (scope_tier === "medium" && approval_status !== "approved") {
-    return { verdict: "ESCALATE", reason: "Medium-risk tool requires approval", appliedRule: "scope_medium_not_approved" };
+    return { verdict: "ASK", reason: "Medium-risk tool requires approval", appliedRule: "scope_medium_not_approved" };
   }
   if (approval_status === "approved" && (scope_tier === "low" || scope_tier === "medium" || scope_tier === null)) {
     return { verdict: "ALLOW", appliedRule: "approved_low_risk" };
@@ -25997,7 +25997,7 @@ function composeVerdict(input) {
   if (hasOnlyNotifyViolations && approval_status === "approved") {
     return { verdict: "ALLOW", appliedRule: "notify_only" };
   }
-  return { verdict: "ESCALATE", reason: "No rule matched; defaulting to ESCALATE", appliedRule: "default_escalate" };
+  return { verdict: "ASK", reason: "No rule matched; defaulting to ASK", appliedRule: "default_ask" };
 }
 var init_verdict_composer = __esm({
   "arbiter-core/src/decision/verdict-composer.ts"() {
@@ -30136,9 +30136,9 @@ var init_schema = __esm({
       gateMatcher: external_exports.string().min(1).default("mcp__*"),
       /**
        * What verdict to return when the policy engine returns an unknown/unexpected
-       * status. ESCALATE is the fail-CLOSED default — never silent ALLOW.
+       * status. ASK is the fail-CLOSED default — never silent ALLOW.
        */
-      unknownVerdict: external_exports.enum(["ALLOW", "BLOCK", "ESCALATE"]).default("ESCALATE"),
+      unknownVerdict: external_exports.enum(["ALLOW", "BLOCK", "ASK"]).default("ASK"),
       /**
        * Failure posture — how the enforce path behaves when it CANNOT get a fresh
        * authoritative verdict (revoked/expired credential, or — at the shim — a
@@ -30149,7 +30149,7 @@ var init_schema = __esm({
        *    daemon or a bad key never bricks a session. Genuine engine-unreachable and a
        *    wedged-but-alive daemon still fail CLOSED.
        *  - 'strict': hard-enforce. A no-credential/401 fails CLOSED (routed to the same
-       *    ESCALATE path as engine-unreachable — never a silent ALLOW), and the shim
+       *    ASK path as engine-unreachable — never a silent ALLOW), and the shim
        *    treats a dead/never-started daemon (past a bounded cold-start grace) as a
        *    BLOCK. Recommended default for managed/enterprise rollout. Trade-off: if the
        *    daemon genuinely cannot start (no Node, OPA download fails) the user is
@@ -30181,7 +30181,7 @@ var init_schema = __esm({
       ]),
       /**
        * Maximum size of the GRAIL audit ring-buffer (ALLOW events).
-       * BLOCK/ESCALATE go to the priority lane and are never dropped before ALLOWs.
+       * BLOCK/ASK go to the priority lane and are never dropped before ALLOWs.
        */
       grailRingBufferSize: external_exports.number().int().min(1).max(1e4).default(500),
       /**
@@ -30313,13 +30313,13 @@ async function runGate(input, deps) {
       deps.onNoCredential?.();
       if (deps.config.enforcementMode === "strict") {
         const out4 = {
-          verdict: "ESCALATE",
-          reason: "No arbiter credential (strict enforcement) \u2014 cannot verify; escalating",
+          verdict: "ASK",
+          reason: "No arbiter credential (strict enforcement) \u2014 cannot verify; asking the human",
           appliedRule: "no_credential_fail_closed",
           evaluated: "error",
           violations: []
         };
-        recordAndAudit(input, "ESCALATE", out4.appliedRule, out4, store, grail ?? null, hookEvent, ts);
+        recordAndAudit(input, "ASK", out4.appliedRule, out4, store, grail ?? null, hookEvent, ts);
         return out4;
       }
       const out3 = {
@@ -30554,8 +30554,8 @@ function makeScreenHandler(deps) {
     if (contextResult.banned.length > 0) {
       lines.push(`BLOCKED tools (do NOT call): ${contextResult.banned.join(", ")}`);
     }
-    if (contextResult.requires_escalation.length > 0) {
-      lines.push(`ESCALATE-required tools (human approval needed): ${contextResult.requires_escalation.join(", ")}`);
+    if (contextResult.requires_ask.length > 0) {
+      lines.push(`ASK-required tools (human approval needed): ${contextResult.requires_ask.join(", ")}`);
     }
     const { posture } = contextResult;
     const postureItems = [];
@@ -30590,7 +30590,7 @@ function makeEnforceHandler(deps) {
         hookSpecificOutput: {
           hookEventName: "PreToolUse",
           permissionDecision: "ask",
-          permissionDecisionReason: "Arbiter internal error \u2014 escalating to human (fail-CLOSED)"
+          permissionDecisionReason: "Arbiter internal error \u2014 asking the human (fail-CLOSED)"
         }
       };
       if (!ctx.req.socket?.destroyed) {
@@ -30611,7 +30611,7 @@ async function enforceInner(ctx, deps, localOpa) {
       session_id: sessionId,
       tool: normalized || rawToolName,
       hook_event: "enforce",
-      verdict: "ESCALATE",
+      verdict: "ASK",
       applied_rule: "malformed_mcp_name",
       ts
     });
@@ -30619,7 +30619,7 @@ async function enforceInner(ctx, deps, localOpa) {
       hookSpecificOutput: {
         hookEventName: "PreToolUse",
         permissionDecision: "ask",
-        permissionDecisionReason: `Malformed MCP tool name "${rawToolName}" \u2014 escalating to human`
+        permissionDecisionReason: `Malformed MCP tool name "${rawToolName}" \u2014 asking the human`
       }
     };
     ctx.reply(200, output2);
@@ -30819,7 +30819,7 @@ function verdictToPermission(verdict) {
       return "allow";
     case "BLOCK":
       return "deny";
-    case "ESCALATE":
+    case "ASK":
       return "ask";
     default:
       return "ask";
@@ -30971,7 +30971,7 @@ function makeStubEngine() {
     async verdict(req) {
       const isLikelyMcp = req.tool.includes(".");
       return {
-        verdict: isLikelyMcp ? "ESCALATE" : "ALLOW",
+        verdict: isLikelyMcp ? "ASK" : "ALLOW",
         reason: isLikelyMcp ? "stub: unresolved MCP tool (ARBITER_STUB_SERVER=1)" : void 0,
         violations: [],
         bundle_revision: "stub",
@@ -30982,9 +30982,9 @@ function makeStubEngine() {
       return {
         bundle_revision: "stub",
         banned: [],
-        requires_escalation: [],
+        requires_ask: [],
         posture: { compliance_regimes: [], enforce_not_approved: false, scope_default_tier: "low" },
-        guardrails: ["Stub mode \u2014 all MCP tools escalate to human approval"]
+        guardrails: ["Stub mode \u2014 all MCP tools ask for human approval"]
       };
     }
   };
@@ -33655,7 +33655,7 @@ init_schema();
 // arbiter-core/src/config/tighten-only.ts
 var VERDICT_RANK = {
   ALLOW: 0,
-  ESCALATE: 1,
+  ASK: 1,
   BLOCK: 2
 };
 function stricter(a, b) {

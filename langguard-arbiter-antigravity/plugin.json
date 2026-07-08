@@ -1,7 +1,7 @@
 {
   "name": "langguard-arbiter",
   "version": "0.1.0",
-  "description": "LangGuard Arbiter — in-harness agent policy enforcement for Google Antigravity. Gates every MCP tool call against your LangGuard tenant policies at the PreToolUse seam: deterministic ALLOW / DENY / FORCE-ASK (ESCALATE renders Antigravity's force_ask prompt, which always asks and ignores cached Always-Allow grants), plus a best-effort catastrophic-command deny on native shell. Runs a session-local policy daemon on 127.0.0.1:52746 (shared with the LangGuard Claude Code / Codex / Cursor plugins) and downloads a SHA-256-pinned OPA binary on first use. No LLM in the enforcement loop.",
+  "description": "LangGuard Arbiter — in-harness agent policy enforcement for Google Antigravity. Gates every MCP tool call against your LangGuard tenant policies at the PreToolUse seam: deterministic ALLOW / DENY / FORCE-ASK (ASK renders Antigravity's force_ask prompt, which always asks and ignores cached Always-Allow grants), plus a best-effort catastrophic-command deny on native shell. Runs a session-local policy daemon on 127.0.0.1:52746 (shared with the LangGuard Claude Code / Codex / Cursor plugins) and downloads a SHA-256-pinned OPA binary on first use. No LLM in the enforcement loop.",
   "author": {
     "name": "LangGuard",
     "url": "https://langguard.ai"

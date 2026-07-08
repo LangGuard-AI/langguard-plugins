@@ -20,7 +20,7 @@
     {
       "name": "langguard-arbiter",
       "source": "./langguard-arbiter",
-      "description": "In-harness agent policy enforcement. Screens, enforces, and evidences every MCP tool call at the pre-action seam (PreToolUse) against your LangGuard policies — deterministic ALLOW / DENY / ESCALATE via a session-local policy daemon, no LLM in the enforcement loop. Requires Claude Code v2.1.105+ and Node.js on PATH.",
+      "description": "In-harness agent policy enforcement. Screens, enforces, and evidences every MCP tool call at the pre-action seam (PreToolUse) against your LangGuard policies — deterministic ALLOW / DENY / ASK via a session-local policy daemon, no LLM in the enforcement loop. Requires Claude Code v2.1.105+ and Node.js on PATH.",
       "category": "ai-governance",
       "tags": ["governance", "policy", "enforcement", "security", "compliance", "mcp"]
     }

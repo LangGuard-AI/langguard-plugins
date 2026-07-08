@@ -7,7 +7,7 @@ description: Verify (and if needed walk the user through) LangGuard Arbiter setu
 
 You are helping the user finish setting up the LangGuard Arbiter plugin for Google
 Antigravity. Arbiter enforces the user's LangGuard tenant policies on every MCP tool
-call (ALLOW / DENY / ESCALATE — ESCALATE surfaces as Antigravity's `force_ask`
+call (ALLOW / DENY / ASK — ASK surfaces as Antigravity's `force_ask`
 approval prompt, which always asks, even when an Always-Allow grant is cached).
 
 **HARD RULE — the API key never touches this chat.** Do NOT ask the user for their
@@ -72,7 +72,7 @@ After the user confirms:
    - Installed plugin version (from `plugin.json`) + how to update (re-run the install)
    - Enforcement mode: cooperative or strict
    - What they get: deterministic **ALLOW / DENY / FORCE-ASK** on every MCP tool call
-     (ESCALATE-tier tools trigger Antigravity's `force_ask` prompt — it always asks,
+     (ASK-tier tools trigger Antigravity's `force_ask` prompt — it always asks,
      ignoring cached Always-Allow grants), best-effort catastrophic-command deny on
      native shell (never full shell enforcement; the browser tool is not verified
      gated), and audit evidence in their LangGuard tenant.

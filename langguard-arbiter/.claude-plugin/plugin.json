@@ -1,7 +1,7 @@
 {
   "name": "langguard-arbiter",
   "version": "0.1.0",
-  "description": "LangGuard Arbiter — in-harness agent policy enforcement for Claude Code. Screens, enforces, and evidences every MCP tool call against your LangGuard policies at the pre-action seam (PreToolUse). Deterministic ALLOW / DENY / ESCALATE — no LLM in the enforcement loop.",
+  "description": "LangGuard Arbiter — in-harness agent policy enforcement for Claude Code. Screens, enforces, and evidences every MCP tool call against your LangGuard policies at the pre-action seam (PreToolUse). Deterministic ALLOW / DENY / ASK — no LLM in the enforcement loop.",
   "author": {
     "name": "LangGuard",
     "url": "https://langguard.ai"
