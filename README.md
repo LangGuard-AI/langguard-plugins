@@ -21,9 +21,9 @@ This marketplace ships:
 - **`langguard-arbiter`** (OpenAI Codex) — the same enforcement plugin, built for
   Codex ([see below](#langguard-arbiter-on-openai-codex)).
 - **`langguard-arbiter`** (Cursor) — the same enforcement plugin, built for
-  Cursor with native Ask on ESCALATE ([see below](#langguard-arbiter-on-cursor)).
+  Cursor, where the ASK verdict uses its native Ask prompt ([see below](#langguard-arbiter-on-cursor)).
 - **`langguard-arbiter`** (Google Antigravity) — the same enforcement plugin,
-  built for Antigravity with ESCALATE rendered as its `force_ask` approval
+  built for Antigravity with the ASK verdict rendered as its `force_ask` approval
   prompt ([see below](#langguard-arbiter-on-google-antigravity)).
 
 ## What you get
@@ -106,7 +106,7 @@ LangGuard policies — no LLM in the enforcement loop.
 ## What you get
 
 - **A `PreToolUse` enforcement hook** on `mcp__*` tool calls — deterministic
-  **ALLOW / DENY / ESCALATE** against your active policies.
+  **ALLOW / DENY / ASK** against your active policies.
 - **Screen / evidence / verify hooks** (SessionStart, PostToolUse, Stop) for advisory
   context and a best-effort audit trail.
 - **A background `monitor`** hosting a **session-local policy daemon** on `127.0.0.1`:
@@ -230,9 +230,9 @@ blocks with the same actionable reason.
 
 ## How enforcement behaves
 
-- On `mcp__*` calls the hook returns **allow / deny**. **ESCALATE collapses to
+- On `mcp__*` calls the hook returns **allow / deny**. **ASK collapses to
   DENY** — Codex has no interactive approval ("ask") path from a hook; the deny
-  reason tells the agent that escalation and approval happen in LangGuard.
+  reason tells the agent that approval happens in LangGuard.
 - **Cooperative** (default): fails OPEN with a warning while the daemon is warming
   up, never started, or your key is missing/revoked — a fresh session is never
   locked out.
@@ -260,13 +260,13 @@ self-describing `langguard-arbiter-cursor/` plugin directory in this repo (a Cur
 plugin is discovered by its `.cursor-plugin/plugin.json`; there is no repo-level
 registration file for Cursor). Same plugin name, same one-key config, same muscle
 memory as the Claude Code and Codex installs — plus the piece the Codex port cannot
-offer: **ESCALATE surfaces as Cursor's native Ask approval prompt**.
+offer: **the ASK verdict surfaces as Cursor's native Ask approval prompt**.
 
 ## What you get
 
 - **A `beforeMCPExecution` enforcement hook** on every MCP tool call — deterministic
   **ALLOW / DENY / ASK** against your active LangGuard policies, no LLM in the
-  enforcement loop. ESCALATE-tier verdicts trigger Cursor's native Ask dialog so a
+  enforcement loop. ASK-tier verdicts trigger Cursor's native Ask dialog so a
   human approves or rejects in-flow.
 - **A `beforeShellExecution` backstop** — best-effort catastrophic-command deny on
   native shell (works even with the local daemon down); full shell policy evaluation
@@ -333,8 +333,8 @@ actionable reason).
 
 ## How enforcement behaves
 
-- On MCP calls the hook returns **allow / deny / ask** — ESCALATE maps to Cursor's
-  native Ask prompt, so escalation is resolved by a human in the session rather
+- On MCP calls the hook returns **allow / deny / ask** — the ASK verdict maps to Cursor's
+  native Ask prompt, so it is resolved by a human in the session rather
   than collapsing to deny (the Codex limitation does not apply here).
 - **Cooperative** (default): fails OPEN with a warning while the daemon is warming
   up, never started, or your key is missing/revoked — a fresh session is never
@@ -373,7 +373,7 @@ and the `agy` CLI). Antigravity has no plugin marketplace: the self-describing
 `langguard-arbiter-antigravity/` directory in this repo *is* the plugin — install it
 with the `agy` CLI or by dropping the folder into Antigravity's plugins directory
 (no repo-level registration file). Same plugin name, same one-key config, same
-muscle memory as the other installs — and **ESCALATE surfaces as Antigravity's
+muscle memory as the other installs — and **the ASK verdict surfaces as Antigravity's
 `force_ask` approval prompt**, which always asks, even when an Always-Allow grant
 is cached (that is the point: policy requires a human to look at this exact call).
 
@@ -385,7 +385,7 @@ until the pre-launch live-verify pass completes.
 - **A `PreToolUse` enforcement hook** on every tool call (the matcher is `*` on
   purpose — one event covers MCP, shell, and everything else, and the hook
   classifies) — deterministic **ALLOW / DENY / FORCE-ASK** against your active
-  LangGuard policies, no LLM in the enforcement loop. ESCALATE-tier verdicts render
+  LangGuard policies, no LLM in the enforcement loop. ASK-tier verdicts render
   Antigravity's `force_ask` prompt so a human approves or rejects in-flow.
 - **A best-effort catastrophic-command deny on native shell** (works even with the
   local daemon down); it is a backstop, not full shell governance.
@@ -460,9 +460,9 @@ with an actionable reason).
 
 ## How enforcement behaves
 
-- On MCP calls the hook returns **allow / deny / force_ask** — ESCALATE maps to
+- On MCP calls the hook returns **allow / deny / force_ask** — the ASK verdict maps to
   Antigravity's `force_ask` prompt, which always asks and ignores cached
-  Always-Allow grants, so escalation is resolved by a human in the session rather
+  Always-Allow grants, so it is resolved by a human in the session rather
   than collapsing to deny (the Codex limitation does not apply here).
 - **Cooperative** (default): fails OPEN with a warning while the daemon is warming
   up, never started, or your key is missing/revoked — a fresh session is never
@@ -489,7 +489,7 @@ folder) and restarting your session; whether `agy` upgrades strictly in place is
 pending live verification. The `setup-arbiter` skill reports the installed plugin
 version, so you can check what a machine is actually running. If you run several
 harness plugins on one machine, update them together — a stale **Codex- or
-shell-owned** sibling daemon fails an Antigravity ESCALATE closed (deny, never
+shell-owned** sibling daemon fails an Antigravity ASK closed (deny, never
 allow) instead of rendering `force_ask` (its whitelist predates `antigravity`,
 so the stamp falls back to its own non-ask-capable harness). Claude- and
 Cursor-owned siblings render `force_ask` even when stale.

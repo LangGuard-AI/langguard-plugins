@@ -6,7 +6,7 @@ description: Verify (and if needed walk the user through) LangGuard Arbiter setu
 
 You are helping the user finish setting up the LangGuard Arbiter plugin for Cursor.
 Arbiter enforces the user's LangGuard tenant policies on every MCP tool call
-(ALLOW / DENY / ESCALATE — ESCALATE surfaces as Cursor's native Ask prompt).
+(ALLOW / DENY / ASK — ASK surfaces as Cursor's native Ask prompt).
 
 **HARD RULE — the API key never touches this chat.** Do NOT ask the user for their
 LangGuard API key, do NOT accept one if they paste it, and do NOT write a key into any
@@ -59,7 +59,7 @@ After the user confirms:
    - Daemon: healthy / not yet running
    - Enforcement mode: cooperative or strict
    - What they get: deterministic **ALLOW / DENY / ASK** on every MCP tool call
-     (ESCALATE-tier tools trigger Cursor's native Ask approval prompt), best-effort
+     (ASK-tier tools trigger Cursor's native Ask approval prompt), best-effort
      catastrophic-command deny on native shell, and audit evidence in their
      LangGuard tenant.
 

@@ -148,7 +148,7 @@ function shapeEnforceResult(daemonResponse) {
   if (decision === "allow") return { stdout: "", stderr: "", exitCode: 0 };
   let reason = typeof hso?.permissionDecisionReason === "string" ? hso.permissionDecisionReason : void 0;
   if (raw === "ask") {
-    const note = "Escalation happens in LangGuard \u2014 denied here (Codex has no interactive approval path). Ask an admin to approve this tool in LangGuard, then retry.";
+    const note = "Approval happens in LangGuard \u2014 denied here (Codex has no interactive approval path). Ask an admin to approve this tool in LangGuard, then retry.";
     reason = reason ? `${reason} ${note}` : note;
   }
   const out = {

@@ -259,11 +259,11 @@ function denyEnvelope(reason, contract) {
   }
   return JSON.stringify({ decision: "deny", reason });
 }
-function escalateEnvelope(reason, contract) {
+function askEnvelope(reason, contract) {
   if (contract === "legacy-allow-tool") {
     return JSON.stringify({
       allow_tool: false,
-      deny_reason: `${reason} (ESCALATE coerced to DENY \u2014 this hook contract has no human-approval path)`
+      deny_reason: `${reason} (ASK coerced to DENY \u2014 this hook contract has no human-approval path)`
     });
   }
   return JSON.stringify({ decision: "force_ask", reason });
@@ -288,7 +288,7 @@ function shapeEnforceOutput(daemonResponse, opts = {}) {
   }
   if (raw === "ask") {
     const askReason = reason ?? "LangGuard Arbiter: this tool call requires human approval.";
-    return { stdout: escalateEnvelope(askReason, contract), stderr: "", exitCode: 0 };
+    return { stdout: askEnvelope(askReason, contract), stderr: "", exitCode: 0 };
   }
   const denyReason = raw === "deny" ? reason ?? "Blocked by LangGuard Arbiter" : "Arbiter daemon rendered no usable verdict \u2014 failing CLOSED.";
   return { stdout: denyEnvelope(denyReason, contract), stderr: denyReason, exitCode: 0 };
