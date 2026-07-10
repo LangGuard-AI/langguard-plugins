@@ -553,11 +553,22 @@ function readGlobalConfigText() {
     return "";
   }
 }
+var BEARER_RE = /^arbd_[0-9a-f]{64}$/;
+function readCanonicalBearer() {
+  const path = process.env.ARBITER_BEARER_FILE ?? join2(homedir2(), ".config", "arbiter", "bearer");
+  try {
+    const v = readFileSync(path, "utf8").trim();
+    return BEARER_RE.test(v) ? v : "";
+  } catch {
+    return "";
+  }
+}
 function readLockfileBearer() {
   const path = process.env.ARBITER_LOCKFILE ?? join2(homedir2(), ".config", "arbiter", "daemon.json");
   try {
     const data = JSON.parse(readFileSync(path, "utf8"));
     if (!data || typeof data.bearer !== "string" || !data.bearer) return "";
+    if (typeof data.port === "number" && data.port !== PORT) return "";
     const pid = data.pid;
     if (typeof pid !== "number" || !Number.isInteger(pid) || pid <= 0) return "";
     try {
@@ -571,10 +582,12 @@ function readLockfileBearer() {
   return "";
 }
 var configText = readGlobalConfigText();
-var resolvedToken = process.env.LANGGUARD_API_KEY?.trim() || yamlScalar(configText, "apiKey") || process.env.ARBITER_TOKEN?.trim() || readLockfileBearer();
 var TOKEN_SHAPE = /^[\x21-\x7E]+$/;
-var token = resolvedToken && TOKEN_SHAPE.test(resolvedToken) ? resolvedToken : "";
-var tokenUnusable = Boolean(resolvedToken) && !token;
+function resolveLoopbackBearer() {
+  const t = readCanonicalBearer() || readLockfileBearer();
+  return t && TOKEN_SHAPE.test(t) ? t : "";
+}
+var token = resolveLoopbackBearer();
 var ENFORCEMENT_MODE = yamlScalar(configText, "enforcementMode") === "strict" || process.env.ARBITER_ENFORCE === "1" ? "strict" : "cooperative";
 var sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function warn(msg) {
@@ -698,6 +711,7 @@ async function postHookWithRetry(hookPhase, bodyRaw, budgetMs) {
     if (backoffs[i] > 0) await sleep(backoffs[i]);
     const remaining = deadline - Date.now();
     if (remaining <= 0) break;
+    if (!token) token = resolveLoopbackBearer();
     try {
       return await postHook(hookPhase, bodyRaw, Math.min(ENFORCE_ATTEMPT_TIMEOUT_MS, remaining));
     } catch (err) {
@@ -883,11 +897,6 @@ function armKickerFromGrace() {
   if (g.category === "absent" || g.category === "no-daemon") armKicker();
 }
 async function handleEnforceMcp(translated) {
-  if (!token) {
-    warnNoCredential("enforce");
-    exitZero();
-    return;
-  }
   const bodyRaw = JSON.stringify(translated.ccBody);
   let res;
   try {
@@ -947,11 +956,6 @@ async function handleEnforceShell(translated) {
     emit(catastrophicDenyOutput(reason));
     return;
   }
-  if (!token) {
-    warnNoCredential("enforce (shell audit)");
-    exitZero();
-    return;
-  }
   const bodyRaw = JSON.stringify(translated.ccBody);
   let res;
   try {
@@ -993,18 +997,10 @@ async function retryWithLockfileBearer(bodyRaw) {
   return null;
 }
 function bearerMismatchReason() {
-  return `LangGuard Arbiter: loopback key mismatch with the daemon owning port ${PORT} \u2014 align keys (reuse ONE lgr_ key across harnesses, or set LANGGUARD_API_KEY machine-wide) or re-run setup from the Arbiter Hooks settings page.`;
-}
-function warnNoCredential(context) {
-  if (tokenUnusable) {
-    warn(
-      `${context}: the resolved LangGuard API key ("${resolvedToken.slice(0, 8)}\u2026") contains characters that cannot be sent in an Authorization header (an unedited placeholder?) \u2014 treating as NO credential, failing OPEN. Put a real lgr_ key in ~/.config/arbiter/config.yaml (see the Arbiter Hooks settings page).`
-    );
-  } else {
-    warn(`${context}: no LangGuard API key (LANGGUARD_API_KEY / config.yaml apiKey / ARBITER_TOKEN / lockfile) \u2014 failing OPEN.`);
-  }
+  return `LangGuard Arbiter: loopback bearer mismatch with the daemon owning port ${PORT} \u2014 the canonical ~/.config/arbiter/bearer (arbd_) did not match the running daemon. Restart the daemon so it republishes the shared loopback bearer, or re-run setup from the Arbiter Hooks settings page.`;
 }
 async function main() {
+  if (!token) token = resolveLoopbackBearer();
   const raw = await readStdin();
   let body;
   try {

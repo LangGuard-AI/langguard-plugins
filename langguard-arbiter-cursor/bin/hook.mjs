@@ -306,8 +306,8 @@ function pathBasename(p) {
   const idx = p.lastIndexOf("/");
   return idx >= 0 ? p.slice(idx + 1) : p;
 }
-function normalizeCommand(token2) {
-  const deescaped = token2.startsWith("\\") ? token2.slice(1) : token2;
+function normalizeCommand(token) {
+  const deescaped = token.startsWith("\\") ? token.slice(1) : token;
   return pathBasename(deescaped);
 }
 function findRealCommandIndex(argv) {
@@ -495,11 +495,24 @@ function readGlobalConfigText() {
     return "";
   }
 }
+var BEARER_SHAPE = /^arbd_[0-9a-f]{64}$/;
+var PRINTABLE_ASCII = /^[\x21-\x7E]+$/;
+function readCanonicalBearer() {
+  const path = process.env.ARBITER_BEARER_FILE ?? join2(homedir2(), ".config", "arbiter", "bearer");
+  try {
+    const raw = readFileSync(path, "utf8").trim();
+    return BEARER_SHAPE.test(raw) ? raw : "";
+  } catch {
+    return "";
+  }
+}
 function readLockfileBearer() {
   const path = process.env.ARBITER_LOCKFILE ?? join2(homedir2(), ".config", "arbiter", "daemon.json");
   try {
     const data = JSON.parse(readFileSync(path, "utf8"));
     if (!data || typeof data.bearer !== "string" || !data.bearer) return "";
+    if (!PRINTABLE_ASCII.test(data.bearer)) return "";
+    if (typeof data.port === "number" && data.port !== PORT) return "";
     const pid = data.pid;
     if (typeof pid !== "number" || !Number.isInteger(pid) || pid <= 0) return "";
     try {
@@ -512,11 +525,10 @@ function readLockfileBearer() {
   }
   return "";
 }
+function resolveLoopbackBearer() {
+  return readCanonicalBearer() || readLockfileBearer();
+}
 var configText = readGlobalConfigText();
-var resolvedToken = process.env.LANGGUARD_API_KEY?.trim() || yamlScalar(configText, "apiKey") || process.env.ARBITER_TOKEN?.trim() || readLockfileBearer();
-var TOKEN_SHAPE = /^[\x21-\x7E]+$/;
-var token = resolvedToken && TOKEN_SHAPE.test(resolvedToken) ? resolvedToken : "";
-var tokenUnusable = Boolean(resolvedToken) && !token;
 var ENFORCEMENT_MODE = yamlScalar(configText, "enforcementMode") === "strict" || process.env.ARBITER_ENFORCE === "1" ? "strict" : "cooperative";
 var sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function warn(msg) {
@@ -598,7 +610,7 @@ function readStdin() {
     });
   });
 }
-function postHook(hookPhase, bodyRaw, timeoutMs, bearer = token) {
+function postHook(hookPhase, bodyRaw, timeoutMs, bearer = "") {
   return new Promise((resolve, reject) => {
     const payload = Buffer.from(bodyRaw ?? "", "utf8");
     const req = http.request(
@@ -636,16 +648,26 @@ async function postHookWithRetry(hookPhase, bodyRaw, budgetMs) {
   const deadline = Date.now() + budgetMs;
   const backoffs = [0, 150, 300, 600];
   let lastErr;
+  let sawBearer = false;
   for (let i = 0; i < backoffs.length; i++) {
     if (backoffs[i] > 0) await sleep(backoffs[i]);
     const remaining = deadline - Date.now();
     if (remaining <= 0) break;
+    const bearer = resolveLoopbackBearer();
+    if (!bearer) continue;
+    sawBearer = true;
     try {
-      return await postHook(hookPhase, bodyRaw, Math.min(ENFORCE_ATTEMPT_TIMEOUT_MS, remaining));
+      const res = await postHook(hookPhase, bodyRaw, Math.min(ENFORCE_ATTEMPT_TIMEOUT_MS, remaining), bearer);
+      return { ...res, bearerUsed: bearer };
     } catch (err) {
       lastErr = err;
       if (!CONNECT_ERROR_CODES.has(err?.code)) throw err;
     }
+  }
+  if (!sawBearer) {
+    throw Object.assign(new Error("no loopback bearer resolved within the connect budget"), {
+      code: "ENOBEARER"
+    });
   }
   throw lastErr ?? Object.assign(new Error("daemon unreachable"), { code: "ECONNREFUSED" });
 }
@@ -759,7 +781,12 @@ async function handleAdvisory(hookPhase, translated) {
     }
   }
   try {
-    const res = await postHook(hookPhase, JSON.stringify(translated.ccBody), ADVISORY_TIMEOUT_MS);
+    const res = await postHook(
+      hookPhase,
+      JSON.stringify(translated.ccBody),
+      ADVISORY_TIMEOUT_MS,
+      resolveLoopbackBearer()
+    );
     if (res.status >= 200 && res.status < 300 && res.text) {
       let daemonResponse;
       try {
@@ -793,17 +820,16 @@ function armKickerFromGrace() {
   if (g.category === "absent" || g.category === "no-daemon") armKicker();
 }
 async function handleEnforceMcp(translated) {
-  if (!token) {
-    warnNoCredential("enforce");
-    exitWith(0);
-    return;
-  }
   const bodyRaw = JSON.stringify(translated.ccBody);
   let res;
   try {
     res = await postHookWithRetry("enforce", bodyRaw, ENFORCE_RETRY_BUDGET_MS);
-  } catch {
+  } catch (err) {
     const now = Date.now();
+    if (err?.code === "ENOBEARER") {
+      handleNoLoopbackBearer("enforce", now);
+      return;
+    }
     const state = readDaemonState();
     if (state) clearStrictMarker();
     const g = classifyGrace(state, now);
@@ -825,7 +851,7 @@ async function handleEnforceMcp(translated) {
     return;
   }
   if (res.status === 401) {
-    const retry = await retryWithLockfileBearer(bodyRaw);
+    const retry = await retryWithLockfileBearer(bodyRaw, res.bearerUsed);
     if (retry) {
       relayEnforceResponse(retry);
       return;
@@ -848,7 +874,12 @@ async function handleEnforceShell(translated) {
     const reason = "LangGuard Arbiter: this shell command matches the catastrophic deny-list \u2014 blocked by the offline backstop (no daemon required).";
     try {
       await Promise.race([
-        postHook("enforce", JSON.stringify(translated.ccBody), CATASTROPHIC_AUDIT_TIMEOUT_MS).catch(() => {
+        postHook(
+          "enforce",
+          JSON.stringify(translated.ccBody),
+          CATASTROPHIC_AUDIT_TIMEOUT_MS,
+          resolveLoopbackBearer()
+        ).catch(() => {
         }),
         sleep(CATASTROPHIC_AUDIT_TIMEOUT_MS)
       ]);
@@ -857,16 +888,16 @@ async function handleEnforceShell(translated) {
     emit(catastrophicDenyOutput(reason));
     return;
   }
-  if (!token) {
-    warnNoCredential("enforce (shell audit)");
-    exitWith(0);
-    return;
-  }
   const bodyRaw = JSON.stringify(translated.ccBody);
   let res;
   try {
     res = await postHookWithRetry("enforce", bodyRaw, ENFORCE_RETRY_BUDGET_MS);
-  } catch {
+  } catch (err) {
+    if (err?.code === "ENOBEARER") {
+      warnNoCredential("enforce (shell audit)");
+      exitWith(0);
+      return;
+    }
     armKickerFromGrace();
     warn("enforce (shell audit): daemon unreachable \u2014 failing OPEN (advisory posture; offline catastrophic backstop already ran).");
     exitWith(0);
@@ -877,7 +908,7 @@ async function handleEnforceShell(translated) {
     return;
   }
   if (res.status === 401) {
-    const retry = await retryWithLockfileBearer(bodyRaw);
+    const retry = await retryWithLockfileBearer(bodyRaw, res.bearerUsed);
     if (retry) {
       relayEnforceResponse(retry);
       return;
@@ -889,11 +920,11 @@ async function handleEnforceShell(translated) {
   warn(`enforce (shell audit): daemon reachable but returned HTTP ${res.status} \u2014 failing OPEN.`);
   exitWith(0);
 }
-async function retryWithLockfileBearer(bodyRaw) {
+async function retryWithLockfileBearer(bodyRaw, bearerUsed) {
   const lockBearer = readLockfileBearer();
-  if (!lockBearer || lockBearer === token) return null;
+  if (!lockBearer || lockBearer === bearerUsed) return null;
   warn(
-    "enforce: daemon returned 401 for the configured key \u2014 this harness's key differs from the daemon owner's loopback bearer (cross-harness key mismatch). Retrying once with the owner's published lockfile bearer (~/.config/arbiter/daemon.json)."
+    "enforce: daemon returned 401 for the canonical loopback bearer \u2014 retrying ONCE with the pid-live daemon owner's published lockfile bearer (~/.config/arbiter/daemon.json) for interim old-daemon compatibility (loopback bearer mismatch)."
   );
   try {
     const retry = await postHook("enforce", bodyRaw, ENFORCE_ATTEMPT_TIMEOUT_MS, lockBearer);
@@ -903,15 +934,26 @@ async function retryWithLockfileBearer(bodyRaw) {
   return null;
 }
 function bearerMismatchReason() {
-  return `LangGuard Arbiter: loopback key mismatch with the daemon owning port ${PORT} \u2014 align keys (reuse ONE lgr_ key across harnesses, or set LANGGUARD_API_KEY machine-wide) or re-run setup from the Arbiter Hooks settings page.`;
+  return `LangGuard Arbiter: loopback bearer mismatch with the daemon on port ${PORT} \u2014 the daemon rejected the canonical arbd_ bearer (~/.config/arbiter/bearer) and the pid-live lockfile fallback. Restart the Arbiter daemon, or re-run setup from the Arbiter Hooks settings page.`;
+}
+function noCredentialReason(context) {
+  return `LangGuard Arbiter: no loopback bearer for ${context} \u2014 the canonical daemon bearer (~/.config/arbiter/bearer) is absent and no pid-live daemon has published one (~/.config/arbiter/daemon.json).`;
 }
 function warnNoCredential(context) {
-  if (tokenUnusable) {
-    warn(
-      `${context}: the resolved LangGuard API key ("${resolvedToken.slice(0, 8)}\u2026") contains characters that cannot be sent in an Authorization header (an unedited placeholder?) \u2014 treating as NO credential, failing OPEN. Put a real lgr_ key in ~/.config/arbiter/config.yaml (see the Arbiter Hooks settings page).`
-    );
+  warn(`${noCredentialReason(context)} Failing OPEN.`);
+}
+function handleNoLoopbackBearer(context, now) {
+  const state = readDaemonState();
+  if (state) clearStrictMarker();
+  const g = classifyGrace(state, now);
+  const strict = ENFORCEMENT_MODE === "strict";
+  if (g.category === "absent" || g.category === "no-daemon") armKicker();
+  const block = strict && (g.verdict === "dead" || g.category === "no-daemon" || g.category === "absent" && strictAbsentGraceExpired(now));
+  if (block) {
+    emit(enforceDenyOutput(`${noCredentialReason(context)} (${g.reason}) \u2014 strict mode, BLOCKING (fail-CLOSED).`));
   } else {
-    warn(`${context}: no LangGuard API key (LANGGUARD_API_KEY / config.yaml apiKey / ARBITER_TOKEN / lockfile) \u2014 failing OPEN.`);
+    warnNoCredential(context);
+    exitWith(0);
   }
 }
 async function main() {
