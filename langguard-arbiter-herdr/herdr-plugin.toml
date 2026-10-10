@@ -1,0 +1,74 @@
+id                = "langguard-arbiter-herdr"
+name              = "LangGuard Arbiter Coverage"
+version           = "0.1.0"
+min_herdr_version = "0.7.5"
+description       = "Shows whether each agent pane is actually covered by LangGuard Arbiter. Observes only; it never gates a tool call."
+platforms         = ["macos", "linux"]
+
+# The plugin is one long-lived supervisor. It holds the events.subscribe stream and the
+# daemon poll, derives a posture per agent pane, and writes one metadata token per pane.
+# Everything else in this manifest exists to keep the supervisor alive or to explain it.
+#
+# Startup hooks need herdr 0.7.5, which sets min_herdr_version above.
+[[startup]]
+command = ["node", "bin/sentinel.mjs"]
+
+# The only event hook, and it is a watchdog rather than a worker. [[startup]] runs once per
+# session; nothing re-runs it if the supervisor dies mid-session. A dead supervisor matters at
+# exactly one moment: a new agent appears unwatched. The command checks a pidfile and exits,
+# because herdr caps concurrent plugin commands at 32 and discards their results.
+#
+# Event names are spelled with dots here. The JSON payload spells the same event with
+# underscores (pane_agent_detected). Both spellings are correct in their own place.
+[[events]]
+on      = "pane.agent_detected"
+command = ["node", "bin/watchdog.mjs"]
+
+# Action stdout goes only to the plugin command log, so anything the user must read has to
+# open a pane. These two actions are thin launchers for the panes declared below.
+[[actions]]
+id          = "report"
+title       = "Arbiter: coverage report"
+description = "Show Arbiter coverage for every agent pane in this session."
+contexts    = ["workspace", "pane"]
+command     = ["node", "bin/open-pane.mjs", "report"]
+
+[[actions]]
+id          = "remediate"
+title       = "Arbiter: protect this agent"
+description = "Show, and optionally run, the Arbiter install command for this pane's agent."
+contexts    = ["pane"]
+command     = ["node", "bin/open-pane.mjs", "remediate"]
+
+# Rescan needs no pane: it nudges the supervisor and confirms with a toast.
+[[actions]]
+id          = "rescan"
+title       = "Arbiter: rescan coverage"
+description = "Force an immediate coverage re-check."
+contexts    = ["workspace"]
+command     = ["node", "bin/rescan.mjs"]
+
+[[panes]]
+id          = "report"
+title       = "Arbiter coverage"
+description = "Per-pane Arbiter coverage for this session."
+placement   = "popup"
+width       = "80%"
+height      = "70%"
+command     = ["node", "bin/report.mjs"]
+
+[[panes]]
+id          = "remediate"
+title       = "Protect this agent"
+description = "Run the Arbiter installer for the agent in the selected pane."
+placement   = "popup"
+width       = "80%"
+height      = "60%"
+command     = ["node", "bin/remediate.mjs"]
+
+# No [[build]] on purpose. Build commands run on `herdr plugin install` but not on
+# `herdr plugin link`, so any build step makes the linked development copy differ from the
+# installed one. This plugin is dependency-free Node, so the source is the artifact.
+#
+# No [[link_handlers]] on purpose. Link handlers act on URLs printed into a pane, and this
+# plugin never writes into a pane's terminal content. There is nothing for one to catch.
