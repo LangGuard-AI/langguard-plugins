@@ -1,8 +1,18 @@
 {
-  "SessionStart":     [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hook.mjs\" screen" }] }],
-  "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hook.mjs\" screen" }] }],
-  "PreToolUse":       [{ "matcher": "mcp__.*", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hook.mjs\" enforce" }] }],
-  "PostToolUse":      [{ "matcher": "*",       "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hook.mjs\" evidence" }] }],
-  "Stop":             [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hook.mjs\" verify" }] }],
-  "SubagentStop":     [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hook.mjs\" verify" }] }]
+  "modules": [
+    "./register.tsx"
+  ],
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/sentinel.mjs\" 2>/dev/null || if [ -n \"$CLAUDE_PLUGIN_OPTION_ENFORCEMENT_MODE\" ] && [ \"$CLAUDE_PLUGIN_OPTION_ENFORCEMENT_MODE\" != cooperative ] || [ \"$(cat \"$HOME/.config/arbiter/claude-mod/mode\" 2>/dev/null)\" = strict ]; then printf '%s' '{\"decision\":\"block\",\"reason\":\"LangGuard is not running in this session, so strict mode blocks this prompt. Common causes are Claude Code older than 2.1.287, a load error, or a crash. Update or restart Claude Code, or run /reload-plugins.\"}'; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
 }

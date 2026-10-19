@@ -1,12 +1,12 @@
 {
-  "_comment": "Pinned OPA release + per-asset SHA-256 checksums, bundled in the plugin. The monitor's OPA provisioner (arbiter-core/src/bundle/opa-provision.ts) downloads the per-OS/arch asset from ${downloadBaseUrl}/v<version>/<asset> and REFUSES to install any binary whose sha256 does not match the value here. Pinned to the server's OPA major (1.16.x) so local Rego-v1 bundles evaluate with matching semantics. Hashes verified from the official open-policy-agent/opa v1.16.2 GitHub release asset digests (2026-07-06). To bump: change version, re-pull the release-asset sha256 digests, and replace every value below.",
-  "version": "1.16.2",
+  "_comment": "Pinned OPA release + per-asset SHA-256 checksums, bundled in the plugin. The monitor's OPA provisioner (arbiter-core/src/bundle/opa-provision.ts) downloads the per-OS/arch asset from ${downloadBaseUrl}/v<version>/<asset> and REFUSES to install any binary whose sha256 does not match the value here. Pinned to the server's OPA major (1.20.x) so local Rego-v1 bundles evaluate with matching semantics. Hashes verified from the official open-policy-agent/opa v1.20.2 release asset digests (2026-09-04). To bump: change version, re-pull the release-asset sha256 digests, and replace every value below.",
+  "version": "1.20.2",
   "downloadBaseUrl": "https://openpolicyagent.org/downloads",
   "assets": {
-    "opa_darwin_amd64": "8e5dee8358b35c05bbcd4be5a4106b9d35bcaf9abb1de4d232652a1b11be5f17",
-    "opa_darwin_arm64": "10cb91e1b91e145e249abbafd59f5a66d32899170af6426864a62436998c3e84",
-    "opa_linux_amd64": "c3dd8bf5d535ec841cfb5e13dd5d9a012856a97dadc6bb04010fddaa54b7a495",
-    "opa_linux_arm64_static": "90947ae0eda93266e14c88aa0360cce23199e7fdf1e4e2af6074b389a0ea04a8",
-    "opa_windows_amd64.exe": "f1a66f971611732de5078aafacc0cbb043a9c3b02e5daa78f6924c46083f9124"
+    "opa_darwin_amd64": "e9b8d205db1aeaa6ec350855087b7d7fc014e7728b65cdf822464ee59e63f601",
+    "opa_darwin_arm64": "54e7008e696d39e8e4f96594e2b71bcbe45fd9a4f838102bcf1240638bf3fbe1",
+    "opa_linux_amd64": "ed3127751a4c786eb407d26a952c92f45fdcc4b97e0af25cd5d721a414fab244",
+    "opa_linux_arm64_static": "431bed5a365578241ab06c7cc1c7d0cdff8c11dcbc6f12c3488590deb8b8d66d",
+    "opa_windows_amd64.exe": "e2f2e2b735ab98f316171ca47a6b352288cdeb5a616e31aa16335b8934748453"
   }
 }
