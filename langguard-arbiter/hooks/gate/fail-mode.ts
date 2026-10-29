@@ -35,6 +35,7 @@ const ROWS: { readonly [K in ArbiterFault['kind']]: Row } = {
   unreachable: { coop: 'ASK', model: 'unchecked', reason: 'unchecked' },
   'rate-limited': { coop: 'ASK', model: 'unchecked', reason: 'unchecked' },
   'key-rejected': { coop: 'ASK', model: 'setup', reason: 'setup' },
+  'key-wrong-type': { coop: 'ASK', model: 'setup', reason: 'setup' },
   'no-key': { coop: 'ASK', model: 'setup', reason: 'setup' },
   'bad-reply': { coop: 'ASK', model: 'unchecked', reason: 'unchecked' },
   'network-policy': { coop: 'ASK', model: 'unchecked', reason: 'unchecked' },

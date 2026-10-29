@@ -9,9 +9,11 @@ import {
   buildInvokeRequest,
   checkpointForHookPhase,
   isCatastrophicMatch,
+  NON_AUTHORITATIVE_RULES,
   parseInvokeReply,
   stableStringify,
   type InvokeReply,
+  type LocalRecord,
   type VerdictRequest,
 } from '../vendor/core/pure.ts'
 import { normalizeToolName } from '../vendor/claude/tool-normalize.ts'
@@ -23,6 +25,7 @@ export const SERVER_TIMEOUT_MS = 2500
 export const BREAKER_FAULTS = 2
 export const BREAKER_OPEN_MS = 15_000
 export const MAX_IN_FLIGHT = 8
+export const MAX_RECORDS_IN_FLIGHT = 16
 export const INTERCEPTOR_PATH = '/api/interceptor'
 export const HARNESS = 'claude'
 
@@ -38,6 +41,8 @@ export type JudgeContext = {
   readonly revoked: boolean
   readonly sessionId: string
   readonly userId?: string | null
+  // The id of this install, as the heartbeat reports it. Null or absent: the request carries none.
+  readonly installId?: string | null
   readonly indexRevision: () => string | null
   readonly remoteOnlyActive: boolean
   readonly scanWindow: number
@@ -112,10 +117,19 @@ export type WireCall = {
   readonly phase?: WirePhase
 }
 
-export function verdictRequestFor(call: WireCall, ctx: { readonly sessionId: string; readonly scanWindow: number; readonly userId?: string | null }): VerdictRequest {
+export const INSTALL_ID_MAX = 128
+
+// The server keys the fleet traffic counter on this id. The state holds 'unknown' until the session starts; a value of another shape stays out of the request.
+export const installIdFor = (id: string | null | undefined): string | null =>
+  typeof id === 'string' && id !== 'unknown' && id.length <= INSTALL_ID_MAX && /^[\w.:-]+$/.test(id) ? id : null
+
+type BodyContext = Pick<JudgeContext, 'sessionId' | 'scanWindow' | 'userId' | 'installId'>
+
+export function verdictRequestFor(call: WireCall, ctx: BodyContext, record?: LocalRecord): VerdictRequest {
   const phase = call.phase ?? 'enforce'
   const checkpoint = checkpointForHookPhase(phase)
   const text = call.serialized.slice(0, ctx.scanWindow)
+  const installId = installIdFor(ctx.installId)
   return {
     session_id: ctx.sessionId,
     tool: call.tool,
@@ -125,14 +139,16 @@ export function verdictRequestFor(call: WireCall, ctx: { readonly sessionId: str
     ...(call.argsHash !== null ? { args_hash: call.argsHash } : {}),
     content: phase === 'evidence' ? { output: text } : { args: text },
     agent_name: HARNESS,
+    ...(installId !== null ? { install_id: installId } : {}),
     ...(ctx.userId ? { user_id: ctx.userId } : {}),
     ai_app_id: `${HARNESS}:${ctx.sessionId}`,
+    ...(record !== undefined ? { record } : {}),
   }
 }
 
 // params.timeoutMs (R7) and config.langguard.agent_id (R30) ride beside the shared envelope.
-export function invokeBodyFor(call: WireCall, ctx: { readonly sessionId: string; readonly scanWindow: number; readonly userId?: string | null }, id: string) {
-  const envelope = buildInvokeRequest(verdictRequestFor(call, ctx), id)
+export function invokeBodyFor(call: WireCall, ctx: BodyContext, id: string, record?: LocalRecord) {
+  const envelope = buildInvokeRequest(verdictRequestFor(call, ctx, record), id)
   return {
     ...envelope,
     params: {
@@ -145,11 +161,22 @@ export function invokeBodyFor(call: WireCall, ctx: { readonly sessionId: string;
 
 const requestId = (): string => (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`)
 
-type ServerAnswer = { readonly verdict: 'ALLOW' | 'BLOCK' | 'ASK' } | { readonly fault: ArbiterFault }
+type ServerAnswer = { readonly verdict: 'ALLOW' | 'BLOCK' | 'ASK'; readonly rule?: string } | { readonly fault: ArbiterFault }
+
+// A valid key of a type that the route does not take answers 403 with the error key_scope. Any other 401 or 403 is a key that the server does not accept.
+export function keyFaultOf(response: Pick<HttpResponse, 'status' | 'text'>): ArbiterFault | null {
+  if (response.status === 401) return { kind: 'key-rejected', status: 401 }
+  if (response.status !== 403) return null
+  try {
+    return (JSON.parse(response.text) as { error?: unknown } | null)?.error === 'key_scope' ? { kind: 'key-wrong-type' } : { kind: 'key-rejected', status: 403 }
+  } catch {
+    return { kind: 'key-rejected', status: 403 }
+  }
+}
 
 function answerOf(response: HttpResponse): ServerAnswer {
-  if (response.status === 401) return { fault: { kind: 'key-rejected', status: 401 } }
-  if (response.status === 403) return { fault: { kind: 'key-rejected', status: 403 } }
+  const keyFault = keyFaultOf(response)
+  if (keyFault !== null) return { fault: keyFault }
   if (response.status === 429) return { fault: { kind: 'rate-limited' } }
   if (response.status >= 500) return { fault: { kind: 'unreachable', cause: 'http-5xx' } }
   if (!response.ok) return { fault: { kind: 'bad-reply' } }
@@ -161,7 +188,8 @@ function answerOf(response: HttpResponse): ServerAnswer {
   }
   if (json !== null && typeof json === 'object' && json.error?.code === -32000) return { fault: { kind: 'unreachable', cause: 'timeout' } }
   try {
-    return { verdict: parseInvokeReply(json).verdict }
+    const reply = parseInvokeReply(json)
+    return { verdict: reply.verdict, ...(reply.applied_rule !== undefined ? { rule: reply.applied_rule } : {}) }
   } catch {
     return { fault: { kind: 'bad-reply' } }
   }
@@ -188,13 +216,13 @@ export function fetchFault(err: unknown): ArbiterFault {
   return { kind: 'unreachable', cause: 'network' }
 }
 
-type HostState = { faults: number; openUntil: number; inFlight: number; waiters: (() => void)[] }
+type HostState = { faults: number; openUntil: number; inFlight: number; records: number; waiters: (() => void)[] }
 const hosts = new Map<string, HostState>()
 
 function hostState(host: string): HostState {
   let state = hosts.get(host)
   if (!state) {
-    state = { faults: 0, openUntil: 0, inFlight: 0, waiters: [] }
+    state = { faults: 0, openUntil: 0, inFlight: 0, records: 0, waiters: [] }
     hosts.set(host, state)
   }
   return state
@@ -273,23 +301,40 @@ async function askServer(host: string, authorization: string, call: WireCall, ct
   return answer
 }
 
-// The header that marks a sample request, so that the server and a test world can tell it from a verdict request.
-export const SAMPLE_HEADER = 'X-Arbiter-Sample'
+// The header that marks a record request, so that a test world can tell it from a verdict request. The server reads the `record` field of the body, not this header.
+export const RECORD_HEADER = 'X-Arbiter-Record'
 
-// A sample runs off the verdict path. A server verdict other than ALLOW for a call that the local tier allowed turns the local tier off (interrogate A15). A fault of the sample is no finding: it neither reads nor feeds the breaker of the host and takes no in-flight slot, so failed samples cannot hold back the calls that need the server (review COR-1).
-async function sampleAgainstServer(host: string, authorization: string, wire: WireCall, ctx: JudgeContext, access: LocalAccess): Promise<void> {
-  const late = new Promise<null>(resolve => {
-    ctx.io.after(VERDICT_WAIT_MS, () => resolve(null))
-  })
-  const asked = ctx.io
-    .fetch(`${host}${INTERCEPTOR_PATH}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: authorization, [SAMPLE_HEADER]: '1' },
-      body: JSON.stringify(invokeBodyFor(wire, ctx, requestId())),
+// A server that could not decide (engine outage, a policy that failed to evaluate) answers ASK under a rule of NON_AUTHORITATIVE_RULES. That answer is no evidence against a local decision. A reply without a rule comes from a server that does not send it, and counts.
+const isAuthoritative = (answer: { readonly rule?: string }): boolean => answer.rule === undefined || !NON_AUTHORITATIVE_RULES.includes(answer.rule)
+
+// The server never sees a call that the mod decides locally, so the violation, the alert, the stats, the blocked-trace row, the MCP counters, the usage count and the approval request of that decision exist only if the mod sends the call. This is that copy: the body of a verdict request plus the local outcome (`record`), sent once for each local decision. The local tier decides; the server records.
+// The record is off the verdict path. Nothing awaits it, it takes no in-flight slot of the verdict path, and it neither feeds the breaker nor ignores it: a fault of the record is no finding, and an open breaker means no record. Records have a slot count of their own per host, freed when the fetch settles ($.http.fetch cannot be aborted, so a timeout does not free it). The server answer matters for one case only. A local ALLOW that the server answers with another authoritative verdict ends the local tier for the revision of the index that decided (access.onMismatch). The server answer to a local BLOCK or ASK is ignored.
+async function recordOnServer(host: string, authorization: string, wire: WireCall, ctx: JudgeContext, record: LocalRecord, access: LocalAccess | null, revision: string | null): Promise<void> {
+  try {
+    const state = hostState(host)
+    const startedAt = await ctx.io.now()
+    if (startedAt < state.openUntil || state.records >= MAX_RECORDS_IN_FLIGHT) return
+    state.records += 1
+    const free = (): void => {
+      state.records -= 1
+    }
+    const late = new Promise<null>(resolve => {
+      ctx.io.after(VERDICT_WAIT_MS, () => resolve(null))
     })
-    .then(answerOf, () => null)
-  const answer = await Promise.race([asked, late]).catch(() => null)
-  if (answer !== null && 'verdict' in answer && answer.verdict !== 'ALLOW') access.onMismatch({ rawTool: wire.rawTool, argsHash: wire.argsHash, serverVerdict: answer.verdict })
+    const asked = (async () =>
+      ctx.io.fetch(`${host}${INTERCEPTOR_PATH}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: authorization, [RECORD_HEADER]: '1' },
+        body: JSON.stringify(invokeBodyFor(wire, ctx, requestId(), record)),
+      }))().then(answerOf, () => null)
+    asked.then(free, free)
+    const answer = await Promise.race([asked, late])
+    if (record.verdict === 'ALLOW' && access !== null && revision !== null && answer !== null && 'verdict' in answer && answer.verdict !== 'ALLOW' && isAuthoritative(answer)) {
+      access.onMismatch({ rawTool: wire.rawTool, argsHash: wire.argsHash, serverVerdict: answer.verdict, revision })
+    }
+  } catch {
+    return
+  }
 }
 
 type LocalStep = { readonly judgment: Judgment } | null
@@ -310,19 +355,45 @@ async function localStep(wire: WireCall, isNativeTool: boolean, revision: string
   if (answer.verdict !== 'BLOCK' && !fresh) return null
   if (answer.verdict === 'ALLOW' && !allowStands({ ...access, signed: answer.signed })) return null
   if (answer.verdict === 'ASK' && !askStands(access)) return null
-  if (answer.verdict === 'ALLOW' && access.sample()) void sampleAgainstServer(host, authorization, wire, ctx, access)
+  void recordOnServer(host, authorization, wire, ctx, { verdict: answer.verdict, catastrophic: false }, access, revision)
   return { judgment: verdictOf(answer.verdict, 'local', wire.argsHash) }
 }
 
+// The serialization of the input (up to 1 MB) runs in a task of its own, after the verdict went out.
+function recordCatastrophic(call: JudgeCall, ctx: JudgeContext): void {
+  const { host, authorization } = ctx
+  if (ctx.revoked || host === null || authorization === null) return
+  ctx.io.after(0, () => {
+    void (async () => {
+      const serialized = serializeInput(call.input)
+      const oversize = 'oversize' in serialized
+      const wire: WireCall = {
+        rawTool: call.rawTool,
+        tool: normalizeToolName(call.rawTool).normalized,
+        argsHash: oversize ? null : await hashInput(call.input),
+        serialized: oversize ? '' : serialized.text,
+        ...(call.agentId !== undefined ? { agentId: call.agentId } : {}),
+      }
+      await recordOnServer(host, authorization, wire, ctx, { verdict: 'BLOCK', catastrophic: true }, null, null)
+    })().catch(() => undefined)
+  })
+}
+
 export async function judge(call: JudgeCall, ctx: JudgeContext): Promise<Judgment> {
-  if (isCatastrophicMatch(call.rawTool, {}, DEFAULT_CATASTROPHIC_DENY_LIST)) return verdictOf('BLOCK', 'local', null)
+  if (isCatastrophicMatch(call.rawTool, {}, DEFAULT_CATASTROPHIC_DENY_LIST)) {
+    if (!isBadName(call.rawTool)) recordCatastrophic(call, ctx)
+    return verdictOf('BLOCK', 'local', null)
+  }
   if (isBadName(call.rawTool)) return faultOf({ kind: 'bad-name' }, null)
 
   const serialized = serializeInput(call.input)
   if ('oversize' in serialized) return faultOf({ kind: 'oversize' }, null)
   const argsHash = await hashInput(call.input)
   const input = call.input !== null && typeof call.input === 'object' && !Array.isArray(call.input) ? (call.input as Record<string, unknown>) : { input: call.input }
-  if (isCatastrophicMatch(call.rawTool, input, DEFAULT_CATASTROPHIC_DENY_LIST)) return verdictOf('BLOCK', 'local', argsHash)
+  if (isCatastrophicMatch(call.rawTool, input, DEFAULT_CATASTROPHIC_DENY_LIST)) {
+    recordCatastrophic(call, ctx)
+    return verdictOf('BLOCK', 'local', argsHash)
+  }
 
   if (ctx.revoked) return faultOf({ kind: 'key-rejected', status: 401 }, argsHash)
   const { host, authorization } = ctx

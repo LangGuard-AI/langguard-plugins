@@ -4,6 +4,7 @@ export type ArbiterMode = 'cooperative' | 'strict'
 export type ArbiterFault =
   | { kind: 'no-key' }
   | { kind: 'key-rejected'; status: 401 | 403 }
+  | { kind: 'key-wrong-type' }
   | { kind: 'unreachable'; cause: 'network' | 'timeout' | 'http-5xx' | 'tls' }
   | { kind: 'rate-limited' }
   | { kind: 'bad-reply' }

@@ -32,8 +32,8 @@ export type LocalAccess = {
   readonly signed: boolean
   readonly instance?: string | null
   readonly allowTier: boolean
-  readonly sample: () => boolean
-  readonly onMismatch: (found: { readonly rawTool: string; readonly argsHash: string | null; readonly serverVerdict: ArbiterVerdict }) => void
+  // `revision` is the one of the index that decided the call.
+  readonly onMismatch: (found: { readonly rawTool: string; readonly argsHash: string | null; readonly serverVerdict: ArbiterVerdict; readonly revision: string }) => void
 }
 
 // `agentName` and `aiAppId` are the ones of the server request: the rego derives the agent key of a remembered rule from them.

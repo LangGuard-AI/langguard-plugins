@@ -1,6 +1,6 @@
 {
   "name": "langguard-arbiter",
-  "version": "1.0.20",
+  "version": "1.0.23",
   "description": "LangGuard checks MCP tool calls against your organization's policies.",
   "author": { "name": "LangGuard", "url": "https://langguard.ai" },
   "homepage": "https://langguard.ai/arbiter",
@@ -17,7 +17,7 @@
       "type": "string",
       "sensitive": true,
       "title": "API key",
-      "description": "Create an Arbiter key in LangGuard: Settings, Arbiter Management, Deployment."
+      "description": "Create a key with ingest access in LangGuard: Settings, Arbiter Management, Deploy Arbiter."
     },
     "enforcement_mode": {
       "type": "string",
@@ -25,16 +25,6 @@
       "description": "cooperative: when LangGuard cannot check a call, it asks you first. strict: when LangGuard cannot check a call, it blocks the call.",
       "options": ["cooperative", "strict"],
       "default": "cooperative"
-    },
-    "bundle_key": {
-      "type": "string",
-      "title": "Policy signing key",
-      "description": "The public key that signs your organization's policy bundle, in PEM form. Your administrator sets it. Leave it empty to take the key from LangGuard."
-    },
-    "opa_path": {
-      "type": "string",
-      "title": "OPA program",
-      "description": "The full path of an OPA 1.20.2 program that your administrator installed. Leave it empty to let the mod fetch the pinned program."
     }
   }
 }

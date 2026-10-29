@@ -2,7 +2,7 @@ import type { CatchHandler, EngineInterface, Hook, Origin, PreToolUseResult, Too
 import { loadedOptions } from '../config.ts'
 import { SLOW_AFTER_MS, apply, askingRecordFor, callView, ledgerView, markSlow, needsAgentLabel, noteAgentLabel, recordIdForCheck, recordOf, watchSlow } from '../ledger.ts'
 import { hashInput, judge, scanWindowDefault, serializeInput, type JudgeContext, type JudgeIo } from '../verdict/source.ts'
-import { localAccess, noteCatches, noteJudgment, noteLocalOff, sessionFacts } from '../state.ts'
+import { currentInstallId, localAccess, noteCatches, noteJudgment, noteLocalOff, sessionFacts } from '../state.ts'
 import { statusChanged, statusLineOf, statusShown } from '../ui/status.ts'
 import type { ArbiterHealth } from '../../types'
 import type { Judgment } from './machine.ts'
@@ -81,6 +81,7 @@ export function judgeContext(io: JudgeIo, local: LocalAccess | null = null): Jud
     revoked: isRevoked(),
     sessionId: sessionFacts().sessionId,
     userId: sessionFacts().userId,
+    installId: currentInstallId(),
     indexRevision,
     remoteOnlyActive: remoteOnlyActive(),
     scanWindow: scanWindowDefault,
@@ -91,10 +92,10 @@ export function judgeContext(io: JudgeIo, local: LocalAccess | null = null): Jud
   }
 }
 
-// A sampled local ALLOW that the server answered differently turns the local tier off and queues one evidence event. It runs after the verdict went out, so it makes no gate decision.
+// A recorded local ALLOW that the server answered differently turns the local tier off and queues one evidence event. It runs after the verdict went out, so it makes no gate decision.
 function mismatchHandler($: EngineInterface): LocalAccess['onMismatch'] {
   return found => {
-    showHealth($, noteLocalOff())
+    showHealth($, noteLocalOff(found.revision))
     noteLocalMismatch({ rawTool: found.rawTool }, found.serverVerdict, found.argsHash, Date.now())
   }
 }

@@ -18,7 +18,7 @@ import { applyServerMode, applyStoredOverride, catchCount, effectiveMode, hostNa
 import type { Judgment } from './gate/machine.ts'
 import { allowTierOf, installOf, runProbes, type ProbeIo, type ProbeOutcome } from './health/probe.ts'
 import { EFFECT, LOG, isDegraded, setupSentenceOf, statusChanged, statusLineOf, statusShown } from './ui/status.ts'
-import { connectOpa, heldScopeOf, type HeldScope, type OpaAuthzFile, type OpaChecksums, type OpaIo, type OpaOutcome } from './local/opa.ts'
+import { connectOpa, heldSigningOf, type HeldSigning, type StoredSigning, type OpaAuthzFile, type OpaChecksums, type OpaIo, type OpaOutcome } from './local/opa.ts'
 import type { LocalAccess } from './local/tier.ts'
 import { INDEX_EVERY_MS, endConversation, heldIndex, indexLongPoll, indexSupportsWait, resetIndex, staleSince, syncIndex, usableIndex } from './posture/index.ts'
 import { opaSocketPath, sha256Hex } from './vendor/core/pure.ts'
@@ -70,7 +70,7 @@ const engineVersion = ($: EngineInterface): Promise<string> =>
 const MODE_OVERRIDE_KEY = 'modeOverride'
 const INSTALL_ID_KEY = 'installId'
 const REVOKED_KEY = 'revoked'
-const OPA_SCOPE_KEY = 'opaScope'
+const OPA_SIGNING_KEY = 'opaSigning'
 const MODE_ROW = 'langguard-arbiter.enforcement_mode'
 
 export type SessionFacts = { readonly isInteractive: boolean | null; readonly desktopAskFallback: boolean; readonly sessionId: string; readonly userId: string | null }
@@ -106,38 +106,26 @@ let health: ArbiterHealth | null = null
 
 let localOutcome: OpaOutcome = { local: 'starting' }
 
-// The local tier answers a call only while it is on and not turned off by a sample (interrogate A15). The socket path is known after the first start step.
+// The local tier answers a call only while it is on and not turned off by a record that the server answered differently (interrogate A15). The socket path is known after the first start step.
 let localSocket: string | null = null
-let localOff = false
+// The revision of the index that decided the call whose record the server answered differently. The tier stays off while the mod holds that revision; a new revision (a policy published between two syncs may explain the mismatch) gives it another sample. null: no mismatch in this session.
+let mismatchRevision: string | null = null
+
+const localIsOff = (): boolean => mismatchRevision !== null && mismatchRevision === (heldIndex()?.revision ?? null)
 
 const OFF_BY_SAMPLE: OpaOutcome = { local: 'off-failed', cause: 'sample-mismatch' }
-
-// 1 in 20 standing local ALLOWs goes to the server (interrogate A15). A constant: no input of the session can change or turn off the rate (review COR-2).
-export const SAMPLE_EVERY = 20
 
 // L22b: a local ALLOW and a local ASK stand only when the managed settings read proves a tier (b) install (allowTierOf). Self-install (a) stays unproven, and tier (c), an unknown tier and a failed read leave the local tier with BLOCK only.
 let allowTier = false
 
-export const sampler = (draw: () => number) => (): boolean => sampleHit(draw())
-
-const sampleHit = (draw: number): boolean => draw % SAMPLE_EVERY === 0
-
-function randomDraw(): number {
-  const draw = new Uint32Array(1)
-  crypto.getRandomValues(draw)
-  return draw[0] as number
-}
-
-const sample = sampler(randomDraw)
-
 export function localAccess(onMismatch: LocalAccess['onMismatch']): LocalAccess | null {
-  if (localOff || localOutcome.local !== 'on' || localSocket === null) return null
-  return { socketPath: localSocket, signed: localOutcome.signed === true, instance: localOutcome.instance ?? null, allowTier, sample, onMismatch }
+  if (localIsOff() || localOutcome.local !== 'on' || localSocket === null) return null
+  return { socketPath: localSocket, signed: localOutcome.signed === true, instance: localOutcome.instance ?? null, allowTier, onMismatch }
 }
 
-// A sample that the server answered with another verdict. The tier stays off until the session ends.
-export function noteLocalOff(): ArbiterHealth {
-  localOff = true
+// A record of a local ALLOW that the server answered with another verdict. The tier stays off until the mod accepts another revision of the index. A mismatch of a revision that the mod no longer holds changes nothing.
+export function noteLocalOff(revision: string): ArbiterHealth {
+  if (revision === (heldIndex()?.revision ?? null)) mismatchRevision = revision
   return noteLocal(localOutcome)
 }
 
@@ -158,8 +146,8 @@ const baseHealth = (engine: string): ArbiterHealth => {
 }
 
 function noteLocal(given: OpaOutcome): ArbiterHealth {
-  const outcome = localOff ? OFF_BY_SAMPLE : given
-  localOutcome = outcome
+  localOutcome = given
+  const outcome = localIsOff() ? OFF_BY_SAMPLE : given
   const { localCause: dropped, ...current } = health ?? baseHealth('unknown')
   void dropped
   health = { ...current, local: outcome.local, ...(outcome.cause === undefined ? {} : { localCause: outcome.cause }) }
@@ -175,7 +163,7 @@ export function noteUncheckedRun(): ArbiterHealth {
 }
 
 // The faults of the server path that the M11 precedence table names. A fault of one call's input (oversize, bad name) or of the mod (internal) is no health reason.
-const HEALTH_FAULTS: ReadonlySet<ArbiterFault['kind']> = new Set(['no-key', 'key-rejected', 'unreachable', 'rate-limited', 'bad-reply', 'network-policy'])
+const HEALTH_FAULTS: ReadonlySet<ArbiterFault['kind']> = new Set(['no-key', 'key-rejected', 'key-wrong-type', 'unreachable', 'rate-limited', 'bad-reply', 'network-policy'])
 
 const sameFault = (a: ArbiterFault, b: ArbiterFault): boolean => JSON.stringify(a) === JSON.stringify(b)
 
@@ -230,7 +218,7 @@ function noteIndex(stale: number | null, syncedAt: number | null): ArbiterHealth
 }
 
 // The reasons a probe run owns. A fault of the run replaces any fault, so health holds one fault at most.
-const PROBE_FAULTS: ReadonlySet<ArbiterFault['kind']> = new Set(['no-key', 'key-rejected', 'unreachable', 'network-policy'])
+const PROBE_FAULTS: ReadonlySet<ArbiterFault['kind']> = new Set(['no-key', 'key-rejected', 'key-wrong-type', 'unreachable', 'network-policy'])
 
 export function noteProbe(outcome: ProbeOutcome): ArbiterHealth {
   const current = health ?? baseHealth('unknown')
@@ -239,7 +227,7 @@ export function noteProbe(outcome: ProbeOutcome): ArbiterHealth {
   const { keyPrefix, keyAccepted, ...rest } = current
   delete rest.hostChecked
   delete rest.keySet
-  const rejected = outcome.reason?.kind === 'fault' && outcome.reason.fault.kind === 'key-rejected'
+  const rejected = outcome.reason?.kind === 'fault' && (outcome.reason.fault.kind === 'key-rejected' || outcome.reason.fault.kind === 'key-wrong-type')
   const key = outcome.keyPrefix !== null ? { keyPrefix: outcome.keyPrefix, keyAccepted: true as const } : rejected ? {} : { ...(keyPrefix === undefined ? {} : { keyPrefix }), ...(keyAccepted === undefined ? {} : { keyAccepted }) }
   health = { ...rest, ...key, ...(outcome.keySet ? {} : { keySet: false as const }), ...(outcome.hostProven ? { hostChecked: true as const } : {}), reasons: outcome.reason === null ? others : [...others, outcome.reason] }
   return health
@@ -359,6 +347,8 @@ function markerIo($: EngineInterface): MarkerIo {
 
 let installId = 'unknown'
 
+export const currentInstallId = (): string => installId
+
 const newInstallId = (): string => (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`)
 
 // No get-then-set here is atomic: two sessions that start together may each mint one, and the re-read adopts the one the store kept (L11).
@@ -422,8 +412,10 @@ let indexRetries = 0
 
 async function indexTick($: EngineInterface): Promise<void> {
   const ctx = evidenceContext($)
+  const wasOff = localIsOff()
   const outcome = await syncIndex({ host: ctx.host, authorization: ctx.authorization, io: ctx.io }).catch((): 'failed' => 'failed')
   if (outcome === 'skipped') return
+  if (wasOff && !localIsOff()) showHealth($, noteLocal(localOutcome))
   const synced = outcome === 'loaded' || outcome === 'kept' ? await $.clock.now().catch(() => Date.now()) : null
   showHealth($, noteIndex(staleSince(), synced))
   void $.state.set(POSTURE, postureFromIndex()).catch(() => {})
@@ -532,20 +524,20 @@ async function localTick($: EngineInterface): Promise<void> {
   const checksums = await readChecksums($)
   const host = config.host ?? ''
   localSocket = home === '' || host === '' ? null : opaSocketPath(home, host)
-  const heldScope = heldScopeOf(await $.store.get(OPA_SCOPE_KEY).catch(() => undefined), host)
-  const holdScope = (scope: string): void => {
-    const held: HeldScope = { host, scope }
-    void $.store.set(OPA_SCOPE_KEY, held).catch(() => undefined)
+  const held = heldSigningOf(await $.store.get(OPA_SIGNING_KEY).catch(() => undefined), host)
+  const hold = (signing: HeldSigning | null): void => {
+    const stored: StoredSigning | null = signing === null ? null : { host, ...signing }
+    void $.store.set(OPA_SIGNING_KEY, stored).catch(() => undefined)
   }
   const outcome: OpaOutcome =
     checksums === null
       ? { local: 'off-failed', cause: 'binary-missing' }
-      : await connectOpa(opaIo($), { host, home, token, pinnedKey: config.bundleKey, opaPath: config.opaPath, authz: await readAuthz($), checksums, heldScope, holdScope }).catch((): OpaOutcome => ({ local: 'off-failed', cause: 'spawn-failed' }))
+      : await connectOpa(opaIo($), { host, home, token, authz: await readAuthz($), checksums, held, hold }).catch((): OpaOutcome => ({ local: 'off-failed', cause: 'spawn-failed' }))
   localChecks += 1
   const settled: OpaOutcome = outcome.local === 'starting' && localChecks >= LOCAL_RECHECKS_MAX ? { local: 'off-failed', cause: 'bundle-not-loaded' } : outcome
   showHealth($, noteLocal(settled))
   $.ui.log(`local checks ${settled.local}${settled.cause === undefined ? '' : ` ${settled.cause}`}${settled.started === true ? ' started' : ''}`, { to: 'debug' })
-  const again = !localOff && (settled.local === 'starting' || (settled.cause === 'key-unavailable' && localChecks < LOCAL_RECHECKS_MAX))
+  const again = !localIsOff() && (settled.local === 'starting' || (settled.cause === 'key-unavailable' && localChecks < LOCAL_RECHECKS_MAX))
   if (again) localTimer = $.clock.after(LOCAL_RECHECK_MS, () => void localTick($))
 }
 
@@ -624,7 +616,7 @@ export const startSession: Hook<'session.start'> = async ($, e, next) => {
   installId = await installIdOf($)
   setEvidenceIdentity(facts.sessionId, installId, facts.userId)
   localOutcome = { local: 'starting' }
-  localOff = false
+  mismatchRevision = null
   allowTier = allowTierOf(install)
   health = baseHealth(await engineVersion($))
   if (isRevoked()) noteRevoked(Date.now())

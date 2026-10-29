@@ -1,6 +1,6 @@
 import type { HttpInit, HttpResponse, Settings } from 'claude-code'
 import type { ArbiterFault, ArbiterHealthReason, ArbiterPosture } from '../../types'
-import { fetchFailureText, fetchFault } from '../verdict/source.ts'
+import { fetchFailureText, fetchFault, keyFaultOf } from '../verdict/source.ts'
 
 export const SHARED_HOST = 'app.langguard.ai'
 export const HEALTH_PATH = '/api/health'
@@ -62,6 +62,7 @@ const prefixOf = (text: string): string | null => {
 const faultReason = (fault: ArbiterFault, since: number): ArbiterHealthReason => ({ kind: 'fault', fault, since })
 
 // The four probes of M1 in order. The first failure is the one reason; no probe runs after it. The key goes only to a host that answered as LangGuard.
+// An arbiter key passes every check of the server but /v1/logs refuses its evidence records, so whoami naming that scope is a key of the wrong type. A server that names no scope is not a fault.
 export async function runProbes(input: ProbeInput, io: ProbeIo, now: number): Promise<ProbeOutcome> {
   const none = { reason: null, keyPrefix: null, hostProven: false, keySet: input.authorization !== null }
   const first = input.configReasons.find(r => r.kind !== 'bad-mode' && !(r.kind === 'not-configured' && r.missing === 'key'))
@@ -76,8 +77,10 @@ export async function runProbes(input: ProbeInput, io: ProbeIo, now: number): Pr
   if (input.authorization === null) return { ...proven, reason: { kind: 'not-configured', missing: 'key' } }
   const whoami = await probeGet(io, `${input.host}${WHOAMI_PATH}`, { Authorization: input.authorization })
   if ('fault' in whoami) return { ...proven, reason: faultReason(whoami.fault, now) }
-  if (whoami.status === 401 || whoami.status === 403) return { ...proven, reason: faultReason({ kind: 'key-rejected', status: whoami.status }, now) }
+  const keyFault = keyFaultOf(whoami)
+  if (keyFault !== null) return { ...proven, reason: faultReason(keyFault, now) }
   if (whoami.status >= 500 && whoami.status < 600) return { ...proven, reason: faultReason({ kind: 'unreachable', cause: 'http-5xx' }, now) }
+  if (whoami.status === 200 && jsonOf(whoami.text)?.scope === 'arbiter') return { ...proven, reason: faultReason({ kind: 'key-wrong-type' }, now) }
   return { ...proven, keyPrefix: whoami.status === 200 ? prefixOf(whoami.text) : null }
 }
 

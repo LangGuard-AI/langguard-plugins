@@ -34,6 +34,7 @@ export const PANE = {
   key_ok: (prefix: string) => `${prefix}... accepted`,
   key_missing: 'Not set',
   key_rejected: 'Not accepted',
+  key_wrong_type: 'Wrong type',
   key_unchecked: 'Not checked yet. Fix the address first.',
   key_pending: 'Set. Not checked yet.',
   mode: { cooperative: 'Cooperative', strict: 'Strict' },
@@ -126,6 +127,7 @@ export function keyStateOf(health: ArbiterHealth | undefined): string {
   if (reasons.some(r => HOST_KINDS.has(r.kind) || (r.kind === 'not-configured' && r.missing !== 'key'))) return PANE.key_unchecked
   if (health?.keySet === false || reasons.some(r => (r.kind === 'not-configured' && r.missing === 'key') || (r.kind === 'fault' && r.fault.kind === 'no-key'))) return PANE.key_missing
   if (reasons.some(r => r.kind === 'fault' && r.fault.kind === 'key-rejected')) return PANE.key_rejected
+  if (reasons.some(r => r.kind === 'fault' && r.fault.kind === 'key-wrong-type')) return PANE.key_wrong_type
   if (health?.keyPrefix !== undefined) return PANE.key_ok(health.keyPrefix)
   return health?.keyAccepted === true ? PANE.key_ok(KEY_FAMILY) : PANE.key_pending
 }
@@ -159,7 +161,7 @@ export function keyLinkOf(health: ArbiterHealth | undefined): string | null {
   const reasons = health?.reasons ?? []
   const host = health?.host ?? null
   if (host === null || health?.hostChecked !== true || reasons.some(r => r.kind === 'bad-host' || (r.kind === 'not-configured' && r.missing !== 'key'))) return null
-  const keyFailed = health.keySet === false || reasons.some(r => (r.kind === 'not-configured' && r.missing === 'key') || (r.kind === 'fault' && (r.fault.kind === 'no-key' || r.fault.kind === 'key-rejected')))
+  const keyFailed = health.keySet === false || reasons.some(r => (r.kind === 'not-configured' && r.missing === 'key') || (r.kind === 'fault' && (r.fault.kind === 'no-key' || r.fault.kind === 'key-rejected' || r.fault.kind === 'key-wrong-type')))
   return keyFailed ? `${host}${KEY_PAGE}` : null
 }
 

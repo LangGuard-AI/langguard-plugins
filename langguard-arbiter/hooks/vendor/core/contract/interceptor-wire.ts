@@ -10,6 +10,7 @@ export interface InvokeReply {
     validation?: { valid?: boolean; severity?: string };
     langguard?: {
       verdict?: Verdict;
+      applied_rule?: string;
       reason?: string;
       block?: boolean;
       violations?: InterceptorViolation[];
@@ -57,6 +58,7 @@ export function buildInvokeRequest(body: VerdictRequest, id: string) {
           ...(body.ai_app_id !== undefined ? { ai_app_id: body.ai_app_id } : {}),
           ...(body.department !== undefined ? { department: body.department } : {}),
           ...(body.environment !== undefined ? { environment: body.environment } : {}),
+          ...(body.record !== undefined ? { record: body.record } : {}),
         },
       },
     },
@@ -81,6 +83,7 @@ export function parseInvokeReply(json: InvokeReply): VerdictResult {
   }
   return {
     verdict: lg.verdict,
+    ...(typeof lg.applied_rule === 'string' ? { applied_rule: lg.applied_rule } : {}),
     ...(lg.reason !== undefined ? { reason: lg.reason } : {}),
     ...(lg.block !== undefined ? { block: lg.block } : {}),
     violations: lg.violations ?? [],

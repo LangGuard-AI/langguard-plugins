@@ -103,7 +103,7 @@ const baseOf = (call: DecisionCall, hookEvent: string, at: number) => ({
   ...(call.toolUseId !== undefined ? { toolUseId: call.toolUseId } : {}),
 })
 
-// A server verdict is in the server's own log; the evidence carries only what the server did not see.
+// A server verdict is in the server's own log, so the evidence skips it. A local decision reaches the server as a record, and the mod still queues its own evidence of it: the server keeps its GRAIL record, and the evidence queue keeps the mod's /v1/logs entry. One local decision has both.
 export function noteDecision(hookEvent: string, call: DecisionCall, decision: Decision, at: number): void {
   const { judgment } = decision
   if (judgment.kind === 'verdict' && judgment.from === 'server') return
@@ -120,7 +120,7 @@ export function noteOutputFault(call: DecisionCall, reason: string, at: number):
   enqueue({ ...baseOf(call, 'session.append', at), kind: 'decision', verdict: 'BLOCK', source: 'fail-mode', argsHash: null, reason })
 }
 
-// The server answered a sampled local ALLOW with another verdict, so the local tier went off for the session (interrogate A15). The record holds no reason text of a policy.
+// The server answered the record of a local ALLOW with another verdict, so the local tier went off until the next revision of the index (interrogate A15). The record holds no reason text of a policy.
 export function noteLocalMismatch(call: DecisionCall, serverVerdict: ArbiterVerdict, argsHash: string | null, at: number): void {
   enqueue({ ...baseOf(call, 'local.sample', at), kind: 'decision', verdict: serverVerdict, source: 'local', argsHash, reason: 'local-sample-mismatch' })
 }

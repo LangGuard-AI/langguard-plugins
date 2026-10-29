@@ -29,6 +29,7 @@ export const STATUS = {
   not_lg: (effect: string) => `Not a LangGuard address. ${effect}`,
   no_key: (effect: string) => `No API key. ${effect} Run /langguard status`,
   key_rejected: (effect: string) => `Key not accepted. ${effect} Run /langguard status`,
+  key_wrong_type: (effect: string) => `Wrong key type. ${effect} Run /langguard status`,
   tls: (effect: string) => `Secure connection failed. ${effect}`,
   unreachable: (effect: string, hostName: string) => `Cannot reach ${hostName}. ${effect}`,
   network_policy: (effect: string) => `Network settings block LangGuard. ${effect}`,
@@ -49,6 +50,7 @@ export const SETUP = {
   not_lg: (hostName: string) => `${hostName} answers, but it is not a LangGuard address.`,
   no_key: () => 'LangGuard has no API key.',
   key_rejected: () => 'LangGuard did not accept this API key. It may be mistyped or revoked.',
+  key_wrong_type: () => 'This API key cannot send LangGuard records. Create a key with ingest access in Settings, Arbiter Management, Deploy Arbiter.',
   tls: (hostName: string) => `Cannot make a secure connection to ${hostName}. If your network uses a proxy, check HTTPS_PROXY.`,
   unreachable: (hostName: string) => `Cannot reach ${hostName}. Check the address and your network.`,
   network_policy: (hostName: string) => `Claude Code network settings block the connection to ${hostName}.`,
@@ -63,7 +65,7 @@ export const LOG = {
 } as const
 
 export const SETUP_STEP = {
-  key: 'Create an Arbiter key in LangGuard: Settings, Arbiter Management, Deployment.',
+  key: 'Create a key with ingest access in LangGuard: Settings, Arbiter Management, Deploy Arbiter.',
   set_key: 'Open /plugin, choose langguard-arbiter, and set the key in its options.',
   set_host: "Open /plugin, choose langguard-arbiter, and set your organization's address in its options.",
   set_mode: 'Open /plugin, choose langguard-arbiter, and set the mode to cooperative or strict in its options.',
@@ -95,6 +97,7 @@ export const PRECEDENCE: readonly Row[] = [
   { word: 'setup', setup: SETUP.no_key, steps: KEY_STEPS, status: STATUS.no_key, matches: r => (r.kind === 'not-configured' && r.missing === 'key') || fault(r)?.kind === 'no-key' },
   // O14: whoami never answers 403, so a 403 reads as row 7.
   { word: 'setup', setup: SETUP.key_rejected, steps: KEY_STEPS, status: STATUS.key_rejected, matches: r => fault(r)?.kind === 'key-rejected' },
+  { word: 'setup', setup: SETUP.key_wrong_type, steps: KEY_STEPS, status: STATUS.key_wrong_type, matches: r => fault(r)?.kind === 'key-wrong-type' },
   { word: 'setup', setup: SETUP.bad_mode, steps: MODE_STEPS, status: STATUS.bad_mode, matches: r => r.kind === 'bad-mode' },
   { word: 'offline', setup: SETUP.tls, steps: NETWORK_STEPS, status: STATUS.tls, matches: r => { const f = fault(r); return f?.kind === 'unreachable' && f.cause === 'tls' } },
   { word: 'offline', setup: SETUP.unreachable, steps: NETWORK_STEPS, status: STATUS.unreachable, matches: r => fault(r)?.kind === 'unreachable' },

@@ -1,7 +1,7 @@
 import type { PluginOptions } from 'claude-code'
 import type { ArbiterHealthReason, ArbiterMode } from '../types'
 
-export const MOD_VERSION = '1.0.20'
+export const MOD_VERSION = '1.0.23'
 
 export type ApiKey = { readonly header: () => string; readonly toJSON: () => '[redacted]' }
 
@@ -11,8 +11,6 @@ export type ArbiterConfig = {
   readonly key: ApiKey | null
   readonly mode: ArbiterMode
   readonly version: string
-  readonly bundleKey: string | null
-  readonly opaPath: string | null
 }
 
 type HostResult = { readonly host: string } | { readonly missing: true } | { readonly reason: ArbiterHealthReason }
@@ -65,7 +63,7 @@ function typedHostOf(raw: unknown): string | null {
 
 export function parseOptions(options: PluginOptions | null | undefined): { config: ArbiterConfig; reasons: ArbiterHealthReason[] } {
   const given: PluginOptions = options ?? {}
-  const { host: rawHost, api_token: rawKey, enforcement_mode: rawMode, bundle_key: rawBundleKey, opa_path: rawOpaPath } = given
+  const { host: rawHost, api_token: rawKey, enforcement_mode: rawMode } = given
   const host = parseHost(rawHost)
   const key = parseKey(rawKey)
   const { mode, reasons: modeReasons } = parseMode(rawMode)
@@ -82,8 +80,6 @@ export function parseOptions(options: PluginOptions | null | undefined): { confi
       key,
       mode,
       version: MOD_VERSION,
-      bundleKey: textOf(rawBundleKey),
-      opaPath: textOf(rawOpaPath),
     },
     reasons,
   }

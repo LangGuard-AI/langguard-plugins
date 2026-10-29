@@ -48,12 +48,10 @@ export type OpaSetup = {
   readonly host: string
   readonly home: string
   readonly token: string
-  readonly pinnedKey: string | null
-  readonly opaPath: string | null
   readonly authz: OpaAuthzFile | null
   readonly checksums: OpaChecksums
-  readonly heldScope: string | null
-  readonly holdScope: (scope: string) => void
+  readonly held: HeldSigning | null
+  readonly hold: (held: HeldSigning | null) => void
 }
 
 export const PROBE_MS = 300
@@ -76,12 +74,15 @@ const ASSETS: Readonly<Record<string, string>> = {
   'Linux arm64': 'opa_linux_arm64_static',
 }
 
-export type HeldScope = { readonly host: string; readonly scope: string }
+export type HeldSigning = { readonly key: string; readonly scope: string }
+export type StoredSigning = HeldSigning & { readonly host: string }
 
-// The scope that the key route gave last, kept in the store with the host it belongs to.
-export function heldScopeOf(stored: unknown, host: string): string | null {
-  const { host: from, scope } = (typeof stored === 'object' && stored !== null ? stored : {}) as { host?: unknown; scope?: unknown }
-  return from === host && typeof scope === 'string' && SCOPE_SHAPE.test(scope) ? scope : null
+const isPublicKey = (value: unknown): value is string => typeof value === 'string' && value.includes('PUBLIC KEY')
+
+// The key and the scope that the key route gave last, kept in the store with the host they belong to.
+export function heldSigningOf(stored: unknown, host: string): HeldSigning | null {
+  const { host: from, scope, key } = (typeof stored === 'object' && stored !== null ? stored : {}) as { host?: unknown; scope?: unknown; key?: unknown }
+  return from === host && typeof scope === 'string' && SCOPE_SHAPE.test(scope) && isPublicKey(key) ? { key, scope } : null
 }
 
 const regexEscape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -168,35 +169,31 @@ async function verifiedBinary(io: OpaIo, setup: OpaSetup, platform: string): Pro
   const asset = ASSETS[platform]
   const expected = asset === undefined ? undefined : setup.checksums.assets[asset]
   if (asset === undefined || expected === undefined) return { cause: 'binary-missing' }
-  const explicit = setup.opaPath !== null && setup.opaPath !== ''
-  const path = explicit ? (setup.opaPath as string) : `${setup.home.replace(/\/+$/, '')}/.config/arbiter/bin/opa`
+  const path = `${setup.home.replace(/\/+$/, '')}/.config/arbiter/bin/opa`
   const present = (await ran(io, ['test', '-f', path]))?.exitCode === 0
-  if (!present) return explicit ? { cause: 'binary-missing' } : provision(io, setup, asset, expected, path)
-  if ((await sha256Of(io, path)) === expected) return { path }
-  // Only an explicit opa_path fails closed. The shared daemon replaces a default binary that fails its check, and so does the mod: a changed pin or a cut file would otherwise leave every machine without a local tier.
-  return explicit ? { cause: 'sha-mismatch' } : provision(io, setup, asset, expected, path)
+  if (present && (await sha256Of(io, path)) === expected) return { path }
+  // The shared daemon replaces a binary that fails its check, and so does the mod: a changed pin or a cut file would otherwise leave every machine without a local tier.
+  return provision(io, setup, asset, expected, path)
 }
 
 type Keyed = { readonly key: string; readonly scope?: string }
 type Signing = Keyed | null | 'unavailable'
-type Route = { readonly signing: Signing; readonly routeScope: string | undefined }
+// `hold` is what the store keeps after this answer: undefined leaves it as it is, null forgets it.
+type Route = { readonly signing: Signing; readonly hold?: HeldSigning | null }
 
-// The key route is asked on every start. A pinned key with a held scope still starts when the route does not answer, because the local tier exists for the time that the server is down (P8).
+// The key route is asked on every start and is the only source of the key. The last key and scope that it gave stay in the store, so a start while the route does not answer still has them, because the local tier exists for the time that the server is down (P8).
 async function signingFor(io: OpaIo, setup: OpaSetup): Promise<Route> {
-  const unreachable = (): Route => ({
-    signing: setup.pinnedKey !== null && setup.heldScope !== null ? { key: setup.pinnedKey, scope: setup.heldScope } : 'unavailable',
-    routeScope: undefined,
-  })
+  const unreachable = (): Route => ({ signing: setup.held ?? 'unavailable' })
   const reply = await within(io, io.fetch(`${setup.host}/api/arbiter/bundle-key`, { headers: { Authorization: `Bearer ${setup.token}` } }), START_WAIT_MS)
   if (reply === 'late' || reply === 'failed') return unreachable()
-  if (reply.value.status === 404) return { signing: setup.pinnedKey === null ? null : { key: setup.pinnedKey }, routeScope: undefined }
+  if (reply.value.status === 404) return { signing: null, ...(setup.held === null ? {} : { hold: null }) }
   if (reply.value.status !== 200) return unreachable()
   try {
     const body = JSON.parse(reply.value.text) as { public_key_pem?: unknown; scope?: unknown }
     const scope = typeof body.scope === 'string' && SCOPE_SHAPE.test(body.scope) ? body.scope : undefined
-    const key = setup.pinnedKey ?? (typeof body.public_key_pem === 'string' && body.public_key_pem.includes('PUBLIC KEY') ? body.public_key_pem : undefined)
+    const key = isPublicKey(body.public_key_pem) ? body.public_key_pem : undefined
     if (key === undefined || scope === undefined) return unreachable()
-    return { signing: { key, scope }, routeScope: scope }
+    return { signing: { key, scope }, ...(setup.held?.key === key && setup.held.scope === scope ? {} : { hold: { key, scope } }) }
   } catch {
     return unreachable()
   }
@@ -373,7 +370,7 @@ export async function connectOpa(io: OpaIo, setup: OpaSetup): Promise<OpaOutcome
   let asked: Promise<Route> | null = null
   const route = (): Promise<Route> => {
     asked ??= signingFor(io, setup).then(answer => {
-      if (answer.routeScope !== undefined && answer.routeScope !== setup.heldScope) setup.holdScope(answer.routeScope)
+      if (answer.hold !== undefined) setup.hold(answer.hold)
       return answer
     })
     return asked

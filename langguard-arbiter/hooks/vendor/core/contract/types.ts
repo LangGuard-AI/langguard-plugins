@@ -300,10 +300,30 @@ export interface VerdictRequest {
   department?: string;
   /** Optional deployment label. */
   environment?: string;
+  /**
+   * Set only on the record of a decision that the mod made locally. The server
+   * decides what to store from the local outcome, not from its own verdict.
+   * Lockstep with the server's ArbiterVerdictRequest.
+   */
+  record?: LocalRecord;
 }
+
+/** The local outcome that a record of a local decision carries. `catastrophic` is true only for a deny-list BLOCK. */
+export interface LocalRecord {
+  verdict: Verdict;
+  catastrophic: boolean;
+}
+
+/**
+ * The applied rules that name a server that could not decide. An answer under one
+ * of them says nothing about the call, so it is no evidence against a local decision.
+ */
+export const NON_AUTHORITATIVE_RULES: readonly string[] = ['engine_unreachable', 'policy_evaluation_error'];
 
 export interface VerdictResult {
   verdict: Verdict;
+  /** The server rule that decided. Absent from a server that does not send it. */
+  applied_rule?: string;
   /** present for BLOCK/ASK; absent for ALLOW. */
   reason?: string;
   /** EVIDENCE/VERIFY hard-violation flag (maps to Claude Code `decision:"block"`). */
