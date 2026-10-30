@@ -1,6 +1,6 @@
 {
   "name": "langguard-arbiter",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "description": "LangGuard checks MCP tool calls against your organization's policies.",
   "author": { "name": "LangGuard", "url": "https://langguard.ai" },
   "homepage": "https://langguard.ai/arbiter",

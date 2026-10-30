@@ -224,11 +224,13 @@ export const gateToolCall: Hook<'tool.call'> = async ($, e, next) => {
   if (current.phase !== 'settled') {
     apply(id, { type: 'unwound', result: ran.deny !== undefined ? 'denied-below' : ran.isError === true ? 'ran-error' : 'ran', at: after }, ctx)
   }
-  if (ran.deny === undefined && current.phase === 'asking' && current.checkSeen && isSetupFault(decision.judgment) && decision.judgment.argsHash !== null) {
+  // A person's no reaches next as an errored result, the shape of a tool that failed (measured on Claude Code 2.1.287 and 2.1.312), so only a clean result shows a yes.
+  const answered = ran.deny !== undefined ? 'denied' : ran.isError === true ? 'errored' : 'ran'
+  if (answered === 'ran' && current.phase === 'asking' && current.checkSeen && isSetupFault(decision.judgment) && decision.judgment.argsHash !== null) {
     rememberIfDialog(rememberKey(e.tool, decision.judgment.argsHash))
   }
   const asked = askedDecision(id, decision)
-  if (asked !== null) noteAskResolved('tool.call', evidenceCall, asked, ran.deny !== undefined ? 'denied' : 'ran', after)
+  if (asked !== null) noteAskResolved('tool.call', evidenceCall, asked, answered, after)
   publish($, id, after)
   return ran
 }

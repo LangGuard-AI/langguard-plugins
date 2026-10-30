@@ -27,7 +27,7 @@ export type EvidenceInput = {
   readonly at: number
   readonly agentId?: string
   readonly toolUseId?: string
-  readonly outcome?: 'ran' | 'denied'
+  readonly outcome?: AskOutcome
   readonly reason?: string
 }
 
@@ -111,7 +111,10 @@ export function noteDecision(hookEvent: string, call: DecisionCall, decision: De
   enqueue({ ...baseOf(call, hookEvent, at), kind: 'decision', verdict: decision.effective, source: sourceOf(judgment), argsHash: judgment.argsHash, ...(reason !== undefined ? { reason } : {}) })
 }
 
-export function noteAskResolved(hookEvent: string, call: DecisionCall, decision: Decision, outcome: 'ran' | 'denied', at: number): void {
+// errored: the call came back as an error, so the person refused it or it failed; the mod cannot tell which.
+export type AskOutcome = 'ran' | 'denied' | 'errored'
+
+export function noteAskResolved(hookEvent: string, call: DecisionCall, decision: Decision, outcome: AskOutcome, at: number): void {
   enqueue({ ...baseOf(call, hookEvent, at), kind: 'ask_resolved', verdict: 'ASK', source: sourceOf(decision.judgment), argsHash: decision.judgment.argsHash, outcome })
 }
 
