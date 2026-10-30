@@ -99,25 +99,31 @@ instance URL (no trailing slash). The plugin uses the standard
 # `langguard-arbiter` — in-harness policy enforcement
 
 A second plugin in this marketplace. Where `langguard` gives the agent governance
-*tools and context*, **`langguard-arbiter` enforces**: it intercepts every MCP tool
-call at the pre-action seam and returns a deterministic verdict against your active
-LangGuard policies — no LLM in the enforcement loop.
+*tools and context*, **`langguard-arbiter` enforces**: it checks every MCP tool call
+against your active LangGuard policies before the call runs. No LLM is in the
+enforcement loop.
 
 ## What you get
 
-- **A `PreToolUse` enforcement hook** on `mcp__*` tool calls — deterministic
-  **ALLOW / DENY / ASK** against your active policies.
-- **Screen / evidence / verify hooks** (SessionStart, PostToolUse, Stop) for advisory
-  context and a best-effort audit trail.
-- **A background `monitor`** hosting a **session-local policy daemon** on `127.0.0.1`:
-  it provisions a checksum-verified OPA binary and keeps a policy-bundle sync channel
-  open so evaluation can run locally as bundle delivery rolls out. Today every verdict
-  rides a low-latency remote check against your LangGuard host.
+The Claude Code plugin is a **mod**: it runs inside Claude Code. It has no background
+daemon and no separate process.
+
+- **A check on each MCP call.** The mod decides each `mcp__*` call before it runs. A
+  blocked call shows only "Blocked by an organization policy". A call that a policy asks
+  about opens the Claude Code permission prompt.
+- **A local policy engine.** The mod fetches a checksum-verified OPA program and keeps
+  your policy bundle in sync with LangGuard. Policies that can run on the machine decide
+  there, in a few milliseconds. The rest go to your LangGuard server.
+- **An output check.** When a policy blocks a tool's output, the model reads
+  "[LangGuard] Output withheld by an organization policy."
+- **`/langguard status`**, a pane with a Session tab (the calls that were not allowed)
+  and a Status tab (setup, connection, mode, version).
 
 ## Requirements
 
-- **Claude Code v2.1.105+** (background `monitor` support)
-- **Node.js on your PATH** (the monitor and hooks run under Node)
+- **Claude Code 2.1.287 or later.** An older Claude Code does not load the mod.
+- **Node.js on your PATH** only for a small start check. Without Node, a strict-mode
+  session blocks each prompt.
 
 ## Install
 
@@ -126,36 +132,36 @@ LangGuard policies — no LLM in the enforcement loop.
 /plugin install langguard-arbiter@langguard-plugins
 ```
 
-You will be prompted for three values at install time:
+Then open `/plugin`, choose **Installed**, choose **langguard-arbiter**, choose
+**Configure options**, and set:
 
-| Field | Description |
+| Option | Description |
 |---|---|
-| `host` | Your LangGuard URL (default `https://app.langguard.ai`; `https://` required unless loopback) |
-| `api_token` | An `lgr_` API key — mint one on the **Arbiter Hooks** page at `<host>/settings/agent-hooks` (ingest scope, shown once; stored in OS keychain) |
-| `enforcement_mode` | `cooperative` (default, fails open if the daemon dies or the key is revoked) or `strict` (fails closed past a short cold-start grace — recommended for managed/enterprise) |
+| **Address** | Your organization's own LangGuard address, like `https://yourcompany.app.langguard.ai`. |
+| **API key** | An `lgr_` key with ingest scope. Create it in LangGuard: Settings, Arbiter Management, **Deploy Arbiter**. Claude Code keeps it in secure storage. |
+| **Mode** | `cooperative` (default): when LangGuard cannot check a call, it asks you first. `strict`: when LangGuard cannot check a call, it blocks the call. |
+| **Policy signing key** | Leave it empty to take the key from LangGuard. |
+| **OPA program** | Leave it empty to let the mod fetch the pinned OPA program. |
 
-If you also run the Codex, Cursor, and/or Antigravity plugin on the same machine,
-**use the same `lgr_` key for all of them** (or set `LANGGUARD_API_KEY` once) — all
-four harnesses share one loopback daemon, and a key mismatch degrades enforcement for
-whichever harness attached later.
+Choose **Save configuration**. Claude Code reloads the plugin. Run `/langguard status`
+to see the result.
 
 ## How enforcement behaves
 
-- On `mcp__*` calls the hook returns **allow / deny / ask**. In **cooperative** mode it
-  **fails OPEN with a warning** while the daemon is warming, never started, or has
-  crashed (cold start, OPA download, no Node) so a fresh session is never locked out;
-  it fails CLOSED only when a daemon is alive but unresponsive (wedged). In **strict**
-  mode a dead or never-starting daemon, a revoked key, and a loopback key mismatch all
-  fail CLOSED once past a bounded cold-start grace.
-- Enforcement is **cooperative + audited**, not a tamper-proof perimeter — a developer
-  can uninstall the plugin. For hard, locked-down enforcement, deploy via Claude Code
-  **managed settings** (force-install + lock).
+- A local BLOCK always stands. When the server cannot be reached, a call that local
+  policies cannot decide asks you first in cooperative mode, and is blocked in strict
+  mode.
+- Enforcement is **cooperative and audited**, not a tamper-proof perimeter: a developer
+  can uninstall the plugin. For locked-down enforcement, deploy through Claude Code
+  managed settings.
 
 ## Enterprise / managed rollout
 
-IT can force-install and pin the host fleet-wide via Claude Code `managed-settings.json`
-(`enabledPlugins` + `strictKnownMarketplaces` + `allowManagedHooksOnly`) — no per-user
-`/plugin install`. See the LangGuard enterprise deployment guide.
+IT can install the plugin and lock its options through Claude Code `managed-settings.json`,
+with a directory marketplace at an admin-only path and `prependPlugins`. The
+template is in the LangGuard enterprise guide and on the Deployment page in LangGuard.
+Do not use the earlier template that set `allowManagedHooksOnly` with a GitHub
+marketplace: the mod does not load under it.
 
 ---
 
