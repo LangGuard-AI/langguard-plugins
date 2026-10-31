@@ -1,10 +1,64 @@
 {
   "version": 1,
   "hooks": {
-    "sessionStart":         [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" screen",   "timeout": 30 }],
-    "beforeMCPExecution":   [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" enforce",  "timeout": 30 }],
-    "beforeShellExecution": [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" enforce",  "timeout": 30 }],
-    "afterMCPExecution":    [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" evidence", "timeout": 30 }],
-    "stop":                 [{ "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" verify",   "timeout": 30 }]
+    "sessionStart": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" screen", "timeout": 30 },
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "sessionEnd": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "beforeMCPExecution": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" enforce", "timeout": 30 },
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "afterMCPExecution": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" evidence", "timeout": 30 },
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "beforeShellExecution": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" enforce", "timeout": 30 },
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "afterShellExecution": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "preToolUse": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "postToolUse": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "postToolUseFailure": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "beforeReadFile": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "afterFileEdit": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "beforeSubmitPrompt": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "preCompact": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "stop": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" verify", "timeout": 30 },
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "subagentStart": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "subagentStop": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "afterAgentResponse": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ],
+    "afterAgentThought": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
+    ]
   }
 }
