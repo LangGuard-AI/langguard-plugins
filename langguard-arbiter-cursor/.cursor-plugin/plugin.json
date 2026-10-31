@@ -1,6 +1,6 @@
 {
   "name": "langguard-arbiter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "LangGuard Arbiter — one hooks.json for Cursor: OpenTelemetry activity export plus in-harness policy. Screens, enforces, and evidences every MCP tool call against your LangGuard policies at the pre-action seam (beforeMCPExecution). Deterministic ALLOW / DENY / ASK — ASK surfaces as Cursor's native Ask approval prompt. Native shell gets a best-effort catastrophic-command deny (beforeShellExecution); afterMCPExecution and stop are advisory. Session, tool, file, and prompt events export as OTLP spans. No LLM in the enforcement loop. Disclosure: the bundled hook shim spawns a local background policy daemon (loopback port 52746, shared with the LangGuard Claude Code and Codex plugins) and on first run downloads a SHA-256-pinned Open Policy Agent binary (checksums bundled in opa/opa-checksums.json); policy logic stays server-side in your LangGuard tenant.",
   "author": {
     "name": "LangGuard",
