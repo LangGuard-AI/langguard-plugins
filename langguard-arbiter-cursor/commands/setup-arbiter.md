@@ -5,7 +5,8 @@ description: Verify (and if needed walk the user through) LangGuard Arbiter setu
 # Set up LangGuard Arbiter
 
 You are helping the user finish setting up the LangGuard Arbiter plugin for Cursor.
-Arbiter enforces the user's LangGuard tenant policies on every MCP tool call
+One hooks.json does both jobs: it exports session and tool activity over OTLP, and
+Arbiter enforces the user's LangGuard policies on every MCP tool call
 (ALLOW / DENY / ASK — ASK surfaces as Cursor's native Ask prompt).
 
 **HARD RULE — the API key never touches this chat.** Do NOT ask the user for their
@@ -60,7 +61,7 @@ After the user confirms:
    - Enforcement mode: cooperative or strict
    - What they get: deterministic **ALLOW / DENY / ASK** on every MCP tool call
      (ASK-tier tools trigger Cursor's native Ask approval prompt), best-effort
-     catastrophic-command deny on native shell, and audit evidence in their
-     LangGuard tenant.
+     catastrophic-command deny on native shell, activity traces from the same
+     hooks.json, and audit evidence in LangGuard.
 
 This command is a convenience only — the plugin works identically without ever running it.

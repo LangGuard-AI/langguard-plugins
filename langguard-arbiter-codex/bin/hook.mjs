@@ -275,7 +275,14 @@ function classifyGrace(state, now) {
   const started = Date.parse(state.startedAt);
   const withinStartupGrace = Number.isFinite(started) && now - started < STARTUP_GRACE_MS;
   if (state.opaProvisioning === true) {
-    return { verdict: "warming", category: "transient", reason: "OPA binary still provisioning (first-run download)" };
+    if (ownerAlive(state)) {
+      return { verdict: "warming", category: "transient", reason: "OPA binary still provisioning (first-run download)" };
+    }
+    return {
+      verdict: "warming",
+      category: "no-daemon",
+      reason: `owner pid ${state.pid ?? "(none)"} died during OPA provisioning \u2192 stale warming state`
+    };
   }
   if (state.ready !== true) {
     return {
@@ -464,8 +471,226 @@ async function handleEnforce(bodyRaw) {
   warn(`enforce: daemon reachable but returned HTTP ${res.status} \u2014 failing OPEN.`);
   exitWith(0);
 }
+var REMOTE_SAAS_HOST = process.env.LANGGUARD_HOST ?? yamlScalar(configText, "host") ?? "https://app.langguard.ai";
+function portalBase() {
+  try {
+    return new URL(REMOTE_SAAS_HOST).origin;
+  } catch {
+    return "your LangGuard portal";
+  }
+}
+var LGR_RE = /^lgr_/;
+var REMOTE_LOOPBACK_HOSTS = /* @__PURE__ */ new Set(["127.0.0.1", "[::1]", "::1", "localhost"]);
+var stripBrackets = (h) => h.replace(/^\[|\]$/g, "");
+function resolveRemoteTarget() {
+  const envUrl = (process.env.ARBITER_DAEMON_URL ?? "").trim();
+  const raw = (envUrl || (yamlScalar(configText, "daemonUrl") ?? "")).trim();
+  if (!raw) return null;
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    return { invalid: true, raw, reason: "unparseable daemonUrl" };
+  }
+  const isHttps = url.protocol === "https:";
+  if (!isHttps) {
+    if (url.protocol !== "http:") {
+      return { invalid: true, raw, reason: `unsupported protocol "${url.protocol}"` };
+    }
+    if (!REMOTE_LOOPBACK_HOSTS.has(url.hostname)) {
+      return { invalid: true, raw, reason: "plain-http is only allowed for loopback \u2014 use https://" };
+    }
+  }
+  const port = url.port ? Number(url.port) : isHttps ? 443 : 80;
+  const pathBase = url.pathname.replace(/\/+$/, "");
+  return { invalid: false, raw, host: url.hostname, port, isHttps, pathBase };
+}
+var REMOTE = resolveRemoteTarget();
+function resolveRemoteCredential() {
+  return (process.env.LANGGUARD_API_KEY ?? yamlScalar(configText, "apiKey") ?? "").trim();
+}
+var REMOTE_ENFORCE_ATTEMPT_TIMEOUT_MS = 2500;
+var REMOTE_ENFORCE_BUDGET_MS = 5e3;
+var REMOTE_ADVISORY_TIMEOUT_MS = 1500;
+async function postHookRemote(hookPhase, bodyRaw, timeoutMs, bearer) {
+  const transport = REMOTE.isHttps ? (await import("node:https")).default : http;
+  const connectHost = stripBrackets(REMOTE.host);
+  return new Promise((resolve, reject) => {
+    const payload = Buffer.from(bodyRaw ?? "", "utf8");
+    const req = transport.request(
+      {
+        host: connectHost,
+        port: REMOTE.port,
+        path: `${REMOTE.pathBase}/hook/${hookPhase}`,
+        method: "POST",
+        ...REMOTE.isHttps ? { servername: connectHost } : {},
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": payload.length,
+          Authorization: `Bearer ${bearer}`
+        }
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on(
+          "end",
+          () => resolve({ status: res.statusCode ?? 0, text: Buffer.concat(chunks).toString("utf8") })
+        );
+        res.on("error", reject);
+      }
+    );
+    req.on("error", reject);
+    req.setTimeout(timeoutMs, () => {
+      const e = new Error(`remote POST timed out after ${timeoutMs}ms`);
+      e.code = "ETIMEDOUT";
+      req.destroy(e);
+    });
+    req.end(payload);
+  });
+}
+async function postHookRemoteWithRetry(hookPhase, bodyRaw, budgetMs, bearer) {
+  const deadline = Date.now() + budgetMs;
+  const backoffs = [0, 200, 500, 1e3];
+  let lastErr;
+  for (let i = 0; i < backoffs.length; i++) {
+    if (backoffs[i] > 0) await sleep(backoffs[i]);
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+    try {
+      return await postHookRemote(
+        hookPhase,
+        bodyRaw,
+        Math.min(REMOTE_ENFORCE_ATTEMPT_TIMEOUT_MS, remaining),
+        bearer
+      );
+    } catch (err) {
+      lastErr = err;
+      if (!CONNECT_ERROR_CODES.has(err?.code)) throw err;
+    }
+  }
+  throw lastErr ?? Object.assign(new Error("cloud daemon unreachable"), { code: "ECONNREFUSED" });
+}
+function remoteEnforceFail(reason) {
+  if (ENFORCEMENT_MODE === "strict") {
+    emit(enforceDenyResult(`LangGuard Arbiter: ${reason} \u2014 BLOCKING (strict mode, fail-CLOSED).`));
+  } else {
+    warn(`enforce (remote): ${reason} \u2014 failing OPEN (cooperative).`);
+    exitWith(0);
+  }
+}
+function relayEnforceResponseRemote(res) {
+  let daemonResponse;
+  try {
+    daemonResponse = JSON.parse(res.text);
+  } catch {
+    emit(enforceDenyResult("Arbiter cloud daemon returned an unparseable enforce response \u2014 failing CLOSED."));
+    return;
+  }
+  emit(shapeEnforceResult(daemonResponse));
+}
+function maybeWarnHostCollision() {
+  try {
+    const saasHost = new URL(REMOTE_SAAS_HOST).hostname;
+    if (saasHost && stripBrackets(REMOTE.host) === stripBrackets(saasHost)) {
+      warn("Arbiter: daemonUrl points at your LangGuard host, not an Arbiter daemon \u2014 hooks will 404");
+    }
+  } catch {
+  }
+}
+async function handleEnforceRemote(bodyRaw) {
+  if (REMOTE.invalid) {
+    remoteEnforceFail(
+      `invalid daemonUrl (${REMOTE.reason}) \u2014 fix daemonUrl in ~/.config/arbiter/config.yaml`
+    );
+    return;
+  }
+  maybeWarnHostCollision();
+  const credential = resolveRemoteCredential();
+  if (!credential || !LGR_RE.test(credential)) {
+    const why = credential ? "the configured API key is not an lgr_ tenant key" : "no API key found";
+    remoteEnforceFail(
+      `cloud daemon configured but ${why} \u2014 get a key at ${portalBase()}/arbiter/connect (or from your admin) and add apiKey: to ~/.config/arbiter/config.yaml`
+    );
+    return;
+  }
+  let res;
+  try {
+    res = await postHookRemoteWithRetry("enforce", bodyRaw, REMOTE_ENFORCE_BUDGET_MS, credential);
+  } catch (err) {
+    remoteEnforceFail(
+      `cloud daemon ${REMOTE.raw} unreachable (${err?.code ?? "network error"}) \u2014 coverage gap`
+    );
+    return;
+  }
+  if (res.status >= 200 && res.status < 300) {
+    relayEnforceResponseRemote(res);
+    return;
+  }
+  if (res.status === 401) {
+    remoteEnforceFail(
+      `credential rejected by ${REMOTE.raw} \u2014 get a new key at ${portalBase()}/arbiter/connect (or from your admin) and update apiKey: in ~/.config/arbiter/config.yaml`
+    );
+    return;
+  }
+  if (res.status === 404) {
+    remoteEnforceFail(
+      `${REMOTE.raw} does not appear to be an Arbiter daemon \u2014 check daemonUrl in ~/.config/arbiter/config.yaml`
+    );
+    return;
+  }
+  remoteEnforceFail(`cloud daemon ${REMOTE.raw} returned HTTP ${res.status}`);
+}
+async function handleAdvisoryRemote(hookPhase, bodyRaw) {
+  if (REMOTE.invalid) {
+    warn(`${hookPhase} (remote): invalid daemonUrl (${REMOTE.reason}) \u2014 skipping (fail-OPEN).`);
+    exitWith(0);
+    return;
+  }
+  maybeWarnHostCollision();
+  const credential = resolveRemoteCredential();
+  if (!credential || !LGR_RE.test(credential)) {
+    exitWith(0);
+    return;
+  }
+  try {
+    const res = await postHookRemote(hookPhase, bodyRaw, REMOTE_ADVISORY_TIMEOUT_MS, credential);
+    if (res.status >= 200 && res.status < 300 && res.text) {
+      let daemonResponse;
+      try {
+        daemonResponse = JSON.parse(res.text);
+      } catch {
+        exitWith(0);
+        return;
+      }
+      emit(hookPhase === "screen" ? shapeScreenResult(daemonResponse) : shapeBlockableResult(daemonResponse));
+      return;
+    }
+  } catch {
+  }
+  exitWith(0);
+}
+async function mainRemote(bodyRaw) {
+  switch (phase) {
+    case "enforce":
+      await handleEnforceRemote(bodyRaw);
+      return;
+    case "screen":
+    case "evidence":
+    case "verify":
+      await handleAdvisoryRemote(phase, bodyRaw);
+      return;
+    default:
+      warn(`unknown phase "${String(phase)}" \u2014 no-op (exit 0).`);
+      exitWith(0);
+  }
+}
 async function main() {
   const bodyRaw = stampHarness(await readStdin());
+  if (REMOTE) {
+    await mainRemote(bodyRaw);
+    return;
+  }
   switch (phase) {
     case "enforce":
       await handleEnforce(bodyRaw);

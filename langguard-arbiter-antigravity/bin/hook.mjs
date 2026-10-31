@@ -312,10 +312,10 @@ function shapeScreenOutput(daemonResponse) {
   }
   return { stdout: "", stderr: "", exitCode: 0 };
 }
-function shapeEvidenceOutput(_daemonResponse) {
+function shapeEvidenceOutput() {
   return { stdout: "", stderr: "", exitCode: 0 };
 }
-function shapeVerifyOutput(_daemonResponse) {
+function shapeVerifyOutput() {
   return { stdout: "", stderr: "", exitCode: 0 };
 }
 
@@ -999,6 +999,233 @@ async function retryWithLockfileBearer(bodyRaw) {
 function bearerMismatchReason() {
   return `LangGuard Arbiter: loopback bearer mismatch with the daemon owning port ${PORT} \u2014 the canonical ~/.config/arbiter/bearer (arbd_) did not match the running daemon. Restart the daemon so it republishes the shared loopback bearer, or re-run setup from the Arbiter Hooks settings page.`;
 }
+var REMOTE_SAAS_HOST = process.env.LANGGUARD_HOST ?? yamlScalar(configText, "host") ?? "https://app.langguard.ai";
+function portalBase() {
+  try {
+    return new URL(REMOTE_SAAS_HOST).origin;
+  } catch {
+    return "your LangGuard portal";
+  }
+}
+var LGR_RE = /^lgr_/;
+var REMOTE_LOOPBACK_HOSTS = /* @__PURE__ */ new Set(["127.0.0.1", "[::1]", "::1", "localhost"]);
+var stripBrackets = (h) => h.replace(/^\[|\]$/g, "");
+function resolveRemoteTarget() {
+  const envUrl = (process.env.ARBITER_DAEMON_URL ?? "").trim();
+  const raw = (envUrl || (yamlScalar(configText, "daemonUrl") ?? "")).trim();
+  if (!raw) return null;
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    return { invalid: true, raw, reason: "unparseable daemonUrl" };
+  }
+  const isHttps = url.protocol === "https:";
+  if (!isHttps) {
+    if (url.protocol !== "http:") {
+      return { invalid: true, raw, reason: `unsupported protocol "${url.protocol}"` };
+    }
+    if (!REMOTE_LOOPBACK_HOSTS.has(url.hostname)) {
+      return { invalid: true, raw, reason: "plain-http is only allowed for loopback \u2014 use https://" };
+    }
+  }
+  const port = url.port ? Number(url.port) : isHttps ? 443 : 80;
+  const pathBase = url.pathname.replace(/\/+$/, "");
+  return { invalid: false, raw, host: url.hostname, port, isHttps, pathBase };
+}
+var REMOTE = resolveRemoteTarget();
+function resolveRemoteCredential() {
+  return (process.env.LANGGUARD_API_KEY ?? yamlScalar(configText, "apiKey") ?? process.env.ARBITER_TOKEN ?? "").trim();
+}
+var REMOTE_ENFORCE_ATTEMPT_TIMEOUT_MS = 2500;
+var REMOTE_ENFORCE_BUDGET_MS = 5e3;
+var REMOTE_ADVISORY_TIMEOUT_MS = 1500;
+async function postHookRemote(hookPhase, bodyRaw, timeoutMs, bearer) {
+  const transport = REMOTE.isHttps ? (await import("node:https")).default : http;
+  const connectHost = stripBrackets(REMOTE.host);
+  return new Promise((resolve, reject) => {
+    const payload = Buffer.from(bodyRaw ?? "", "utf8");
+    const req = transport.request(
+      {
+        host: connectHost,
+        port: REMOTE.port,
+        path: `${REMOTE.pathBase}/hook/${hookPhase}`,
+        method: "POST",
+        ...REMOTE.isHttps ? { servername: connectHost } : {},
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": payload.length,
+          Authorization: `Bearer ${bearer}`
+        }
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on(
+          "end",
+          () => resolve({ status: res.statusCode ?? 0, text: Buffer.concat(chunks).toString("utf8") })
+        );
+        res.on("error", reject);
+      }
+    );
+    req.on("error", reject);
+    req.setTimeout(timeoutMs, () => {
+      const e = new Error(`remote POST timed out after ${timeoutMs}ms`);
+      e.code = "ETIMEDOUT";
+      req.destroy(e);
+    });
+    req.end(payload);
+  });
+}
+async function postHookRemoteWithRetry(hookPhase, bodyRaw, budgetMs, bearer) {
+  const deadline = Date.now() + budgetMs;
+  const backoffs = [0, 200, 500, 1e3];
+  let lastErr;
+  for (let i = 0; i < backoffs.length; i++) {
+    if (backoffs[i] > 0) await sleep(backoffs[i]);
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+    try {
+      return await postHookRemote(
+        hookPhase,
+        bodyRaw,
+        Math.min(REMOTE_ENFORCE_ATTEMPT_TIMEOUT_MS, remaining),
+        bearer
+      );
+    } catch (err) {
+      lastErr = err;
+      if (!CONNECT_ERROR_CODES.has(err?.code)) throw err;
+    }
+  }
+  throw lastErr ?? Object.assign(new Error("cloud daemon unreachable"), { code: "ECONNREFUSED" });
+}
+function remoteEnforceFail(reason) {
+  if (ENFORCEMENT_MODE === "strict") {
+    emit(enforceDenyOutput(`LangGuard Arbiter: ${reason} \u2014 BLOCKING (strict mode, fail-CLOSED).`));
+  } else {
+    warn(`enforce (remote): ${reason} \u2014 failing OPEN (cooperative).`);
+    exitZero();
+  }
+}
+function relayEnforceResponseRemote(res) {
+  let daemonResponse;
+  try {
+    daemonResponse = JSON.parse(res.text);
+  } catch {
+    emit(enforceDenyOutput("Arbiter cloud daemon returned an unparseable enforce response \u2014 failing CLOSED."));
+    return;
+  }
+  emit(shapeEnforceOutput(daemonResponse));
+}
+function maybeWarnHostCollision() {
+  try {
+    const saasHost = new URL(REMOTE_SAAS_HOST).hostname;
+    if (saasHost && stripBrackets(REMOTE.host) === stripBrackets(saasHost)) {
+      warn("Arbiter: daemonUrl points at your LangGuard host, not an Arbiter daemon \u2014 hooks will 404");
+    }
+  } catch {
+  }
+}
+async function handleEnforceRemote(translated) {
+  if (translated.toolClass === "shell") {
+    const command = translated.ccBody?.tool_input?.command ?? "";
+    if (isCatastrophicShellMatch(command, DEFAULT_CATASTROPHIC_DENY_LIST)) {
+      emit(catastrophicDenyOutput(
+        "LangGuard Arbiter: this shell command matches the catastrophic deny-list \u2014 blocked by the offline backstop (no daemon required)."
+      ));
+      return;
+    }
+  }
+  if (REMOTE.invalid) {
+    remoteEnforceFail(
+      `invalid daemonUrl (${REMOTE.reason}) \u2014 fix daemonUrl in ~/.config/arbiter/config.yaml`
+    );
+    return;
+  }
+  maybeWarnHostCollision();
+  const credential = resolveRemoteCredential();
+  if (!credential || !LGR_RE.test(credential)) {
+    const why = credential ? "the configured API key is not an lgr_ tenant key" : "no API key found";
+    remoteEnforceFail(
+      `cloud daemon configured but ${why} \u2014 get a key at ${portalBase()}/arbiter/connect (or from your admin) and add apiKey: to ~/.config/arbiter/config.yaml`
+    );
+    return;
+  }
+  let res;
+  try {
+    res = await postHookRemoteWithRetry(
+      "enforce",
+      JSON.stringify(translated.ccBody),
+      REMOTE_ENFORCE_BUDGET_MS,
+      credential
+    );
+  } catch (err) {
+    remoteEnforceFail(
+      `cloud daemon ${REMOTE.raw} unreachable (${err?.code ?? "network error"}) \u2014 coverage gap`
+    );
+    return;
+  }
+  if (res.status >= 200 && res.status < 300) {
+    relayEnforceResponseRemote(res);
+    return;
+  }
+  if (res.status === 401) {
+    remoteEnforceFail(
+      `credential rejected by ${REMOTE.raw} \u2014 get a new key at ${portalBase()}/arbiter/connect (or from your admin) and update apiKey: in ~/.config/arbiter/config.yaml`
+    );
+    return;
+  }
+  if (res.status === 404) {
+    remoteEnforceFail(
+      `${REMOTE.raw} does not appear to be an Arbiter daemon \u2014 check daemonUrl in ~/.config/arbiter/config.yaml`
+    );
+    return;
+  }
+  remoteEnforceFail(`cloud daemon ${REMOTE.raw} returned HTTP ${res.status}`);
+}
+async function handleAdvisoryRemote(hookPhase, translated) {
+  if (REMOTE.invalid) {
+    warn(`${hookPhase} (remote): invalid daemonUrl (${REMOTE.reason}) \u2014 skipping (fail-OPEN).`);
+    exitZero();
+    return;
+  }
+  maybeWarnHostCollision();
+  const credential = resolveRemoteCredential();
+  if (!credential || !LGR_RE.test(credential)) {
+    exitZero();
+    return;
+  }
+  try {
+    const res = await postHookRemote(
+      hookPhase,
+      JSON.stringify(translated.ccBody),
+      REMOTE_ADVISORY_TIMEOUT_MS,
+      credential
+    );
+    if (res.status >= 200 && res.status < 300 && res.text) {
+      let daemonResponse;
+      try {
+        daemonResponse = JSON.parse(res.text);
+      } catch {
+        exitZero();
+        return;
+      }
+      if (hookPhase === "screen") emit(shapeScreenOutput(daemonResponse));
+      else if (hookPhase === "evidence") emit(shapeEvidenceOutput(daemonResponse));
+      else emit(shapeVerifyOutput(daemonResponse));
+      return;
+    }
+  } catch {
+  }
+  exitZero();
+}
+async function mainRemote(translated) {
+  if (phase === "enforce") {
+    await handleEnforceRemote(translated);
+    return;
+  }
+  await handleAdvisoryRemote(phase, translated);
+}
 async function main() {
   if (!token) token = resolveLoopbackBearer();
   const raw = await readStdin();
@@ -1023,6 +1250,10 @@ async function main() {
     }
     warn(`${phase}: unparseable or non-object stdin \u2014 emitting nothing locally (exit 0), not forwarded.`);
     emitPassive();
+    return;
+  }
+  if (REMOTE) {
+    await mainRemote(translated);
     return;
   }
   if (phase === "enforce") {
