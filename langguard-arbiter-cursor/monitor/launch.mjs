@@ -1711,10 +1711,10 @@ var require_util = __commonJS({
       }
       return obj;
     }
-    function errorRequest(client, request, err) {
+    function errorRequest(client, request2, err) {
       try {
-        request.onError(err);
-        assert2(request.aborted);
+        request2.onError(err);
+        assert2(request2.aborted);
       } catch (err2) {
         client.emit("error", err2);
       }
@@ -2405,7 +2405,7 @@ var require_request = __commonJS({
         return this;
       }
     };
-    function processHeader(request, key, val) {
+    function processHeader(request2, key, val) {
       if (val && (typeof val === "object" && !Array.isArray(val))) {
         throw new InvalidArgumentError(`invalid ${key} header`);
       } else if (val === void 0) {
@@ -2452,24 +2452,24 @@ var require_request = __commonJS({
         }
       }
       if (headerName === "host") {
-        if (request.host !== null) {
+        if (request2.host !== null) {
           throw new InvalidArgumentError("duplicate host header");
         }
         if (typeof val !== "string") {
           throw new InvalidArgumentError("invalid host header");
         }
-        request.host = val;
+        request2.host = val;
       } else if (headerName === "content-length") {
-        if (request.contentLength !== null) {
+        if (request2.contentLength !== null) {
           throw new InvalidArgumentError("duplicate content-length header");
         }
         if (!isValidContentLengthHeaderValue(val)) {
           throw new InvalidArgumentError("invalid content-length header");
         }
-        request.contentLength = parseInt(val, 10);
-      } else if (request.contentType === null && headerName === "content-type") {
-        request.contentType = val;
-        request.headers.push(key, val);
+        request2.contentLength = parseInt(val, 10);
+      } else if (request2.contentType === null && headerName === "content-type") {
+        request2.contentType = val;
+        request2.headers.push(key, val);
       } else if (headerName === "transfer-encoding" || headerName === "keep-alive" || headerName === "upgrade") {
         throw new InvalidArgumentError(`invalid ${headerName} header`);
       } else if (headerName === "connection") {
@@ -2478,18 +2478,18 @@ var require_request = __commonJS({
           throw new InvalidArgumentError("invalid connection header");
         }
         for (const token of value.toLowerCase().split(",")) {
-          const trimmed = token.trim();
-          if (!isValidHTTPToken(trimmed)) {
+          const trimmed2 = token.trim();
+          if (!isValidHTTPToken(trimmed2)) {
             throw new InvalidArgumentError("invalid connection header");
           }
-          if (trimmed === "close") {
-            request.reset = true;
+          if (trimmed2 === "close") {
+            request2.reset = true;
           }
         }
       } else if (headerName === "expect") {
         throw new NotSupportedError("expect header not supported");
       } else {
-        request.headers.push(key, val);
+        request2.headers.push(key, val);
       }
     }
     module.exports = Request;
@@ -2933,7 +2933,7 @@ var require_connect = __commonJS({
       const sessionCache = new SessionCache(maxCachedSessions == null ? 100 : maxCachedSessions);
       timeout = timeout == null ? 1e4 : timeout;
       allowH2 = allowH2 != null ? allowH2 : false;
-      return function connect({ hostname: hostname3, host: host2, protocol, port, servername, localAddress, httpSocket }, callback) {
+      return function connect2({ hostname: hostname3, host: host2, protocol, port, servername, localAddress, httpSocket }, callback) {
         let socket;
         if (protocol === "https:") {
           if (!tls) {
@@ -5102,11 +5102,11 @@ var require_util2 = __commonJS({
     function normalizeBinaryStringToUtf8(value) {
       return Buffer.from(value, "binary").toString("utf8");
     }
-    function requestCurrentURL(request) {
-      return request.urlList[request.urlList.length - 1];
+    function requestCurrentURL(request2) {
+      return request2.urlList[request2.urlList.length - 1];
     }
-    function requestBadPort(request) {
-      const url2 = requestCurrentURL(request);
+    function requestBadPort(request2) {
+      const url2 = requestCurrentURL(request2);
       if (urlIsHttpHttpsScheme(url2) && badPortsSet.has(url2.port)) {
         return "blocked";
       }
@@ -5144,10 +5144,10 @@ var require_util2 = __commonJS({
       }
       return policy;
     }
-    function setRequestReferrerPolicyOnRedirect(request, actualResponse) {
+    function setRequestReferrerPolicyOnRedirect(request2, actualResponse) {
       const policy = parseReferrerPolicy(actualResponse);
       if (policy !== "") {
-        request.referrerPolicy = policy;
+        request2.referrerPolicy = policy;
       }
     }
     function crossOriginResourcePolicyCheck() {
@@ -5159,38 +5159,38 @@ var require_util2 = __commonJS({
     function TAOCheck() {
       return "success";
     }
-    function appendFetchMetadata(httpRequest) {
+    function appendFetchMetadata(httpRequest3) {
       let header = null;
-      header = httpRequest.mode;
-      httpRequest.headersList.set("sec-fetch-mode", header, true);
+      header = httpRequest3.mode;
+      httpRequest3.headersList.set("sec-fetch-mode", header, true);
     }
-    function appendRequestOriginHeader(request) {
-      let serializedOrigin = request.origin;
+    function appendRequestOriginHeader(request2) {
+      let serializedOrigin = request2.origin;
       if (serializedOrigin === "client" || serializedOrigin === void 0) {
         return;
       }
-      if (request.responseTainting === "cors" || request.mode === "websocket") {
-        request.headersList.append("origin", serializedOrigin, true);
-      } else if (request.method !== "GET" && request.method !== "HEAD") {
-        switch (request.referrerPolicy) {
+      if (request2.responseTainting === "cors" || request2.mode === "websocket") {
+        request2.headersList.append("origin", serializedOrigin, true);
+      } else if (request2.method !== "GET" && request2.method !== "HEAD") {
+        switch (request2.referrerPolicy) {
           case "no-referrer":
             serializedOrigin = null;
             break;
           case "no-referrer-when-downgrade":
           case "strict-origin":
           case "strict-origin-when-cross-origin":
-            if (request.origin && urlHasHttpsScheme(request.origin) && !urlHasHttpsScheme(requestCurrentURL(request))) {
+            if (request2.origin && urlHasHttpsScheme(request2.origin) && !urlHasHttpsScheme(requestCurrentURL(request2))) {
               serializedOrigin = null;
             }
             break;
           case "same-origin":
-            if (!sameOrigin(request, requestCurrentURL(request))) {
+            if (!sameOrigin(request2, requestCurrentURL(request2))) {
               serializedOrigin = null;
             }
             break;
           default:
         }
-        request.headersList.append("origin", serializedOrigin, true);
+        request2.headersList.append("origin", serializedOrigin, true);
       }
     }
     function coarsenTime(timestamp2, crossOriginIsolatedCapability) {
@@ -5244,18 +5244,18 @@ var require_util2 = __commonJS({
         referrerPolicy: policyContainer.referrerPolicy
       };
     }
-    function determineRequestsReferrer(request) {
-      const policy = request.referrerPolicy;
+    function determineRequestsReferrer(request2) {
+      const policy = request2.referrerPolicy;
       assert2(policy);
       let referrerSource = null;
-      if (request.referrer === "client") {
+      if (request2.referrer === "client") {
         const globalOrigin = getGlobalOrigin();
         if (!globalOrigin || globalOrigin.origin === "null") {
           return "no-referrer";
         }
         referrerSource = new URL(globalOrigin);
-      } else if (webidl.is.URL(request.referrer)) {
-        referrerSource = request.referrer;
+      } else if (webidl.is.URL(request2.referrer)) {
+        referrerSource = request2.referrer;
       }
       let referrerURL = stripURLForReferrer(referrerSource);
       const referrerOrigin = stripURLForReferrer(referrerSource, true);
@@ -5273,14 +5273,14 @@ var require_util2 = __commonJS({
         case "unsafe-url":
           return referrerURL;
         case "strict-origin": {
-          const currentURL = requestCurrentURL(request);
+          const currentURL = requestCurrentURL(request2);
           if (isURLPotentiallyTrustworthy(referrerURL) && !isURLPotentiallyTrustworthy(currentURL)) {
             return "no-referrer";
           }
           return referrerOrigin;
         }
         case "strict-origin-when-cross-origin": {
-          const currentURL = requestCurrentURL(request);
+          const currentURL = requestCurrentURL(request2);
           if (sameOrigin(referrerURL, currentURL)) {
             return referrerURL;
           }
@@ -5290,17 +5290,17 @@ var require_util2 = __commonJS({
           return referrerOrigin;
         }
         case "same-origin":
-          if (sameOrigin(request, referrerURL)) {
+          if (sameOrigin(request2, referrerURL)) {
             return referrerURL;
           }
           return "no-referrer";
         case "origin-when-cross-origin":
-          if (sameOrigin(request, referrerURL)) {
+          if (sameOrigin(request2, referrerURL)) {
             return referrerURL;
           }
           return referrerOrigin;
         case "no-referrer-when-downgrade": {
-          const currentURL = requestCurrentURL(request);
+          const currentURL = requestCurrentURL(request2);
           if (isURLPotentiallyTrustworthy(referrerURL) && !isURLPotentiallyTrustworthy(currentURL)) {
             return "no-referrer";
           }
@@ -5367,7 +5367,7 @@ var require_util2 = __commonJS({
       if (url2.protocol === "blob:") return true;
       return isOriginPotentiallyTrustworthy(url2.origin);
     }
-    function tryUpgradeRequestToAPotentiallyTrustworthyURL(request) {
+    function tryUpgradeRequestToAPotentiallyTrustworthyURL(request2) {
     }
     function sameOrigin(A, B) {
       if (A.origin === B.origin && A.origin === "null") {
@@ -5746,7 +5746,7 @@ var require_util2 = __commonJS({
       }
       return gettingDecodingSplitting(value);
     }
-    function hasAuthenticationEntry(request) {
+    function hasAuthenticationEntry(request2) {
       return false;
     }
     function includesCredentials(url2) {
@@ -6980,11 +6980,11 @@ var require_client_h1 = __commonJS({
           util.destroy(socket, new SocketError("bad response", util.getSocketInfo(socket)));
           return -1;
         }
-        const request = client[kQueue][client[kRunningIdx]];
-        if (!request) {
+        const request2 = client[kQueue][client[kRunningIdx]];
+        if (!request2) {
           return -1;
         }
-        request.onResponseStarted();
+        request2.onResponseStarted();
         return 0;
       }
       /**
@@ -7046,9 +7046,9 @@ var require_client_h1 = __commonJS({
         assert2(!socket.destroyed);
         assert2(!this.paused);
         assert2((headers.length & 1) === 0);
-        const request = client[kQueue][client[kRunningIdx]];
-        assert2(request);
-        assert2(request.upgrade || request.method === "CONNECT");
+        const request2 = client[kQueue][client[kRunningIdx]];
+        assert2(request2);
+        assert2(request2.upgrade || request2.method === "CONNECT");
         this.statusCode = 0;
         this.statusText = "";
         this.shouldKeepAlive = false;
@@ -7065,9 +7065,9 @@ var require_client_h1 = __commonJS({
         client[kQueue][client[kRunningIdx]++] = null;
         client.emit("disconnect", client[kUrl], [client], new InformationalError("upgrade"));
         try {
-          request.onUpgrade(statusCode, headers, socket, statusText);
+          request2.onUpgrade(statusCode, headers, socket, statusText);
         } catch (err) {
-          util.errorRequest(client, request, err);
+          util.errorRequest(client, request2, err);
           util.destroy(socket, err);
         }
         client[kResume]();
@@ -7087,8 +7087,8 @@ var require_client_h1 = __commonJS({
           util.destroy(socket, new SocketError("bad response", util.getSocketInfo(socket)));
           return -1;
         }
-        const request = client[kQueue][client[kRunningIdx]];
-        if (!request) {
+        const request2 = client[kQueue][client[kRunningIdx]];
+        if (!request2) {
           return -1;
         }
         assert2(!this.upgrade);
@@ -7097,23 +7097,23 @@ var require_client_h1 = __commonJS({
           util.destroy(socket, new SocketError("bad response", util.getSocketInfo(socket)));
           return -1;
         }
-        if (upgrade && !request.upgrade) {
+        if (upgrade && !request2.upgrade) {
           util.destroy(socket, new SocketError("bad upgrade", util.getSocketInfo(socket)));
           return -1;
         }
         assert2(this.timeoutType === TIMEOUT_HEADERS);
         this.statusCode = statusCode;
         this.shouldKeepAlive = shouldKeepAlive || // Override llhttp value which does not allow keepAlive for HEAD.
-        request.method === "HEAD" && !socket[kReset] && this.connection.toLowerCase() === "keep-alive";
+        request2.method === "HEAD" && !socket[kReset] && this.connection.toLowerCase() === "keep-alive";
         if (this.statusCode >= 200) {
-          const bodyTimeout = request.bodyTimeout != null ? request.bodyTimeout : client[kBodyTimeout];
+          const bodyTimeout = request2.bodyTimeout != null ? request2.bodyTimeout : client[kBodyTimeout];
           this.setTimeout(bodyTimeout, TIMEOUT_BODY);
         } else if (this.timeout) {
           if (this.timeout.refresh) {
             this.timeout.refresh();
           }
         }
-        if (request.method === "CONNECT") {
+        if (request2.method === "CONNECT") {
           assert2(client[kRunning] === 1);
           this.upgrade = true;
           return 2;
@@ -7144,11 +7144,11 @@ var require_client_h1 = __commonJS({
         } else {
           socket[kReset] = true;
         }
-        const pause = request.onHeaders(statusCode, headers, this.resume, statusText) === false;
-        if (request.aborted) {
+        const pause = request2.onHeaders(statusCode, headers, this.resume, statusText) === false;
+        if (request2.aborted) {
           return -1;
         }
-        if (request.method === "HEAD") {
+        if (request2.method === "HEAD") {
           return 1;
         }
         if (statusCode < 200) {
@@ -7169,8 +7169,8 @@ var require_client_h1 = __commonJS({
         if (socket.destroyed) {
           return -1;
         }
-        const request = client[kQueue][client[kRunningIdx]];
-        assert2(request);
+        const request2 = client[kQueue][client[kRunningIdx]];
+        assert2(request2);
         assert2(this.timeoutType === TIMEOUT_BODY);
         if (this.timeout) {
           if (this.timeout.refresh) {
@@ -7183,7 +7183,7 @@ var require_client_h1 = __commonJS({
           return -1;
         }
         this.bytesRead += buf.length;
-        if (request.onData(buf) === false) {
+        if (request2.onData(buf) === false) {
           return constants.ERROR.PAUSED;
         }
         return 0;
@@ -7201,8 +7201,8 @@ var require_client_h1 = __commonJS({
         }
         assert2(statusCode >= 100);
         assert2((this.headers.length & 1) === 0);
-        const request = client[kQueue][client[kRunningIdx]];
-        assert2(request);
+        const request2 = client[kQueue][client[kRunningIdx]];
+        assert2(request2);
         this.statusCode = 0;
         this.statusText = "";
         this.bytesRead = 0;
@@ -7214,11 +7214,11 @@ var require_client_h1 = __commonJS({
         if (statusCode < 200) {
           return 0;
         }
-        if (request.method !== "HEAD" && contentLength && bytesRead !== parseInt(contentLength, 10)) {
+        if (request2.method !== "HEAD" && contentLength && bytesRead !== parseInt(contentLength, 10)) {
           util.destroy(socket, new ResponseContentLengthMismatchError());
           return -1;
         }
-        request.onComplete(headers);
+        request2.onComplete(headers);
         client[kQueue][client[kRunningIdx]++] = null;
         socket[kSocketUsed] = client[kPending] === 0;
         if (socket[kWriting]) {
@@ -7287,8 +7287,8 @@ var require_client_h1 = __commonJS({
       return {
         version: "h1",
         defaultPipelining: 1,
-        write(request) {
-          return writeH1(client, request);
+        write(request2) {
+          return writeH1(client, request2);
         },
         resume() {
           resumeH1(client);
@@ -7315,18 +7315,18 @@ var require_client_h1 = __commonJS({
          * @param {import('../core/request.js')} request
          * @returns {boolean}
          */
-        busy(request) {
+        busy(request2) {
           if (socket[kWriting] || socket[kReset] || socket[kBlocking] || socket[kIdleSocketValidation] === 1) {
             return true;
           }
-          if (request) {
-            if (client[kRunning] > 0 && !request.idempotent) {
+          if (request2) {
+            if (client[kRunning] > 0 && !request2.idempotent) {
               return true;
             }
-            if (client[kRunning] > 0 && (request.upgrade || request.method === "CONNECT")) {
+            if (client[kRunning] > 0 && (request2.upgrade || request2.method === "CONNECT")) {
               return true;
             }
-            if (client[kRunning] > 0 && util.bodyLength(request.body) !== 0 && (util.isStream(request.body) || util.isAsyncIterable(request.body) || util.isFormDataLike(request.body))) {
+            if (client[kRunning] > 0 && util.bodyLength(request2.body) !== 0 && (util.isStream(request2.body) || util.isAsyncIterable(request2.body) || util.isFormDataLike(request2.body))) {
               return true;
             }
           }
@@ -7379,13 +7379,13 @@ var require_client_h1 = __commonJS({
         assert2(client[kPending] === 0);
         const requests = client[kQueue].splice(client[kRunningIdx]);
         for (let i = 0; i < requests.length; i++) {
-          const request = requests[i];
-          util.errorRequest(client, request, err);
+          const request2 = requests[i];
+          util.errorRequest(client, request2, err);
         }
       } else if (client[kRunning] > 0 && err.code !== "UND_ERR_INFO") {
-        const request = client[kQueue][client[kRunningIdx]];
+        const request2 = client[kQueue][client[kRunningIdx]];
         client[kQueue][client[kRunningIdx]++] = null;
-        util.errorRequest(client, request, err);
+        util.errorRequest(client, request2, err);
       }
       client[kPendingIdx] = client[kRunningIdx];
       assert2(client[kRunning] === 0);
@@ -7453,8 +7453,8 @@ var require_client_h1 = __commonJS({
           }
         } else if (client[kRunning] > 0 && socket[kParser].statusCode < 200) {
           if (socket[kParser].timeoutType !== TIMEOUT_HEADERS) {
-            const request = client[kQueue][client[kRunningIdx]];
-            const headersTimeout = request.headersTimeout != null ? request.headersTimeout : client[kHeadersTimeout];
+            const request2 = client[kQueue][client[kRunningIdx]];
+            const headersTimeout = request2.headersTimeout != null ? request2.headersTimeout : client[kHeadersTimeout];
             socket[kParser].setTimeout(headersTimeout, TIMEOUT_HEADERS);
           }
         }
@@ -7463,26 +7463,26 @@ var require_client_h1 = __commonJS({
     function shouldSendContentLength(method) {
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
-    function writeH1(client, request) {
-      const { method, path, host: host2, upgrade, blocking, reset } = request;
-      let { body, headers, contentLength } = request;
+    function writeH1(client, request2) {
+      const { method, path, host: host2, upgrade, blocking, reset } = request2;
+      let { body, headers, contentLength } = request2;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util.isFormDataLike(body)) {
         if (!extractBody) {
           extractBody = require_body().extractBody;
         }
         const [bodyStream, contentType] = extractBody(body);
-        if (request.contentType == null) {
+        if (request2.contentType == null) {
           headers.push("content-type", contentType);
         }
         body = bodyStream.stream;
         contentLength = bodyStream.length;
-      } else if (util.isBlobLike(body) && request.contentType == null) {
+      } else if (util.isBlobLike(body) && request2.contentType == null) {
         const contentType = body.type;
         if (contentType) {
           const contentTypeValue = `${contentType}`;
           if (!util.isValidHeaderValue(contentTypeValue)) {
-            util.errorRequest(client, request, new InvalidArgumentError("invalid content-type header"));
+            util.errorRequest(client, request2, new InvalidArgumentError("invalid content-type header"));
             return false;
           }
           headers.push("content-type", contentTypeValue);
@@ -7494,14 +7494,14 @@ var require_client_h1 = __commonJS({
       const bodyLength = util.bodyLength(body);
       contentLength = bodyLength ?? contentLength;
       if (contentLength === null) {
-        contentLength = request.contentLength;
+        contentLength = request2.contentLength;
       }
       if (contentLength === 0 && !expectsPayload) {
         contentLength = null;
       }
-      if (shouldSendContentLength(method) && contentLength > 0 && request.contentLength !== null && request.contentLength !== contentLength) {
+      if (shouldSendContentLength(method) && contentLength > 0 && request2.contentLength !== null && request2.contentLength !== contentLength) {
         if (client[kStrictContentLength]) {
-          util.errorRequest(client, request, new RequestContentLengthMismatchError());
+          util.errorRequest(client, request2, new RequestContentLengthMismatchError());
           return false;
         }
         process.emitWarning(new RequestContentLengthMismatchError());
@@ -7509,19 +7509,19 @@ var require_client_h1 = __commonJS({
       const socket = client[kSocket];
       clearIdleSocketValidation(socket);
       const abort = (err) => {
-        if (request.aborted || request.completed) {
+        if (request2.aborted || request2.completed) {
           return;
         }
-        util.errorRequest(client, request, err || new RequestAbortedError());
+        util.errorRequest(client, request2, err || new RequestAbortedError());
         util.destroy(body);
         util.destroy(socket, new InformationalError("aborted"));
       };
       try {
-        request.onConnect(abort);
+        request2.onConnect(abort);
       } catch (err) {
-        util.errorRequest(client, request, err);
+        util.errorRequest(client, request2, err);
       }
-      if (request.aborted) {
+      if (request2.aborted) {
         return false;
       }
       if (method === "HEAD") {
@@ -7540,7 +7540,7 @@ var require_client_h1 = __commonJS({
         socket[kBlocking] = true;
       }
       if (socket.setTypeOfService) {
-        socket.setTypeOfService(request.typeOfService);
+        socket.setTypeOfService(request2.typeOfService);
       }
       let header = `${method} ${path} HTTP/1.1\r
 `;
@@ -7575,31 +7575,31 @@ upgrade: ${upgrade}\r
         }
       }
       if (channels.sendHeaders.hasSubscribers) {
-        channels.sendHeaders.publish({ request, headers: header, socket });
+        channels.sendHeaders.publish({ request: request2, headers: header, socket });
       }
       if (!body || bodyLength === 0) {
-        writeBuffer(abort, null, client, request, socket, contentLength, header, expectsPayload);
+        writeBuffer(abort, null, client, request2, socket, contentLength, header, expectsPayload);
       } else if (util.isBuffer(body)) {
-        writeBuffer(abort, body, client, request, socket, contentLength, header, expectsPayload);
+        writeBuffer(abort, body, client, request2, socket, contentLength, header, expectsPayload);
       } else if (util.isBlobLike(body)) {
         if (typeof body.stream === "function") {
-          writeIterable(abort, body.stream(), client, request, socket, contentLength, header, expectsPayload);
+          writeIterable(abort, body.stream(), client, request2, socket, contentLength, header, expectsPayload);
         } else {
-          writeBlob(abort, body, client, request, socket, contentLength, header, expectsPayload);
+          writeBlob(abort, body, client, request2, socket, contentLength, header, expectsPayload);
         }
       } else if (util.isStream(body)) {
-        writeStream(abort, body, client, request, socket, contentLength, header, expectsPayload);
+        writeStream(abort, body, client, request2, socket, contentLength, header, expectsPayload);
       } else if (util.isIterable(body)) {
-        writeIterable(abort, body, client, request, socket, contentLength, header, expectsPayload);
+        writeIterable(abort, body, client, request2, socket, contentLength, header, expectsPayload);
       } else {
         assert2(false);
       }
       return true;
     }
-    function writeStream(abort, body, client, request, socket, contentLength, header, expectsPayload) {
+    function writeStream(abort, body, client, request2, socket, contentLength, header, expectsPayload) {
       assert2(contentLength !== 0 || client[kRunning] === 0, "stream body cannot be pipelined");
       let finished = false;
-      const writer = new AsyncWriter({ abort, socket, request, contentLength, client, expectsPayload, header });
+      const writer = new AsyncWriter({ abort, socket, request: request2, contentLength, client, expectsPayload, header });
       const onData = function(chunk) {
         if (finished) {
           return;
@@ -7665,7 +7665,7 @@ upgrade: ${upgrade}\r
         setImmediate(onClose);
       }
     }
-    function writeBuffer(abort, body, client, request, socket, contentLength, header, expectsPayload) {
+    function writeBuffer(abort, body, client, request2, socket, contentLength, header, expectsPayload) {
       try {
         if (!body) {
           if (contentLength === 0) {
@@ -7685,18 +7685,18 @@ upgrade: ${upgrade}\r
 `, "latin1");
           socket.write(body);
           socket.uncork();
-          request.onBodySent(body);
-          if (!expectsPayload && request.reset !== false) {
+          request2.onBodySent(body);
+          if (!expectsPayload && request2.reset !== false) {
             socket[kReset] = true;
           }
         }
-        request.onRequestSent();
+        request2.onRequestSent();
         client[kResume]();
       } catch (err) {
         abort(err);
       }
     }
-    async function writeBlob(abort, body, client, request, socket, contentLength, header, expectsPayload) {
+    async function writeBlob(abort, body, client, request2, socket, contentLength, header, expectsPayload) {
       assert2(contentLength === body.size, "blob body must have content length");
       try {
         if (contentLength != null && contentLength !== body.size) {
@@ -7709,9 +7709,9 @@ upgrade: ${upgrade}\r
 `, "latin1");
         socket.write(buffer);
         socket.uncork();
-        request.onBodySent(buffer);
-        request.onRequestSent();
-        if (!expectsPayload && request.reset !== false) {
+        request2.onBodySent(buffer);
+        request2.onRequestSent();
+        if (!expectsPayload && request2.reset !== false) {
           socket[kReset] = true;
         }
         client[kResume]();
@@ -7719,7 +7719,7 @@ upgrade: ${upgrade}\r
         abort(err);
       }
     }
-    async function writeIterable(abort, body, client, request, socket, contentLength, header, expectsPayload) {
+    async function writeIterable(abort, body, client, request2, socket, contentLength, header, expectsPayload) {
       assert2(contentLength !== 0 || client[kRunning] === 0, "iterator body cannot be pipelined");
       let callback = null;
       function onDrain() {
@@ -7738,7 +7738,7 @@ upgrade: ${upgrade}\r
         }
       });
       socket.on("close", onDrain).on("drain", onDrain);
-      const writer = new AsyncWriter({ abort, socket, request, contentLength, client, expectsPayload, header });
+      const writer = new AsyncWriter({ abort, socket, request: request2, contentLength, client, expectsPayload, header });
       try {
         for await (const chunk of body) {
           if (socket[kError]) {
@@ -7767,9 +7767,9 @@ upgrade: ${upgrade}\r
        * @param {boolean} arg.expectsPayload
        * @param {string} arg.header
        */
-      constructor({ abort, socket, request, contentLength, client, expectsPayload, header }) {
+      constructor({ abort, socket, request: request2, contentLength, client, expectsPayload, header }) {
         this.socket = socket;
-        this.request = request;
+        this.request = request2;
         this.contentLength = contentLength;
         this.client = client;
         this.bytesWritten = 0;
@@ -7783,7 +7783,7 @@ upgrade: ${upgrade}\r
        * @returns
        */
       write(chunk) {
-        const { socket, request, contentLength, client, bytesWritten, expectsPayload, header } = this;
+        const { socket, request: request2, contentLength, client, bytesWritten, expectsPayload, header } = this;
         if (socket[kError]) {
           throw socket[kError];
         }
@@ -7802,7 +7802,7 @@ upgrade: ${upgrade}\r
         }
         socket.cork();
         if (bytesWritten === 0) {
-          if (!expectsPayload && request.reset !== false) {
+          if (!expectsPayload && request2.reset !== false) {
             socket[kReset] = true;
           }
           if (contentLength === null) {
@@ -7822,7 +7822,7 @@ ${len.toString(16)}\r
         this.bytesWritten += len;
         const ret = socket.write(chunk);
         socket.uncork();
-        request.onBodySent(chunk);
+        request2.onBodySent(chunk);
         if (!ret) {
           if (socket[kParser].timeout && socket[kParser].timeoutType === TIMEOUT_HEADERS) {
             if (socket[kParser].timeout.refresh) {
@@ -7836,8 +7836,8 @@ ${len.toString(16)}\r
        * @returns {void}
        */
       end() {
-        const { socket, contentLength, client, bytesWritten, expectsPayload, header, request } = this;
-        request.onRequestSent();
+        const { socket, contentLength, client, bytesWritten, expectsPayload, header, request: request2 } = this;
+        request2.onRequestSent();
         socket[kWriting] = false;
         if (socket[kError]) {
           throw socket[kError];
@@ -8017,8 +8017,8 @@ var require_client_h2 = __commonJS({
          * @param {import('../core/request.js')} request
          * @returns {boolean}
         */
-        write(request) {
-          return writeH2(client, request);
+        write(request2) {
+          return writeH2(client, request2);
         },
         /**
          * @returns {void}
@@ -8047,14 +8047,14 @@ var require_client_h2 = __commonJS({
          * @param {import('../core/request.js')} request
          * @returns {boolean}
         */
-        busy(request) {
-          if (request != null) {
+        busy(request2) {
+          if (request2 != null) {
             if (client[kRunning] > 0) {
-              if (request.idempotent === false) return true;
-              if ((request.upgrade === "websocket" || request.method === "CONNECT") && session[kRemoteSettings] === false) return true;
-              if (util.bodyLength(request.body) !== 0 && (util.isStream(request.body) || util.isAsyncIterable(request.body) || util.isFormDataLike(request.body))) return true;
+              if (request2.idempotent === false) return true;
+              if ((request2.upgrade === "websocket" || request2.method === "CONNECT") && session[kRemoteSettings] === false) return true;
+              if (util.bodyLength(request2.body) !== 0 && (util.isStream(request2.body) || util.isAsyncIterable(request2.body) || util.isFormDataLike(request2.body))) return true;
             } else {
-              return (request.upgrade === "websocket" || request.method === "CONNECT") && session[kRemoteSettings] === false;
+              return (request2.upgrade === "websocket" || request2.method === "CONNECT") && session[kRemoteSettings] === false;
             }
           }
           return false;
@@ -8129,15 +8129,15 @@ var require_client_h2 = __commonJS({
       this.destroy(err);
       util.destroy(this[kSocket], err);
     }
-    function completeRequest(client, request, resetPendingIdx = false) {
+    function completeRequest(client, request2, resetPendingIdx = false) {
       const queue = client[kQueue];
       const runningIdx = client[kRunningIdx];
-      if (runningIdx < client[kPendingIdx] && queue[runningIdx] === request) {
+      if (runningIdx < client[kPendingIdx] && queue[runningIdx] === request2) {
         queue[runningIdx] = null;
         client[kRunningIdx] = runningIdx + 1;
         return;
       }
-      const index = queue.indexOf(request, runningIdx);
+      const index = queue.indexOf(request2, runningIdx);
       if (index === -1 || index >= client[kPendingIdx]) {
         return;
       }
@@ -8156,10 +8156,10 @@ var require_client_h2 = __commonJS({
       this[kHTTP2Session] = null;
       util.destroy(this[kSocket], err);
       if (client[kRunningIdx] < client[kQueue].length) {
-        const request = client[kQueue][client[kRunningIdx]];
+        const request2 = client[kQueue][client[kRunningIdx]];
         client[kQueue][client[kRunningIdx]++] = null;
-        if (request != null) {
-          util.errorRequest(client, request, err);
+        if (request2 != null) {
+          util.errorRequest(client, request2, err);
         }
         client[kPendingIdx] = client[kRunningIdx];
       }
@@ -8182,9 +8182,9 @@ var require_client_h2 = __commonJS({
         assert2(client[kPending] === 0);
         const requests = client[kQueue].splice(client[kRunningIdx]);
         for (let i = 0; i < requests.length; i++) {
-          const request = requests[i];
-          if (request != null) {
-            util.errorRequest(client, request, err);
+          const request2 = requests[i];
+          if (request2 != null) {
+            util.errorRequest(client, request2, err);
           }
         }
       }
@@ -8215,14 +8215,14 @@ var require_client_h2 = __commonJS({
     function shouldSendContentLength(method) {
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
-    function writeH2(client, request) {
-      const headersTimeout = request.headersTimeout ?? client[kHeadersTimeout];
-      const bodyTimeout = request.bodyTimeout ?? client[kBodyTimeout];
+    function writeH2(client, request2) {
+      const headersTimeout = request2.headersTimeout ?? client[kHeadersTimeout];
+      const bodyTimeout = request2.bodyTimeout ?? client[kBodyTimeout];
       const session = client[kHTTP2Session];
-      const { method, path, host: host2, upgrade, expectContinue, signal, protocol, headers: reqHeaders } = request;
-      let { body } = request;
+      const { method, path, host: host2, upgrade, expectContinue, signal, protocol, headers: reqHeaders } = request2;
+      let { body } = request2;
       if (upgrade != null && upgrade !== "websocket") {
-        util.errorRequest(client, request, new InvalidArgumentError(`Custom upgrade "${upgrade}" not supported over HTTP/2`));
+        util.errorRequest(client, request2, new InvalidArgumentError(`Custom upgrade "${upgrade}" not supported over HTTP/2`));
         return false;
       }
       const headers = {};
@@ -8256,33 +8256,33 @@ var require_client_h2 = __commonJS({
       headers[HTTP2_HEADER_AUTHORITY] = host2 || `${hostname3}${port ? `:${port}` : ""}`;
       headers[HTTP2_HEADER_METHOD] = method;
       const abort = (err) => {
-        if (request.aborted || request.completed) {
+        if (request2.aborted || request2.completed) {
           return;
         }
         err = err || new RequestAbortedError();
-        util.errorRequest(client, request, err);
+        util.errorRequest(client, request2, err);
         if (stream != null) {
           stream.removeAllListeners("data");
           stream.close();
           client[kOnError](err);
-          completeRequest(client, request);
+          completeRequest(client, request2);
           client[kResume]();
         }
         util.destroy(body, err);
       };
       try {
-        request.onConnect(abort);
+        request2.onConnect(abort);
       } catch (err) {
-        util.errorRequest(client, request, err);
+        util.errorRequest(client, request2, err);
       }
-      if (request.aborted) {
+      if (request2.aborted) {
         return false;
       }
       if (upgrade || method === "CONNECT") {
         session.ref();
         if (upgrade === "websocket") {
           if (session[kEnableConnectProtocol] === false) {
-            util.errorRequest(client, request, new InformationalError("HTTP/2: Extended CONNECT protocol not supported by server"));
+            util.errorRequest(client, request2, new InformationalError("HTTP/2: Extended CONNECT protocol not supported by server"));
             session.unref();
             return false;
           }
@@ -8300,12 +8300,12 @@ var require_client_h2 = __commonJS({
           stream.once("response", (headers2, _flags) => {
             const { [HTTP2_HEADER_STATUS]: statusCode, ...realHeaders } = headers2;
             try {
-              request.onUpgrade(statusCode, parseH2Headers(realHeaders), stream);
+              request2.onUpgrade(statusCode, parseH2Headers(realHeaders), stream);
             } catch (err) {
               abort(err);
               return;
             }
-            completeRequest(client, request);
+            completeRequest(client, request2);
           });
           stream.on("error", () => {
             if (stream.rstCode === NGHTTP2_REFUSED_STREAM || stream.rstCode === NGHTTP2_CANCEL) {
@@ -8325,12 +8325,12 @@ var require_client_h2 = __commonJS({
         stream.on("response", (headers2) => {
           const { [HTTP2_HEADER_STATUS]: statusCode, ...realHeaders } = headers2;
           try {
-            request.onUpgrade(statusCode, parseH2Headers(realHeaders), stream);
+            request2.onUpgrade(statusCode, parseH2Headers(realHeaders), stream);
           } catch (err) {
             abort(err);
             return;
           }
-          completeRequest(client, request);
+          completeRequest(client, request2);
         });
         stream.on("error", abort);
         stream.once("close", () => {
@@ -8355,14 +8355,14 @@ var require_client_h2 = __commonJS({
         contentLength = bodyStream.length;
       }
       if (contentLength == null) {
-        contentLength = request.contentLength;
+        contentLength = request2.contentLength;
       }
       if (!expectsPayload) {
         contentLength = null;
       }
-      if (shouldSendContentLength(method) && contentLength > 0 && request.contentLength != null && request.contentLength !== contentLength) {
+      if (shouldSendContentLength(method) && contentLength > 0 && request2.contentLength != null && request2.contentLength !== contentLength) {
         if (client[kStrictContentLength]) {
-          util.errorRequest(client, request, new RequestContentLengthMismatchError());
+          util.errorRequest(client, request2, new RequestContentLengthMismatchError());
           return false;
         }
         process.emitWarning(new RequestContentLengthMismatchError());
@@ -8378,7 +8378,7 @@ var require_client_h2 = __commonJS({
           header += `${key}: ${headers[key]}\r
 `;
         }
-        channels.sendHeaders.publish({ request, headers: header, socket: session[kSocket] });
+        channels.sendHeaders.publish({ request: request2, headers: header, socket: session[kSocket] });
       }
       const shouldEndStream = method === "GET" || method === "HEAD" || body === null;
       if (expectContinue) {
@@ -8399,21 +8399,21 @@ var require_client_h2 = __commonJS({
       let responseReceived = false;
       stream.once("response", (headers2) => {
         const { [HTTP2_HEADER_STATUS]: statusCode, ...realHeaders } = headers2;
-        request.onResponseStarted();
+        request2.onResponseStarted();
         responseReceived = true;
         stream.setTimeout(bodyTimeout);
-        if (request.aborted) {
+        if (request2.aborted) {
           stream.removeAllListeners("data");
           return;
         }
-        if (request.onHeaders(Number(statusCode), parseH2Headers(realHeaders), stream.resume.bind(stream), "") === false) {
+        if (request2.onHeaders(Number(statusCode), parseH2Headers(realHeaders), stream.resume.bind(stream), "") === false) {
           stream.pause();
         }
         stream.on("data", (chunk) => {
-          if (request.aborted || request.completed) {
+          if (request2.aborted || request2.completed) {
             return;
           }
-          if (request.onData(chunk) === false) {
+          if (request2.onData(chunk) === false) {
             stream.pause();
           }
         });
@@ -8421,14 +8421,14 @@ var require_client_h2 = __commonJS({
       stream.once("end", () => {
         stream.removeAllListeners("data");
         if (responseReceived) {
-          if (!request.aborted && !request.completed) {
-            request.onComplete({});
+          if (!request2.aborted && !request2.completed) {
+            request2.onComplete({});
           }
-          completeRequest(client, request);
+          completeRequest(client, request2);
           client[kResume]();
         } else {
           abort(new InformationalError("HTTP/2: stream half-closed (remote)"));
-          completeRequest(client, request, true);
+          completeRequest(client, request2, true);
           client[kResume]();
         }
       });
@@ -8438,7 +8438,7 @@ var require_client_h2 = __commonJS({
         if (session[kOpenStreams] === 0) {
           session.unref();
         }
-        if (!request.aborted && !request.completed) {
+        if (!request2.aborted && !request2.completed) {
           abort(new InformationalError("HTTP/2: stream closed before the response was complete"));
         }
       });
@@ -8463,11 +8463,11 @@ var require_client_h2 = __commonJS({
         abort(err);
       });
       stream.once("trailers", (trailers) => {
-        if (request.aborted || request.completed) {
+        if (request2.aborted || request2.completed) {
           return;
         }
         stream.removeAllListeners("data");
-        request.onComplete(trailers);
+        request2.onComplete(trailers);
       });
       return true;
       function writeBodyH2() {
@@ -8477,7 +8477,7 @@ var require_client_h2 = __commonJS({
             stream,
             null,
             client,
-            request,
+            request2,
             client[kSocket],
             contentLength,
             expectsPayload
@@ -8488,7 +8488,7 @@ var require_client_h2 = __commonJS({
             stream,
             body,
             client,
-            request,
+            request2,
             client[kSocket],
             contentLength,
             expectsPayload
@@ -8500,7 +8500,7 @@ var require_client_h2 = __commonJS({
               stream,
               body.stream(),
               client,
-              request,
+              request2,
               client[kSocket],
               contentLength,
               expectsPayload
@@ -8511,7 +8511,7 @@ var require_client_h2 = __commonJS({
               stream,
               body,
               client,
-              request,
+              request2,
               client[kSocket],
               contentLength,
               expectsPayload
@@ -8525,7 +8525,7 @@ var require_client_h2 = __commonJS({
             stream,
             body,
             client,
-            request,
+            request2,
             contentLength
           );
         } else if (util.isIterable(body)) {
@@ -8534,7 +8534,7 @@ var require_client_h2 = __commonJS({
             stream,
             body,
             client,
-            request,
+            request2,
             client[kSocket],
             contentLength,
             expectsPayload
@@ -8544,7 +8544,7 @@ var require_client_h2 = __commonJS({
         }
       }
     }
-    function writeBuffer(abort, h2stream, body, client, request, socket, contentLength, expectsPayload) {
+    function writeBuffer(abort, h2stream, body, client, request2, socket, contentLength, expectsPayload) {
       try {
         if (body != null && util.isBuffer(body)) {
           assert2(contentLength === body.byteLength, "buffer body must have content length");
@@ -8552,18 +8552,18 @@ var require_client_h2 = __commonJS({
           h2stream.write(body);
           h2stream.uncork();
           h2stream.end();
-          request.onBodySent(body);
+          request2.onBodySent(body);
         }
         if (!expectsPayload) {
           socket[kReset] = true;
         }
-        request.onRequestSent();
+        request2.onRequestSent();
         client[kResume]();
       } catch (error62) {
         abort(error62);
       }
     }
-    function writeStream(abort, socket, expectsPayload, h2stream, body, client, request, contentLength) {
+    function writeStream(abort, socket, expectsPayload, h2stream, body, client, request2, contentLength) {
       assert2(contentLength !== 0 || client[kRunning] === 0, "stream body cannot be pipelined");
       const pipe2 = pipeline(
         body,
@@ -8574,7 +8574,7 @@ var require_client_h2 = __commonJS({
             abort(err);
           } else {
             util.removeAllListeners(pipe2);
-            request.onRequestSent();
+            request2.onRequestSent();
             if (!expectsPayload) {
               socket[kReset] = true;
             }
@@ -8584,10 +8584,10 @@ var require_client_h2 = __commonJS({
       );
       util.addListener(pipe2, "data", onPipeData);
       function onPipeData(chunk) {
-        request.onBodySent(chunk);
+        request2.onBodySent(chunk);
       }
     }
-    async function writeBlob(abort, h2stream, body, client, request, socket, contentLength, expectsPayload) {
+    async function writeBlob(abort, h2stream, body, client, request2, socket, contentLength, expectsPayload) {
       assert2(contentLength === body.size, "blob body must have content length");
       try {
         if (contentLength != null && contentLength !== body.size) {
@@ -8598,8 +8598,8 @@ var require_client_h2 = __commonJS({
         h2stream.write(buffer);
         h2stream.uncork();
         h2stream.end();
-        request.onBodySent(buffer);
-        request.onRequestSent();
+        request2.onBodySent(buffer);
+        request2.onRequestSent();
         if (!expectsPayload) {
           socket[kReset] = true;
         }
@@ -8608,7 +8608,7 @@ var require_client_h2 = __commonJS({
         abort(err);
       }
     }
-    async function writeIterable(abort, h2stream, body, client, request, socket, contentLength, expectsPayload) {
+    async function writeIterable(abort, h2stream, body, client, request2, socket, contentLength, expectsPayload) {
       assert2(contentLength !== 0 || client[kRunning] === 0, "iterator body cannot be pipelined");
       let callback = null;
       function onDrain() {
@@ -8633,13 +8633,13 @@ var require_client_h2 = __commonJS({
             throw socket[kError];
           }
           const res = h2stream.write(chunk);
-          request.onBodySent(chunk);
+          request2.onBodySent(chunk);
           if (!res) {
             await waitForDrain();
           }
         }
         h2stream.end();
-        request.onRequestSent();
+        request2.onRequestSent();
         if (!expectsPayload) {
           socket[kReset] = true;
         }
@@ -8750,7 +8750,7 @@ var require_client = __commonJS({
         tls,
         strictContentLength,
         maxCachedSessions,
-        connect: connect2,
+        connect: connect3,
         maxRequestsPerClient,
         localAddress,
         maxResponseSize,
@@ -8809,7 +8809,7 @@ var require_client = __commonJS({
         if (bodyTimeout != null && (!Number.isInteger(bodyTimeout) || bodyTimeout < 0)) {
           throw new InvalidArgumentError("bodyTimeout must be a positive integer or zero");
         }
-        if (connect2 != null && typeof connect2 !== "function" && typeof connect2 !== "object") {
+        if (connect3 != null && typeof connect3 !== "function" && typeof connect3 !== "object") {
           throw new InvalidArgumentError("connect must be a function or an object");
         }
         if (maxRequestsPerClient != null && (!Number.isInteger(maxRequestsPerClient) || maxRequestsPerClient < 0)) {
@@ -8843,8 +8843,8 @@ var require_client = __commonJS({
           throw new InvalidArgumentError("pingInterval must be a positive integer, greater or equal to 0");
         }
         super({ webSocket, eventSource });
-        if (typeof connect2 !== "function") {
-          connect2 = buildConnector({
+        if (typeof connect3 !== "function") {
+          connect3 = buildConnector({
             ...tls,
             maxCachedSessions,
             allowH2,
@@ -8852,18 +8852,18 @@ var require_client = __commonJS({
             socketPath,
             timeout: connectTimeout,
             ...typeof autoSelectFamily === "boolean" ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : void 0,
-            ...connect2
+            ...connect3
           });
         } else {
-          const customConnect = connect2;
-          connect2 = (opts, callback) => customConnect({
+          const customConnect = connect3;
+          connect3 = (opts, callback) => customConnect({
             ...opts,
             ...socketPath != null ? { socketPath } : null,
             ...allowH2 != null ? { allowH2 } : null
           }, callback);
         }
         this[kUrl] = util.parseOrigin(url2);
-        this[kConnector] = connect2;
+        this[kConnector] = connect3;
         this[kPipelining] = pipelining != null ? pipelining : 1;
         this[kMaxHeadersSize] = maxHeaderSize;
         this[kKeepAliveDefaultTimeout] = keepAliveTimeout == null ? 4e3 : keepAliveTimeout;
@@ -8921,14 +8921,14 @@ var require_client = __commonJS({
         );
       }
       [kConnect](cb) {
-        connect(this);
+        connect2(this);
         this.once("connect", cb);
       }
       [kDispatch](opts, handler) {
-        const request = new Request(this[kUrl].origin, opts, handler);
-        this[kQueue].push(request);
+        const request2 = new Request(this[kUrl].origin, opts, handler);
+        this[kQueue].push(request2);
         if (this[kResuming]) {
-        } else if (util.bodyLength(request.body) == null && util.isIterable(request.body)) {
+        } else if (util.bodyLength(request2.body) == null && util.isIterable(request2.body)) {
           this[kResuming] = 1;
           queueMicrotask(() => resume(this));
         } else {
@@ -8952,9 +8952,9 @@ var require_client = __commonJS({
         return new Promise((resolve) => {
           const requests = this[kQueue].splice(this[kPendingIdx]);
           for (let i = 0; i < requests.length; i++) {
-            const request = requests[i];
-            if (request != null) {
-              util.errorRequest(this, request, err);
+            const request2 = requests[i];
+            if (request2 != null) {
+              util.errorRequest(this, request2, err);
             }
           }
           const callback = () => {
@@ -8979,15 +8979,15 @@ var require_client = __commonJS({
         assert2(client[kPendingIdx] === client[kRunningIdx]);
         const requests = client[kQueue].splice(client[kRunningIdx]);
         for (let i = 0; i < requests.length; i++) {
-          const request = requests[i];
-          if (request != null) {
-            util.errorRequest(client, request, err);
+          const request2 = requests[i];
+          if (request2 != null) {
+            util.errorRequest(client, request2, err);
           }
         }
         assert2(client[kSize] === 0);
       }
     }
-    function connect(client) {
+    function connect2(client) {
       assert2(!client[kConnecting]);
       assert2(!client[kHTTPContext]);
       let { host: host2, hostname: hostname3, protocol, port } = client[kUrl];
@@ -9092,8 +9092,8 @@ var require_client = __commonJS({
       if (err.code === "ERR_TLS_CERT_ALTNAME_INVALID") {
         assert2(client[kRunning] === 0);
         while (client[kPending] > 0 && client[kQueue][client[kPendingIdx]].servername === client[kServerName]) {
-          const request = client[kQueue][client[kPendingIdx]++];
-          util.errorRequest(client, request, err);
+          const request2 = client[kQueue][client[kPendingIdx]++];
+          util.errorRequest(client, request2, err);
         }
       } else {
         onError(client, err);
@@ -9148,15 +9148,15 @@ var require_client = __commonJS({
         if (client[kRunning] >= (getPipelining(client) || 1)) {
           return;
         }
-        const request = client[kQueue][client[kPendingIdx]];
-        if (request === null) {
+        const request2 = client[kQueue][client[kPendingIdx]];
+        if (request2 === null) {
           return;
         }
-        if (client[kUrl].protocol === "https:" && client[kServerName] !== request.servername) {
+        if (client[kUrl].protocol === "https:" && client[kServerName] !== request2.servername) {
           if (client[kRunning] > 0) {
             return;
           }
-          client[kServerName] = request.servername;
+          client[kServerName] = request2.servername;
           client[kHTTPContext]?.destroy(new InformationalError("servername changed"), () => {
             client[kHTTPContext] = null;
             resume(client);
@@ -9166,16 +9166,16 @@ var require_client = __commonJS({
           return;
         }
         if (!client[kHTTPContext]) {
-          connect(client);
+          connect2(client);
           return;
         }
         if (client[kHTTPContext].destroyed) {
           return;
         }
-        if (client[kHTTPContext].busy(request)) {
+        if (client[kHTTPContext].busy(request2)) {
           return;
         }
-        if (!request.aborted && client[kHTTPContext].write(request)) {
+        if (!request2.aborted && client[kHTTPContext].write(request2)) {
           client[kPendingIdx]++;
         } else {
           client[kQueue].splice(client[kPendingIdx], 1);
@@ -9462,7 +9462,7 @@ var require_pool = __commonJS({
       constructor(origin, {
         connections,
         factory = defaultFactory,
-        connect,
+        connect: connect2,
         connectTimeout,
         tls,
         maxCachedSessions,
@@ -9479,24 +9479,24 @@ var require_pool = __commonJS({
         if (typeof factory !== "function") {
           throw new InvalidArgumentError("factory must be a function.");
         }
-        if (connect != null && typeof connect !== "function" && typeof connect !== "object") {
+        if (connect2 != null && typeof connect2 !== "function" && typeof connect2 !== "object") {
           throw new InvalidArgumentError("connect must be a function or an object");
         }
-        if (typeof connect !== "function") {
-          connect = buildConnector({
+        if (typeof connect2 !== "function") {
+          connect2 = buildConnector({
             ...tls,
             maxCachedSessions,
             allowH2,
             socketPath,
             timeout: connectTimeout,
             ...typeof autoSelectFamily === "boolean" ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : void 0,
-            ...connect
+            ...connect2
           });
         }
         super(options);
         this[kConnections] = connections || null;
         this[kUrl] = util.parseOrigin(origin);
-        this[kOptions] = { ...util.deepClone(options), connect, allowH2, clientTtl, socketPath };
+        this[kOptions] = { ...util.deepClone(options), connect: connect2, allowH2, clientTtl, socketPath };
         this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
         this[kFactory] = factory;
         this.on("connect", (origin2, targets) => {
@@ -9575,14 +9575,14 @@ var require_balanced_pool = __commonJS({
       return new Pool(origin, opts);
     }
     var BalancedPool = class extends PoolBase {
-      constructor(upstreams = [], { factory = defaultFactory, connect, tls, ...opts } = {}) {
+      constructor(upstreams = [], { factory = defaultFactory, connect: connect2, tls, ...opts } = {}) {
         if (typeof factory !== "function") {
           throw new InvalidArgumentError("factory must be a function.");
         }
         super(opts);
-        if (connect && typeof connect !== "function") connect = { ...connect };
+        if (connect2 && typeof connect2 !== "function") connect2 = { ...connect2 };
         if (tls && typeof tls !== "function") tls = { ...tls };
-        this[kOptions] = { ...util.deepClone(opts), connect, tls };
+        this[kOptions] = { ...util.deepClone(opts), connect: connect2, tls };
         this[kOptions].interceptors = opts.interceptors ? { ...opts.interceptors } : void 0;
         this[kIndex] = -1;
         this[kCurrentWeight] = 0;
@@ -9715,7 +9715,7 @@ var require_round_robin_pool = __commonJS({
       constructor(origin, {
         connections,
         factory = defaultFactory,
-        connect,
+        connect: connect2,
         connectTimeout,
         tls,
         maxCachedSessions,
@@ -9732,24 +9732,24 @@ var require_round_robin_pool = __commonJS({
         if (typeof factory !== "function") {
           throw new InvalidArgumentError("factory must be a function.");
         }
-        if (connect != null && typeof connect !== "function" && typeof connect !== "object") {
+        if (connect2 != null && typeof connect2 !== "function" && typeof connect2 !== "object") {
           throw new InvalidArgumentError("connect must be a function or an object");
         }
-        if (typeof connect !== "function") {
-          connect = buildConnector({
+        if (typeof connect2 !== "function") {
+          connect2 = buildConnector({
             ...tls,
             maxCachedSessions,
             allowH2,
             socketPath,
             timeout: connectTimeout,
             ...typeof autoSelectFamily === "boolean" ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : void 0,
-            ...connect
+            ...connect2
           });
         }
         super();
         this[kConnections] = connections || null;
         this[kUrl] = util.parseOrigin(origin);
-        this[kOptions] = { ...util.deepClone(options), connect, allowH2, clientTtl, socketPath };
+        this[kOptions] = { ...util.deepClone(options), connect: connect2, allowH2, clientTtl, socketPath };
         this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
         this[kFactory] = factory;
         this[kIndex] = -1;
@@ -9822,25 +9822,25 @@ var require_agent = __commonJS({
     function defaultFactory(origin, opts) {
       return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool(origin, opts);
     }
-    var Agent = class extends DispatcherBase {
-      constructor({ factory = defaultFactory, maxOrigins = Infinity, connect, tls, ...options } = {}) {
+    var Agent2 = class extends DispatcherBase {
+      constructor({ factory = defaultFactory, maxOrigins = Infinity, connect: connect2, tls, ...options } = {}) {
         if (typeof factory !== "function") {
           throw new InvalidArgumentError("factory must be a function.");
         }
-        if (connect != null && typeof connect !== "function" && typeof connect !== "object") {
+        if (connect2 != null && typeof connect2 !== "function" && typeof connect2 !== "object") {
           throw new InvalidArgumentError("connect must be a function or an object");
         }
         if (typeof maxOrigins !== "number" || Number.isNaN(maxOrigins) || maxOrigins <= 0) {
           throw new InvalidArgumentError("maxOrigins must be a number greater than 0");
         }
         super(options);
-        if (connect && typeof connect !== "function") {
-          connect = { ...connect };
+        if (connect2 && typeof connect2 !== "function") {
+          connect2 = { ...connect2 };
         }
         if (tls && typeof tls !== "function") {
           tls = { ...tls };
         }
-        this[kOptions] = { ...util.deepClone(options), maxOrigins, connect, tls };
+        this[kOptions] = { ...util.deepClone(options), maxOrigins, connect: connect2, tls };
         this[kFactory] = factory;
         this[kClients] = /* @__PURE__ */ new Map();
         this[kOrigins] = /* @__PURE__ */ new Set();
@@ -9934,7 +9934,7 @@ var require_agent = __commonJS({
         return allClientStats;
       }
     };
-    module.exports = Agent;
+    module.exports = Agent2;
   }
 });
 
@@ -10230,13 +10230,13 @@ var require_socks5_client = __commonJS({
         }
         debug("starting handshake with", this.authMethods.length, "auth methods");
         this.state = STATES.HANDSHAKING;
-        const request = Buffer2.alloc(2 + this.authMethods.length);
-        request[0] = SOCKS_VERSION;
-        request[1] = this.authMethods.length;
+        const request2 = Buffer2.alloc(2 + this.authMethods.length);
+        request2[0] = SOCKS_VERSION;
+        request2[1] = this.authMethods.length;
         this.authMethods.forEach((method, i) => {
-          request[2 + i] = method;
+          request2[2 + i] = method;
         });
-        this.socket.write(request);
+        this.socket.write(request2);
       }
       /**
        * Handle handshake response from server
@@ -10278,13 +10278,13 @@ var require_socks5_client = __commonJS({
         if (usernameBuffer.length > 255 || passwordBuffer.length > 255) {
           throw new InvalidArgumentError("Username or password too long");
         }
-        const request = Buffer2.alloc(3 + usernameBuffer.length + passwordBuffer.length);
-        request[0] = 1;
-        request[1] = usernameBuffer.length;
-        usernameBuffer.copy(request, 2);
-        request[2 + usernameBuffer.length] = passwordBuffer.length;
-        passwordBuffer.copy(request, 3 + usernameBuffer.length);
-        this.socket.write(request);
+        const request2 = Buffer2.alloc(3 + usernameBuffer.length + passwordBuffer.length);
+        request2[0] = 1;
+        request2[1] = usernameBuffer.length;
+        usernameBuffer.copy(request2, 2);
+        request2[2 + usernameBuffer.length] = passwordBuffer.length;
+        passwordBuffer.copy(request2, 3 + usernameBuffer.length);
+        this.socket.write(request2);
       }
       /**
        * Handle authentication response
@@ -10319,22 +10319,22 @@ var require_socks5_client = __commonJS({
         }
         debug("connecting to", address, port);
         this.state = STATES.CONNECTING;
-        const request = this.buildConnectRequest(COMMANDS.CONNECT, address, port);
-        this.socket.write(request);
+        const request2 = this.buildConnectRequest(COMMANDS.CONNECT, address, port);
+        this.socket.write(request2);
       }
       /**
        * Build a SOCKS5 request
        */
       buildConnectRequest(command, address, port) {
         const { type: addressType, buffer: addressBuffer } = parseAddress(address);
-        const request = Buffer2.alloc(4 + addressBuffer.length + 2);
-        request[0] = SOCKS_VERSION;
-        request[1] = command;
-        request[2] = 0;
-        request[3] = addressType;
-        addressBuffer.copy(request, 4);
-        request.writeUInt16BE(port, 4 + addressBuffer.length);
-        return request;
+        const request2 = Buffer2.alloc(4 + addressBuffer.length + 2);
+        request2[0] = SOCKS_VERSION;
+        request2[1] = command;
+        request2[2] = 0;
+        request2[3] = addressType;
+        addressBuffer.copy(request2, 4);
+        request2.writeUInt16BE(port, 4 + addressBuffer.length);
+        return request2;
       }
       /**
        * Handle CONNECT response
@@ -10640,7 +10640,7 @@ var require_proxy_agent = __commonJS({
   "node_modules/undici/lib/dispatcher/proxy-agent.js"(exports, module) {
     "use strict";
     var { kProxy, kClose, kDestroy, kDispatch } = require_symbols();
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     var Pool = require_pool();
     var DispatcherBase = require_dispatcher_base();
     var { InvalidArgumentError, RequestAbortedError, SecureProxyConnectionError } = require_errors();
@@ -10671,16 +10671,16 @@ var require_proxy_agent = __commonJS({
     }
     var Http1ProxyWrapper = class extends DispatcherBase {
       #client;
-      constructor(proxyUrl, { headers = {}, connect, factory }) {
+      constructor(proxyUrl, { headers = {}, connect: connect2, factory }) {
         if (!proxyUrl) {
           throw new InvalidArgumentError("Proxy URL is mandatory");
         }
         super();
         this[kProxyHeaders] = headers;
         if (factory) {
-          this.#client = factory(proxyUrl, { connect });
+          this.#client = factory(proxyUrl, { connect: connect2 });
         } else {
-          this.#client = new Client(proxyUrl, { connect });
+          this.#client = new Client(proxyUrl, { connect: connect2 });
         }
       }
       [kDispatch](opts, handler) {
@@ -10741,7 +10741,7 @@ var require_proxy_agent = __commonJS({
         } else if (username && password) {
           this[kProxyHeaders]["proxy-authorization"] = `Basic ${Buffer.from(`${decodeURIComponent(username)}:${decodeURIComponent(password)}`).toString("base64")}`;
         }
-        const connect = buildConnector({ ...opts.proxyTls });
+        const connect2 = buildConnector({ ...opts.proxyTls });
         this[kConnectEndpoint] = buildConnector({ ...opts.requestTls });
         const agentFactory = opts.factory || defaultAgentFactory;
         const factory = (origin2, options) => {
@@ -10749,7 +10749,7 @@ var require_proxy_agent = __commonJS({
           if (this[kProxy].protocol === "socks5:" || this[kProxy].protocol === "socks:") {
             return new Socks5ProxyAgent(this[kProxy].uri, {
               headers: this[kProxyHeaders],
-              connect,
+              connect: connect2,
               factory: agentFactory,
               username: opts.username || username,
               password: opts.password || password,
@@ -10760,7 +10760,7 @@ var require_proxy_agent = __commonJS({
           if (!this[kTunnelProxy] && protocol2 === "http:" && this[kProxy].protocol === "http:") {
             return new Http1ProxyWrapper(this[kProxy].uri, {
               headers: this[kProxyHeaders],
-              connect,
+              connect: connect2,
               factory: agentFactory
             });
           }
@@ -10769,9 +10769,9 @@ var require_proxy_agent = __commonJS({
         if (protocol === "socks5:" || protocol === "socks:") {
           this[kClient] = null;
         } else {
-          this[kClient] = clientFactory(url2, { connect });
+          this[kClient] = clientFactory(url2, { connect: connect2 });
         }
-        this[kAgent] = new Agent({
+        this[kAgent] = new Agent2({
           ...opts,
           factory,
           connect: async (opts2, callback) => {
@@ -10899,7 +10899,7 @@ var require_env_http_proxy_agent = __commonJS({
     var DispatcherBase = require_dispatcher_base();
     var { kClose, kDestroy, kClosed, kDestroyed, kDispatch, kNoProxyAgent, kHttpProxyAgent, kHttpsProxyAgent } = require_symbols();
     var ProxyAgent = require_proxy_agent();
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     var DEFAULT_PORTS = {
       "http:": 80,
       "https:": 443
@@ -10912,7 +10912,7 @@ var require_env_http_proxy_agent = __commonJS({
         super();
         this.#opts = opts;
         const { httpProxy, httpsProxy, noProxy, ...agentOpts } = opts;
-        this[kNoProxyAgent] = new Agent(agentOpts);
+        this[kNoProxyAgent] = new Agent2(agentOpts);
         const HTTP_PROXY = httpProxy ?? process.env.http_proxy ?? process.env.HTTP_PROXY;
         if (HTTP_PROXY) {
           this[kHttpProxyAgent] = new ProxyAgent({ ...agentOpts, uri: HTTP_PROXY });
@@ -12054,10 +12054,10 @@ var require_api_request = __commonJS({
         }
       }
     };
-    function request(opts, callback) {
+    function request2(opts, callback) {
       if (callback === void 0) {
         return new Promise((resolve, reject) => {
-          request.call(this, opts, (err, data) => {
+          request2.call(this, opts, (err, data) => {
             return err ? reject(err) : resolve(data);
           });
         });
@@ -12073,7 +12073,7 @@ var require_api_request = __commonJS({
         queueMicrotask(() => callback(err, { opaque }));
       }
     }
-    module.exports = request;
+    module.exports = request2;
     module.exports.RequestHandler = RequestHandler;
   }
 });
@@ -12653,10 +12653,10 @@ var require_api_connect = __commonJS({
         }
       }
     };
-    function connect(opts, callback) {
+    function connect2(opts, callback) {
       if (callback === void 0) {
         return new Promise((resolve, reject) => {
-          connect.call(this, opts, (err, data) => {
+          connect2.call(this, opts, (err, data) => {
             return err ? reject(err) : resolve(data);
           });
         });
@@ -12673,7 +12673,7 @@ var require_api_connect = __commonJS({
         queueMicrotask(() => callback(err, { opaque }));
       }
     }
-    module.exports = connect;
+    module.exports = connect2;
   }
 });
 
@@ -13661,7 +13661,7 @@ var require_mock_agent = __commonJS({
   "node_modules/undici/lib/mock/mock-agent.js"(exports, module) {
     "use strict";
     var { kClients } = require_symbols();
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     var {
       kAgent,
       kMockAgentSet,
@@ -13699,7 +13699,7 @@ var require_mock_agent = __commonJS({
         if (opts?.agent && typeof opts.agent.dispatch !== "function") {
           throw new InvalidArgumentError("Argument opts.agent must implement Agent");
         }
-        const agent = opts?.agent ? opts.agent : new Agent(opts);
+        const agent = opts?.agent ? opts.agent : new Agent2(opts);
         this[kAgent] = agent;
         this[kClients] = agent[kClients];
         this[kOptions] = mockOptions;
@@ -13854,8 +13854,8 @@ var require_snapshot_utils = __commonJS({
         match: new Set(matchHeaders.map((header) => caseSensitive ? header : header.toLowerCase()))
       };
     }
-    var crypto = runtimeFeatures.has("crypto") ? __require("node:crypto") : null;
-    var hashId = crypto?.hash ? (value) => crypto.hash("sha256", value, "base64url") : (value) => Buffer.from(value).toString("base64url");
+    var crypto2 = runtimeFeatures.has("crypto") ? __require("node:crypto") : null;
+    var hashId = crypto2?.hash ? (value) => crypto2.hash("sha256", value, "base64url") : (value) => Buffer.from(value).toString("base64url");
     function isUndiciHeaders(headers) {
       return Array.isArray(headers) && (headers.length & 1) === 0;
     }
@@ -13931,7 +13931,7 @@ var require_snapshot_recorder = __commonJS({
   "node_modules/undici/lib/mock/snapshot-recorder.js"(exports, module) {
     "use strict";
     var { writeFile, readFile, mkdir } = __require("node:fs/promises");
-    var { dirname: dirname6, resolve } = __require("node:path");
+    var { dirname: dirname8, resolve } = __require("node:path");
     var { setTimeout: setTimeout2, clearTimeout: clearTimeout2 } = __require("node:timers");
     var { InvalidArgumentError, UndiciError } = require_errors();
     var { hashId, isUrlExcludedFactory, normalizeHeaders, createHeaderFilters } = require_snapshot_utils();
@@ -14056,8 +14056,8 @@ var require_snapshot_recorder = __commonJS({
         if (this.isUrlExcluded(requestOpts)) {
           return;
         }
-        const request = formatRequestKey(requestOpts, this.#headerFilters, this.matchOptions);
-        const hash2 = createRequestHash(request);
+        const request2 = formatRequestKey(requestOpts, this.#headerFilters, this.matchOptions);
+        const hash2 = createRequestHash(request2);
         const normalizedHeaders = normalizeHeaders(response.headers);
         const responseData = {
           statusCode: response.statusCode,
@@ -14075,7 +14075,7 @@ var require_snapshot_recorder = __commonJS({
           existingSnapshot.timestamp = (/* @__PURE__ */ new Date()).toISOString();
         } else {
           this.#snapshots.set(hash2, {
-            request,
+            request: request2,
             responses: [responseData],
             // Always store as array for consistency
             callCount: 0,
@@ -14109,8 +14109,8 @@ var require_snapshot_recorder = __commonJS({
         if (this.isUrlExcluded(requestOpts)) {
           return void 0;
         }
-        const request = formatRequestKey(requestOpts, this.#headerFilters, this.matchOptions);
-        const hash2 = createRequestHash(request);
+        const request2 = formatRequestKey(requestOpts, this.#headerFilters, this.matchOptions);
+        const hash2 = createRequestHash(request2);
         const snapshot = this.#snapshots.get(hash2);
         if (!snapshot) return void 0;
         const currentCallCount = snapshot.callCount || 0;
@@ -14162,7 +14162,7 @@ var require_snapshot_recorder = __commonJS({
           throw new InvalidArgumentError("Snapshot path is required");
         }
         const resolvedPath = resolve(path);
-        await mkdir(dirname6(resolvedPath), { recursive: true });
+        await mkdir(dirname8(resolvedPath), { recursive: true });
         const data = Array.from(this.#snapshots.entries()).map(([hash2, snapshot]) => ({
           hash: hash2,
           snapshot
@@ -14205,8 +14205,8 @@ var require_snapshot_recorder = __commonJS({
        * @returns {boolean} - True if snapshot was deleted, false if not found
        */
       deleteSnapshot(requestOpts) {
-        const request = formatRequestKey(requestOpts, this.#headerFilters, this.matchOptions);
-        const hash2 = createRequestHash(request);
+        const request2 = formatRequestKey(requestOpts, this.#headerFilters, this.matchOptions);
+        const hash2 = createRequestHash(request2);
         return this.#snapshots.delete(hash2);
       }
       /**
@@ -14215,8 +14215,8 @@ var require_snapshot_recorder = __commonJS({
        * @returns {SnapshotInfo|null} - Snapshot information or null if not found
        */
       getSnapshotInfo(requestOpts) {
-        const request = formatRequestKey(requestOpts, this.#headerFilters, this.matchOptions);
-        const hash2 = createRequestHash(request);
+        const request2 = formatRequestKey(requestOpts, this.#headerFilters, this.matchOptions);
+        const hash2 = createRequestHash(request2);
         const snapshot = this.#snapshots.get(hash2);
         if (!snapshot) return null;
         return {
@@ -14306,7 +14306,7 @@ var require_snapshot_recorder = __commonJS({
 var require_snapshot_agent = __commonJS({
   "node_modules/undici/lib/mock/snapshot-agent.js"(exports, module) {
     "use strict";
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     var MockAgent = require_mock_agent();
     var { SnapshotRecorder } = require_snapshot_recorder();
     var WrapHandler = require_wrap_handler();
@@ -14357,7 +14357,7 @@ var require_snapshot_agent = __commonJS({
         });
         this[kSnapshotLoaded] = false;
         if (this[kSnapshotMode] === "record" || this[kSnapshotMode] === "update" || this[kSnapshotMode] === "playback" && opts.excludeUrls && opts.excludeUrls.length > 0) {
-          this[kRealAgent] = new Agent(opts);
+          this[kRealAgent] = new Agent2(opts);
         }
         if ((this[kSnapshotMode] === "playback" || this[kSnapshotMode] === "update") && this[kSnapshotPath]) {
           this.loadSnapshots().catch(() => {
@@ -14507,16 +14507,16 @@ var require_snapshot_agent = __commonJS({
        */
       #setupMockInterceptors() {
         for (const snapshot of this[kSnapshotRecorder].getSnapshots()) {
-          const { request, responses, response } = snapshot;
-          const url2 = new URL(request.url);
+          const { request: request2, responses, response } = snapshot;
+          const url2 = new URL(request2.url);
           const mockPool = this.get(url2.origin);
           const responseData = responses ? responses[0] : response;
           if (!responseData) continue;
           mockPool.intercept({
             path: url2.pathname + url2.search,
-            method: request.method,
-            headers: request.headers,
-            body: request.body
+            method: request2.method,
+            headers: request2.headers,
+            body: request2.body
           }).reply(responseData.statusCode, responseData.body, {
             headers: responseData.headers,
             trailers: responseData.trailers
@@ -14596,9 +14596,9 @@ var require_global2 = __commonJS({
     var globalDispatcher = /* @__PURE__ */ Symbol.for("undici.globalDispatcher.2");
     var legacyGlobalDispatcher = /* @__PURE__ */ Symbol.for("undici.globalDispatcher.1");
     var { InvalidArgumentError } = require_errors();
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     if (getGlobalDispatcher() === void 0) {
-      setGlobalDispatcher2(new Agent());
+      setGlobalDispatcher2(new Agent2());
     }
     function setGlobalDispatcher2(agent) {
       if (!agent || typeof agent.dispatch !== "function") {
@@ -20042,7 +20042,7 @@ var require_request2 = __commonJS({
         webidl.argumentLengthCheck(arguments, 1, prefix);
         input2 = webidl.converters.RequestInfo(input2);
         init = webidl.converters.RequestInit(init);
-        let request = null;
+        let request2 = null;
         let fallbackMode = null;
         const baseUrl = environmentSettingsObject.settingsObject.baseUrl;
         let signal = null;
@@ -20059,18 +20059,18 @@ var require_request2 = __commonJS({
               "Request cannot be constructed from a URL that includes credentials: " + input2
             );
           }
-          request = makeRequest({ urlList: [parsedURL] });
+          request2 = makeRequest({ urlList: [parsedURL] });
           fallbackMode = "cors";
         } else {
           assert2(webidl.is.Request(input2));
-          request = input2.#state;
+          request2 = input2.#state;
           signal = input2.#signal;
           this.#dispatcher = init.dispatcher || input2.#dispatcher;
         }
         const origin = environmentSettingsObject.settingsObject.origin;
         let window2 = "client";
-        if (request.window?.constructor?.name === "EnvironmentSettingsObject" && sameOrigin(request.window, origin)) {
-          window2 = request.window;
+        if (request2.window?.constructor?.name === "EnvironmentSettingsObject" && sameOrigin(request2.window, origin)) {
+          window2 = request2.window;
         }
         if (init.window != null) {
           throw new TypeError(`'window' option '${window2}' must be null`);
@@ -20078,66 +20078,66 @@ var require_request2 = __commonJS({
         if ("window" in init) {
           window2 = "no-window";
         }
-        request = makeRequest({
+        request2 = makeRequest({
           // URL request’s URL.
           // undici implementation note: this is set as the first item in request's urlList in makeRequest
           // method request’s method.
-          method: request.method,
+          method: request2.method,
           // header list A copy of request’s header list.
           // undici implementation note: headersList is cloned in makeRequest
-          headersList: request.headersList,
+          headersList: request2.headersList,
           // unsafe-request flag Set.
-          unsafeRequest: request.unsafeRequest,
+          unsafeRequest: request2.unsafeRequest,
           // client This’s relevant settings object.
           client: environmentSettingsObject.settingsObject,
           // window window.
           window: window2,
           // priority request’s priority.
-          priority: request.priority,
+          priority: request2.priority,
           // origin request’s origin. The propagation of the origin is only significant for navigation requests
           // being handled by a service worker. In this scenario a request can have an origin that is different
           // from the current client.
-          origin: request.origin,
+          origin: request2.origin,
           // referrer request’s referrer.
-          referrer: request.referrer,
+          referrer: request2.referrer,
           // referrer policy request’s referrer policy.
-          referrerPolicy: request.referrerPolicy,
+          referrerPolicy: request2.referrerPolicy,
           // mode request’s mode.
-          mode: request.mode,
+          mode: request2.mode,
           // credentials mode request’s credentials mode.
-          credentials: request.credentials,
+          credentials: request2.credentials,
           // cache mode request’s cache mode.
-          cache: request.cache,
+          cache: request2.cache,
           // redirect mode request’s redirect mode.
-          redirect: request.redirect,
+          redirect: request2.redirect,
           // integrity metadata request’s integrity metadata.
-          integrity: request.integrity,
+          integrity: request2.integrity,
           // keepalive request’s keepalive.
-          keepalive: request.keepalive,
+          keepalive: request2.keepalive,
           // reload-navigation flag request’s reload-navigation flag.
-          reloadNavigation: request.reloadNavigation,
+          reloadNavigation: request2.reloadNavigation,
           // history-navigation flag request’s history-navigation flag.
-          historyNavigation: request.historyNavigation,
+          historyNavigation: request2.historyNavigation,
           // URL list A clone of request’s URL list.
-          urlList: [...request.urlList]
+          urlList: [...request2.urlList]
         });
         const initHasKey = Object.keys(init).length !== 0;
         if (initHasKey) {
-          if (request.mode === "navigate") {
-            request.mode = "same-origin";
+          if (request2.mode === "navigate") {
+            request2.mode = "same-origin";
           }
-          request.reloadNavigation = false;
-          request.historyNavigation = false;
-          request.origin = "client";
-          request.referrer = "client";
-          request.referrerPolicy = "";
-          request.url = request.urlList[request.urlList.length - 1];
-          request.urlList = [request.url];
+          request2.reloadNavigation = false;
+          request2.historyNavigation = false;
+          request2.origin = "client";
+          request2.referrer = "client";
+          request2.referrerPolicy = "";
+          request2.url = request2.urlList[request2.urlList.length - 1];
+          request2.urlList = [request2.url];
         }
         if (init.referrer !== void 0) {
           const referrer = init.referrer;
           if (referrer === "") {
-            request.referrer = "no-referrer";
+            request2.referrer = "no-referrer";
           } else {
             let parsedReferrer;
             try {
@@ -20146,14 +20146,14 @@ var require_request2 = __commonJS({
               throw new TypeError(`Referrer "${referrer}" is not a valid URL.`, { cause: err });
             }
             if (parsedReferrer.protocol === "about:" && parsedReferrer.hostname === "client" || origin && !sameOrigin(parsedReferrer, environmentSettingsObject.settingsObject.baseUrl)) {
-              request.referrer = "client";
+              request2.referrer = "client";
             } else {
-              request.referrer = parsedReferrer;
+              request2.referrer = parsedReferrer;
             }
           }
         }
         if (init.referrerPolicy !== void 0) {
-          request.referrerPolicy = init.referrerPolicy;
+          request2.referrerPolicy = init.referrerPolicy;
         }
         let mode;
         if (init.mode !== void 0) {
@@ -20168,33 +20168,33 @@ var require_request2 = __commonJS({
           });
         }
         if (mode != null) {
-          request.mode = mode;
+          request2.mode = mode;
         }
         if (init.credentials !== void 0) {
-          request.credentials = init.credentials;
+          request2.credentials = init.credentials;
         }
         if (init.cache !== void 0) {
-          request.cache = init.cache;
+          request2.cache = init.cache;
         }
-        if (request.cache === "only-if-cached" && request.mode !== "same-origin") {
+        if (request2.cache === "only-if-cached" && request2.mode !== "same-origin") {
           throw new TypeError(
             "'only-if-cached' can be set only with 'same-origin' mode"
           );
         }
         if (init.redirect !== void 0) {
-          request.redirect = init.redirect;
+          request2.redirect = init.redirect;
         }
         if (init.integrity != null) {
-          request.integrity = String(init.integrity);
+          request2.integrity = String(init.integrity);
         }
         if (init.keepalive !== void 0) {
-          request.keepalive = Boolean(init.keepalive);
+          request2.keepalive = Boolean(init.keepalive);
         }
         if (init.method !== void 0) {
           let method = init.method;
           const mayBeNormalized = normalizedMethodRecords[method];
           if (mayBeNormalized !== void 0) {
-            request.method = mayBeNormalized;
+            request2.method = mayBeNormalized;
           } else {
             if (!isValidHTTPToken(method)) {
               throw new TypeError(`'${method}' is not a valid HTTP method.`);
@@ -20204,9 +20204,9 @@ var require_request2 = __commonJS({
               throw new TypeError(`'${method}' HTTP method is unsupported.`);
             }
             method = normalizedMethodRecordsBase[upperCase] ?? method;
-            request.method = method;
+            request2.method = method;
           }
-          if (!patchMethodWarning && request.method === "patch") {
+          if (!patchMethodWarning && request2.method === "patch") {
             process.emitWarning("Using `patch` is highly likely to result in a `405 Method Not Allowed`. `PATCH` is much more likely to succeed.", {
               code: "UNDICI-FETCH-patch"
             });
@@ -20216,7 +20216,7 @@ var require_request2 = __commonJS({
         if (init.signal !== void 0) {
           signal = init.signal;
         }
-        this.#state = request;
+        this.#state = request2;
         const ac = new AbortController();
         this.#signal = ac.signal;
         if (signal != null) {
@@ -20234,12 +20234,12 @@ var require_request2 = __commonJS({
           }
         }
         this.#headers = new Headers(kConstruct);
-        setHeadersList(this.#headers, request.headersList);
+        setHeadersList(this.#headers, request2.headersList);
         setHeadersGuard(this.#headers, "request");
         if (mode === "no-cors") {
-          if (!corsSafeListedMethodsSet.has(request.method)) {
+          if (!corsSafeListedMethodsSet.has(request2.method)) {
             throw new TypeError(
-              `'${request.method} is unsupported in no-cors mode.`
+              `'${request2.method} is unsupported in no-cors mode.`
             );
           }
           setHeadersGuard(this.#headers, "request-no-cors");
@@ -20258,14 +20258,14 @@ var require_request2 = __commonJS({
           }
         }
         const inputBody = webidl.is.Request(input2) ? input2.#state.body : null;
-        if ((init.body != null || inputBody != null) && (request.method === "GET" || request.method === "HEAD")) {
+        if ((init.body != null || inputBody != null) && (request2.method === "GET" || request2.method === "HEAD")) {
           throw new TypeError("Request with GET/HEAD method cannot have body.");
         }
         let initBody = null;
         if (init.body != null) {
           const [extractedBody, contentType] = extractBody(
             init.body,
-            request.keepalive
+            request2.keepalive
           );
           initBody = extractedBody;
           if (contentType && !getHeadersList(this.#headers).contains("content-type", true)) {
@@ -20277,12 +20277,12 @@ var require_request2 = __commonJS({
           if (initBody != null && init.duplex == null) {
             throw new TypeError("RequestInit: duplex option is required when sending a body.");
           }
-          if (request.mode !== "same-origin" && request.mode !== "cors") {
+          if (request2.mode !== "same-origin" && request2.mode !== "cors") {
             throw new TypeError(
               'If request is made from ReadableStream, mode should be "same-origin" or "cors"'
             );
           }
-          request.useCORSPreflightFlag = true;
+          request2.useCORSPreflightFlag = true;
         }
         let finalBody = inputOrInitBody;
         if (initBody == null && inputBody != null) {
@@ -20472,42 +20472,42 @@ var require_request2 = __commonJS({
        * @param {Request} request
        * @param {AbortSignal} newSignal
        */
-      static setRequestSignal(request, newSignal) {
-        request.#signal = newSignal;
-        return request;
+      static setRequestSignal(request2, newSignal) {
+        request2.#signal = newSignal;
+        return request2;
       }
       /**
        * @param {Request} request
        */
-      static getRequestDispatcher(request) {
-        return request.#dispatcher;
+      static getRequestDispatcher(request2) {
+        return request2.#dispatcher;
       }
       /**
        * @param {Request} request
        * @param {import('../../dispatcher/dispatcher')} newDispatcher
        */
-      static setRequestDispatcher(request, newDispatcher) {
-        request.#dispatcher = newDispatcher;
+      static setRequestDispatcher(request2, newDispatcher) {
+        request2.#dispatcher = newDispatcher;
       }
       /**
        * @param {Request} request
        * @param {Headers} newHeaders
        */
-      static setRequestHeaders(request, newHeaders) {
-        request.#headers = newHeaders;
+      static setRequestHeaders(request2, newHeaders) {
+        request2.#headers = newHeaders;
       }
       /**
        * @param {Request} request
        */
-      static getRequestState(request) {
-        return request.#state;
+      static getRequestState(request2) {
+        return request2.#state;
       }
       /**
        * @param {Request} request
        * @param {any} newState
        */
-      static setRequestState(request, newState) {
-        request.#state = newState;
+      static setRequestState(request2, newState) {
+        request2.#state = newState;
       }
     };
     var { setRequestSignal, getRequestDispatcher, setRequestDispatcher, setRequestHeaders, getRequestState, setRequestState } = Request;
@@ -20562,23 +20562,23 @@ var require_request2 = __commonJS({
         headersList: init.headersList ? new HeadersList(init.headersList) : new HeadersList()
       };
     }
-    function cloneRequest(request) {
-      const newRequest = makeRequest({ ...request, body: null });
-      if (request.body != null) {
-        newRequest.body = cloneBody(request.body);
+    function cloneRequest(request2) {
+      const newRequest = makeRequest({ ...request2, body: null });
+      if (request2.body != null) {
+        newRequest.body = cloneBody(request2.body);
       }
       return newRequest;
     }
     function fromInnerRequest(innerRequest, dispatcher, signal, guard) {
-      const request = new Request(kConstruct);
-      setRequestState(request, innerRequest);
-      setRequestDispatcher(request, dispatcher);
-      setRequestSignal(request, signal);
+      const request2 = new Request(kConstruct);
+      setRequestState(request2, innerRequest);
+      setRequestDispatcher(request2, dispatcher);
+      setRequestSignal(request2, signal);
       const headers = new Headers(kConstruct);
-      setRequestHeaders(request, headers);
+      setRequestHeaders(request2, headers);
       setHeadersList(headers, innerRequest.headersList);
       setHeadersGuard(headers, guard);
-      return request;
+      return request2;
     }
     Object.defineProperties(Request.prototype, {
       method: kEnumerableProperty,
@@ -20723,10 +20723,10 @@ var require_subresource_integrity = __commonJS({
     var { runtimeFeatures } = require_runtime_features();
     var { asciiLowercase } = require_infra();
     var validSRIHashAlgorithmTokenSet = /* @__PURE__ */ new Map([["sha256", 0], ["sha384", 1], ["sha512", 2]]);
-    var crypto;
+    var crypto2;
     if (runtimeFeatures.has("crypto")) {
-      crypto = __require("node:crypto");
-      const cryptoHashes = crypto.getHashes();
+      crypto2 = __require("node:crypto");
+      const cryptoHashes = crypto2.getHashes();
       if (cryptoHashes.length === 0) {
         validSRIHashAlgorithmTokenSet.clear();
       }
@@ -20814,7 +20814,7 @@ var require_subresource_integrity = __commonJS({
       return result;
     }
     var applyAlgorithmToBytes = (algorithm, bytes) => {
-      return crypto.hash(algorithm, bytes, "base64");
+      return crypto2.hash(algorithm, bytes, "base64");
     };
     function caseSensitiveMatch(actualValue, expectedValue) {
       let actualValueLength = actualValue.length;
@@ -20969,14 +20969,14 @@ var require_fetch = __commonJS({
         p.reject(e);
         return p.promise;
       }
-      const request = getRequestState(requestObject);
+      const request2 = getRequestState(requestObject);
       if (requestObject.signal.aborted) {
-        abortFetch(p, request, null, requestObject.signal.reason, null);
+        abortFetch(p, request2, null, requestObject.signal.reason, null);
         return p.promise;
       }
-      const globalObject = request.client.globalObject;
+      const globalObject = request2.client.globalObject;
       if (globalObject?.constructor?.name === "ServiceWorkerGlobalScope") {
-        request.serviceWorkers = "none";
+        request2.serviceWorkers = "none";
       }
       let responseObject = null;
       let locallyAborted = false;
@@ -20988,7 +20988,7 @@ var require_fetch = __commonJS({
           assert2(controller != null);
           controller.abort(requestObject.signal.reason);
           const realResponse = responseObject?.deref();
-          abortFetch(p, request, realResponse, requestObject.signal.reason, controller.controller);
+          abortFetch(p, request2, realResponse, requestObject.signal.reason, controller.controller);
         }
       );
       const processResponse = (response) => {
@@ -20996,7 +20996,7 @@ var require_fetch = __commonJS({
           return;
         }
         if (response.aborted) {
-          abortFetch(p, request, responseObject, controller.serializedAbortReason, controller.controller);
+          abortFetch(p, request2, responseObject, controller.serializedAbortReason, controller.controller);
           return;
         }
         if (response.type === "error") {
@@ -21008,7 +21008,7 @@ var require_fetch = __commonJS({
         p = null;
       };
       controller = fetching({
-        request,
+        request: request2,
         processResponseEndOfBody: handleFetchDone,
         processResponse,
         dispatcher: getRequestDispatcher(requestObject),
@@ -21055,12 +21055,12 @@ var require_fetch = __commonJS({
       );
     }
     var markResourceTiming = performance.markResourceTiming;
-    function abortFetch(p, request, responseObject, error62, controller) {
+    function abortFetch(p, request2, responseObject, error62, controller) {
       if (p) {
         p.reject(error62);
       }
-      if (request.body?.stream != null && isReadable(request.body.stream)) {
-        request.body.stream.cancel(error62).catch((err) => {
+      if (request2.body?.stream != null && isReadable(request2.body.stream)) {
+        request2.body.stream.cancel(error62).catch((err) => {
           if (err.code === "ERR_INVALID_STATE") {
             return;
           }
@@ -21076,7 +21076,7 @@ var require_fetch = __commonJS({
       }
     }
     function fetching({
-      request,
+      request: request2,
       processRequestBodyChunkLength,
       processRequestEndOfBody,
       processResponse,
@@ -21091,9 +21091,9 @@ var require_fetch = __commonJS({
       assert2(dispatcher);
       let taskDestination = null;
       let crossOriginIsolatedCapability = false;
-      if (request.client != null) {
-        taskDestination = request.client.globalObject;
-        crossOriginIsolatedCapability = request.client.crossOriginIsolatedCapability;
+      if (request2.client != null) {
+        taskDestination = request2.client.globalObject;
+        crossOriginIsolatedCapability = request2.client.crossOriginIsolatedCapability;
       }
       const currentTime = coarsenedSharedCurrentTime(crossOriginIsolatedCapability);
       const timingInfo = createOpaqueTimingInfo({
@@ -21101,7 +21101,7 @@ var require_fetch = __commonJS({
       });
       const fetchParams = {
         controller: new Fetch(dispatcher),
-        request,
+        request: request2,
         timingInfo,
         processRequestBodyChunkLength,
         processRequestEndOfBody,
@@ -21113,79 +21113,79 @@ var require_fetch = __commonJS({
         // Keep requestObject alive to prevent its AbortController from being GC'd
         requestObject
       };
-      assert2(!request.body || request.body.stream);
-      if (request.window === "client") {
-        request.window = request.client?.globalObject?.constructor?.name === "Window" ? request.client : "no-window";
+      assert2(!request2.body || request2.body.stream);
+      if (request2.window === "client") {
+        request2.window = request2.client?.globalObject?.constructor?.name === "Window" ? request2.client : "no-window";
       }
-      if (request.origin === "client") {
-        request.origin = request.client.origin;
+      if (request2.origin === "client") {
+        request2.origin = request2.client.origin;
       }
-      if (request.policyContainer === "client") {
-        if (request.client != null) {
-          request.policyContainer = clonePolicyContainer(
-            request.client.policyContainer
+      if (request2.policyContainer === "client") {
+        if (request2.client != null) {
+          request2.policyContainer = clonePolicyContainer(
+            request2.client.policyContainer
           );
         } else {
-          request.policyContainer = makePolicyContainer();
+          request2.policyContainer = makePolicyContainer();
         }
       }
-      if (!request.headersList.contains("accept", true)) {
+      if (!request2.headersList.contains("accept", true)) {
         const value = "*/*";
-        request.headersList.append("accept", value, true);
+        request2.headersList.append("accept", value, true);
       }
-      if (!request.headersList.contains("accept-language", true)) {
-        request.headersList.append("accept-language", "*", true);
+      if (!request2.headersList.contains("accept-language", true)) {
+        request2.headersList.append("accept-language", "*", true);
       }
-      if (request.priority === null) {
+      if (request2.priority === null) {
       }
-      if (subresourceSet.has(request.destination)) {
+      if (subresourceSet.has(request2.destination)) {
       }
       mainFetch(fetchParams, false);
       return fetchParams.controller;
     }
     async function mainFetch(fetchParams, recursive2) {
       try {
-        const request = fetchParams.request;
+        const request2 = fetchParams.request;
         let response = null;
-        if (request.localURLsOnly && !urlIsLocal(requestCurrentURL(request))) {
+        if (request2.localURLsOnly && !urlIsLocal(requestCurrentURL(request2))) {
           response = makeNetworkError("local URLs only");
         }
-        tryUpgradeRequestToAPotentiallyTrustworthyURL(request);
-        if (requestBadPort(request) === "blocked") {
+        tryUpgradeRequestToAPotentiallyTrustworthyURL(request2);
+        if (requestBadPort(request2) === "blocked") {
           response = makeNetworkError("bad port");
         }
-        if (request.referrerPolicy === "") {
-          request.referrerPolicy = request.policyContainer.referrerPolicy;
+        if (request2.referrerPolicy === "") {
+          request2.referrerPolicy = request2.policyContainer.referrerPolicy;
         }
-        if (request.referrer !== "no-referrer") {
-          request.referrer = determineRequestsReferrer(request);
+        if (request2.referrer !== "no-referrer") {
+          request2.referrer = determineRequestsReferrer(request2);
         }
         if (response === null) {
-          const currentURL = requestCurrentURL(request);
+          const currentURL = requestCurrentURL(request2);
           if (
             // - request’s current URL’s origin is same origin with request’s origin,
             //   and request’s response tainting is "basic"
-            sameOrigin(currentURL, request.url) && request.responseTainting === "basic" || // request’s current URL’s scheme is "data"
+            sameOrigin(currentURL, request2.url) && request2.responseTainting === "basic" || // request’s current URL’s scheme is "data"
             currentURL.protocol === "data:" || // - request’s mode is "navigate" or "websocket"
-            (request.mode === "navigate" || request.mode === "websocket")
+            (request2.mode === "navigate" || request2.mode === "websocket")
           ) {
-            request.responseTainting = "basic";
+            request2.responseTainting = "basic";
             response = await schemeFetch(fetchParams);
-          } else if (request.mode === "same-origin") {
+          } else if (request2.mode === "same-origin") {
             response = makeNetworkError('request mode cannot be "same-origin"');
-          } else if (request.mode === "no-cors") {
-            if (request.redirect !== "follow") {
+          } else if (request2.mode === "no-cors") {
+            if (request2.redirect !== "follow") {
               response = makeNetworkError(
                 'redirect mode cannot be "follow" for "no-cors" request'
               );
             } else {
-              request.responseTainting = "opaque";
+              request2.responseTainting = "opaque";
               response = await schemeFetch(fetchParams);
             }
-          } else if (!urlIsHttpHttpsScheme(requestCurrentURL(request))) {
+          } else if (!urlIsHttpHttpsScheme(requestCurrentURL(request2))) {
             response = makeNetworkError("URL scheme must be a HTTP(S) scheme");
           } else {
-            request.responseTainting = "cors";
+            request2.responseTainting = "cors";
             response = await httpFetch(fetchParams);
           }
         }
@@ -21193,13 +21193,13 @@ var require_fetch = __commonJS({
           return response;
         }
         if (response.status !== 0 && !response.internalResponse) {
-          if (request.responseTainting === "cors") {
+          if (request2.responseTainting === "cors") {
           }
-          if (request.responseTainting === "basic") {
+          if (request2.responseTainting === "basic") {
             response = filterResponse(response, "basic");
-          } else if (request.responseTainting === "cors") {
+          } else if (request2.responseTainting === "cors") {
             response = filterResponse(response, "cors");
-          } else if (request.responseTainting === "opaque") {
+          } else if (request2.responseTainting === "opaque") {
             response = filterResponse(response, "opaque");
           } else {
             assert2(false);
@@ -21207,26 +21207,26 @@ var require_fetch = __commonJS({
         }
         let internalResponse = response.status === 0 ? response : response.internalResponse;
         if (internalResponse.urlList.length === 0) {
-          internalResponse.urlList.push(...request.urlList);
+          internalResponse.urlList.push(...request2.urlList);
         }
-        if (!request.timingAllowFailed) {
+        if (!request2.timingAllowFailed) {
           response.timingAllowPassed = true;
         }
-        if (response.type === "opaque" && internalResponse.status === 206 && internalResponse.rangeRequested && !request.headers.contains("range", true)) {
+        if (response.type === "opaque" && internalResponse.status === 206 && internalResponse.rangeRequested && !request2.headers.contains("range", true)) {
           response = internalResponse = makeNetworkError();
         }
-        if (response.status !== 0 && (request.method === "HEAD" || request.method === "CONNECT" || nullBodyStatus.includes(internalResponse.status))) {
+        if (response.status !== 0 && (request2.method === "HEAD" || request2.method === "CONNECT" || nullBodyStatus.includes(internalResponse.status))) {
           internalResponse.body = null;
           fetchParams.controller.dump = true;
         }
-        if (request.integrity) {
+        if (request2.integrity) {
           const processBodyError = (reason) => fetchFinale(fetchParams, makeNetworkError(reason));
-          if (request.responseTainting === "opaque" || response.body == null) {
+          if (request2.responseTainting === "opaque" || response.body == null) {
             processBodyError(response.error);
             return;
           }
           const processBody = (bytes) => {
-            if (!bytesMatch(bytes, request.integrity)) {
+            if (!bytesMatch(bytes, request2.integrity)) {
               processBodyError("integrity mismatch");
               return;
             }
@@ -21245,8 +21245,8 @@ var require_fetch = __commonJS({
       if (isCancelled(fetchParams) && fetchParams.request.redirectCount === 0) {
         return Promise.resolve(makeAppropriateNetworkError(fetchParams));
       }
-      const { request } = fetchParams;
-      const { protocol: scheme } = requestCurrentURL(request);
+      const { request: request2 } = fetchParams;
+      const { protocol: scheme } = requestCurrentURL(request2);
       switch (scheme) {
         case "about:": {
           return Promise.resolve(makeNetworkError("about scheme is not supported"));
@@ -21255,19 +21255,19 @@ var require_fetch = __commonJS({
           if (!resolveObjectURL) {
             resolveObjectURL = __require("node:buffer").resolveObjectURL;
           }
-          const blobURLEntry = requestCurrentURL(request);
+          const blobURLEntry = requestCurrentURL(request2);
           if (blobURLEntry.search.length !== 0) {
             return Promise.resolve(makeNetworkError("NetworkError when attempting to fetch resource."));
           }
           const blob = resolveObjectURL(blobURLEntry.toString());
-          if (request.method !== "GET" || !webidl.is.Blob(blob)) {
+          if (request2.method !== "GET" || !webidl.is.Blob(blob)) {
             return Promise.resolve(makeNetworkError("invalid method"));
           }
           const response = makeResponse();
           const fullLength = blob.size;
           const serializedFullLength = isomorphicEncode(`${fullLength}`);
           const type2 = blob.type;
-          if (!request.headersList.contains("range", true)) {
+          if (!request2.headersList.contains("range", true)) {
             const bodyWithType = extractBody(blob);
             response.statusText = "OK";
             response.body = bodyWithType[0];
@@ -21275,7 +21275,7 @@ var require_fetch = __commonJS({
             response.headersList.set("content-type", type2, true);
           } else {
             response.rangeRequested = true;
-            const rangeHeader = request.headersList.get("range", true);
+            const rangeHeader = request2.headersList.get("range", true);
             const rangeValue = simpleRangeHeaderValue(rangeHeader, true);
             if (rangeValue === "failure") {
               return Promise.resolve(makeNetworkError("failed to fetch the data URL"));
@@ -21306,7 +21306,7 @@ var require_fetch = __commonJS({
           return Promise.resolve(response);
         }
         case "data:": {
-          const currentURL = requestCurrentURL(request);
+          const currentURL = requestCurrentURL(request2);
           const dataURLStruct = dataURLProcessor(currentURL);
           if (dataURLStruct === "failure") {
             return Promise.resolve(makeNetworkError("failed to fetch the data URL"));
@@ -21395,41 +21395,41 @@ var require_fetch = __commonJS({
       }
     }
     async function httpFetch(fetchParams) {
-      const request = fetchParams.request;
+      const request2 = fetchParams.request;
       let response = null;
       let actualResponse = null;
       const timingInfo = fetchParams.timingInfo;
-      if (request.serviceWorkers === "all") {
+      if (request2.serviceWorkers === "all") {
       }
       if (response === null) {
-        if (request.redirect === "follow") {
-          request.serviceWorkers = "none";
+        if (request2.redirect === "follow") {
+          request2.serviceWorkers = "none";
         }
         actualResponse = response = await httpNetworkOrCacheFetch(fetchParams);
-        if (request.responseTainting === "cors" && corsCheck(request, response) === "failure") {
+        if (request2.responseTainting === "cors" && corsCheck(request2, response) === "failure") {
           return makeNetworkError("cors failure");
         }
-        if (TAOCheck(request, response) === "failure") {
-          request.timingAllowFailed = true;
+        if (TAOCheck(request2, response) === "failure") {
+          request2.timingAllowFailed = true;
         }
       }
-      if ((request.responseTainting === "opaque" || response.type === "opaque") && crossOriginResourcePolicyCheck(
-        request.origin,
-        request.client,
-        request.destination,
+      if ((request2.responseTainting === "opaque" || response.type === "opaque") && crossOriginResourcePolicyCheck(
+        request2.origin,
+        request2.client,
+        request2.destination,
         actualResponse
       ) === "blocked") {
         return makeNetworkError("blocked");
       }
       if (redirectStatusSet.has(actualResponse.status)) {
-        if (request.redirect !== "manual") {
+        if (request2.redirect !== "manual") {
           fetchParams.controller.connection.destroy(void 0, false);
         }
-        if (request.redirect === "error") {
+        if (request2.redirect === "error") {
           response = makeNetworkError("unexpected redirect");
-        } else if (request.redirect === "manual") {
+        } else if (request2.redirect === "manual") {
           response = actualResponse;
-        } else if (request.redirect === "follow") {
+        } else if (request2.redirect === "follow") {
           response = await httpRedirectFetch(fetchParams, response);
         } else {
           assert2(false);
@@ -21439,13 +21439,13 @@ var require_fetch = __commonJS({
       return response;
     }
     function httpRedirectFetch(fetchParams, response) {
-      const request = fetchParams.request;
+      const request2 = fetchParams.request;
       const actualResponse = response.internalResponse ? response.internalResponse : response;
       let locationURL;
       try {
         locationURL = responseLocationURL(
           actualResponse,
-          requestCurrentURL(request).hash
+          requestCurrentURL(request2).hash
         );
         if (locationURL == null) {
           return response;
@@ -21456,129 +21456,129 @@ var require_fetch = __commonJS({
       if (!urlIsHttpHttpsScheme(locationURL)) {
         return Promise.resolve(makeNetworkError("URL scheme must be a HTTP(S) scheme"));
       }
-      if (request.redirectCount === 20) {
+      if (request2.redirectCount === 20) {
         return Promise.resolve(makeNetworkError("redirect count exceeded"));
       }
-      request.redirectCount += 1;
-      if (request.mode === "cors" && (locationURL.username || locationURL.password) && !sameOrigin(request, locationURL)) {
+      request2.redirectCount += 1;
+      if (request2.mode === "cors" && (locationURL.username || locationURL.password) && !sameOrigin(request2, locationURL)) {
         return Promise.resolve(makeNetworkError('cross origin not allowed for request mode "cors"'));
       }
-      if (request.responseTainting === "cors" && (locationURL.username || locationURL.password)) {
+      if (request2.responseTainting === "cors" && (locationURL.username || locationURL.password)) {
         return Promise.resolve(makeNetworkError(
           'URL cannot contain credentials for request mode "cors"'
         ));
       }
-      if (actualResponse.status !== 303 && request.body != null && request.body.source == null) {
+      if (actualResponse.status !== 303 && request2.body != null && request2.body.source == null) {
         return Promise.resolve(makeNetworkError());
       }
-      if ([301, 302].includes(actualResponse.status) && request.method === "POST" || actualResponse.status === 303 && !GET_OR_HEAD.includes(request.method)) {
-        request.method = "GET";
-        request.body = null;
+      if ([301, 302].includes(actualResponse.status) && request2.method === "POST" || actualResponse.status === 303 && !GET_OR_HEAD.includes(request2.method)) {
+        request2.method = "GET";
+        request2.body = null;
         for (const headerName of requestBodyHeader) {
-          request.headersList.delete(headerName);
+          request2.headersList.delete(headerName);
         }
       }
-      if (!sameOrigin(requestCurrentURL(request), locationURL)) {
-        request.headersList.delete("authorization", true);
-        request.headersList.delete("proxy-authorization", true);
-        request.headersList.delete("cookie", true);
-        request.headersList.delete("host", true);
+      if (!sameOrigin(requestCurrentURL(request2), locationURL)) {
+        request2.headersList.delete("authorization", true);
+        request2.headersList.delete("proxy-authorization", true);
+        request2.headersList.delete("cookie", true);
+        request2.headersList.delete("host", true);
       }
-      if (request.body != null) {
-        assert2(request.body.source != null);
-        request.body = safelyExtractBody(request.body.source)[0];
+      if (request2.body != null) {
+        assert2(request2.body.source != null);
+        request2.body = safelyExtractBody(request2.body.source)[0];
       }
       const timingInfo = fetchParams.timingInfo;
       timingInfo.redirectEndTime = timingInfo.postRedirectStartTime = coarsenedSharedCurrentTime(fetchParams.crossOriginIsolatedCapability);
       if (timingInfo.redirectStartTime === 0) {
         timingInfo.redirectStartTime = timingInfo.startTime;
       }
-      request.urlList.push(locationURL);
-      setRequestReferrerPolicyOnRedirect(request, actualResponse);
+      request2.urlList.push(locationURL);
+      setRequestReferrerPolicyOnRedirect(request2, actualResponse);
       return mainFetch(fetchParams, true);
     }
     async function httpNetworkOrCacheFetch(fetchParams, isAuthenticationFetch = false, isNewConnectionFetch = false) {
-      const request = fetchParams.request;
+      const request2 = fetchParams.request;
       let httpFetchParams = null;
-      let httpRequest = null;
+      let httpRequest3 = null;
       let response = null;
       const httpCache = null;
       const revalidatingFlag = false;
-      if (request.window === "no-window" && request.redirect === "error") {
+      if (request2.window === "no-window" && request2.redirect === "error") {
         httpFetchParams = fetchParams;
-        httpRequest = request;
+        httpRequest3 = request2;
       } else {
-        httpRequest = cloneRequest(request);
+        httpRequest3 = cloneRequest(request2);
         httpFetchParams = { ...fetchParams };
-        httpFetchParams.request = httpRequest;
+        httpFetchParams.request = httpRequest3;
       }
-      const includeCredentials = request.credentials === "include" || request.credentials === "same-origin" && request.responseTainting === "basic";
-      const contentLength = httpRequest.body ? httpRequest.body.length : null;
+      const includeCredentials = request2.credentials === "include" || request2.credentials === "same-origin" && request2.responseTainting === "basic";
+      const contentLength = httpRequest3.body ? httpRequest3.body.length : null;
       let contentLengthHeaderValue = null;
-      if (httpRequest.body == null && ["POST", "PUT"].includes(httpRequest.method)) {
+      if (httpRequest3.body == null && ["POST", "PUT"].includes(httpRequest3.method)) {
         contentLengthHeaderValue = "0";
       }
       if (contentLength != null) {
         contentLengthHeaderValue = isomorphicEncode(`${contentLength}`);
       }
-      if (contentLengthHeaderValue != null && !httpRequest.headersList.contains("content-length", true)) {
-        httpRequest.headersList.append("content-length", contentLengthHeaderValue, true);
+      if (contentLengthHeaderValue != null && !httpRequest3.headersList.contains("content-length", true)) {
+        httpRequest3.headersList.append("content-length", contentLengthHeaderValue, true);
       }
-      if (contentLength != null && httpRequest.keepalive) {
+      if (contentLength != null && httpRequest3.keepalive) {
       }
-      if (webidl.is.URL(httpRequest.referrer)) {
-        httpRequest.headersList.append("referer", isomorphicEncode(httpRequest.referrer.href), true);
+      if (webidl.is.URL(httpRequest3.referrer)) {
+        httpRequest3.headersList.append("referer", isomorphicEncode(httpRequest3.referrer.href), true);
       }
-      appendRequestOriginHeader(httpRequest);
-      appendFetchMetadata(httpRequest);
-      if (!httpRequest.headersList.contains("user-agent", true)) {
-        httpRequest.headersList.append("user-agent", defaultUserAgent, true);
+      appendRequestOriginHeader(httpRequest3);
+      appendFetchMetadata(httpRequest3);
+      if (!httpRequest3.headersList.contains("user-agent", true)) {
+        httpRequest3.headersList.append("user-agent", defaultUserAgent, true);
       }
-      if (httpRequest.cache === "default" && (httpRequest.headersList.contains("if-modified-since", true) || httpRequest.headersList.contains("if-none-match", true) || httpRequest.headersList.contains("if-unmodified-since", true) || httpRequest.headersList.contains("if-match", true) || httpRequest.headersList.contains("if-range", true))) {
-        httpRequest.cache = "no-store";
+      if (httpRequest3.cache === "default" && (httpRequest3.headersList.contains("if-modified-since", true) || httpRequest3.headersList.contains("if-none-match", true) || httpRequest3.headersList.contains("if-unmodified-since", true) || httpRequest3.headersList.contains("if-match", true) || httpRequest3.headersList.contains("if-range", true))) {
+        httpRequest3.cache = "no-store";
       }
-      if (httpRequest.cache === "no-cache" && !httpRequest.preventNoCacheCacheControlHeaderModification && !httpRequest.headersList.contains("cache-control", true)) {
-        httpRequest.headersList.append("cache-control", "max-age=0", true);
+      if (httpRequest3.cache === "no-cache" && !httpRequest3.preventNoCacheCacheControlHeaderModification && !httpRequest3.headersList.contains("cache-control", true)) {
+        httpRequest3.headersList.append("cache-control", "max-age=0", true);
       }
-      if (httpRequest.cache === "no-store" || httpRequest.cache === "reload") {
-        if (!httpRequest.headersList.contains("pragma", true)) {
-          httpRequest.headersList.append("pragma", "no-cache", true);
+      if (httpRequest3.cache === "no-store" || httpRequest3.cache === "reload") {
+        if (!httpRequest3.headersList.contains("pragma", true)) {
+          httpRequest3.headersList.append("pragma", "no-cache", true);
         }
-        if (!httpRequest.headersList.contains("cache-control", true)) {
-          httpRequest.headersList.append("cache-control", "no-cache", true);
+        if (!httpRequest3.headersList.contains("cache-control", true)) {
+          httpRequest3.headersList.append("cache-control", "no-cache", true);
         }
       }
-      if (httpRequest.headersList.contains("range", true)) {
-        httpRequest.headersList.append("accept-encoding", "identity", true);
+      if (httpRequest3.headersList.contains("range", true)) {
+        httpRequest3.headersList.append("accept-encoding", "identity", true);
       }
-      if (!httpRequest.headersList.contains("accept-encoding", true)) {
-        if (urlHasHttpsScheme(requestCurrentURL(httpRequest))) {
-          httpRequest.headersList.append("accept-encoding", "br, gzip, deflate", true);
+      if (!httpRequest3.headersList.contains("accept-encoding", true)) {
+        if (urlHasHttpsScheme(requestCurrentURL(httpRequest3))) {
+          httpRequest3.headersList.append("accept-encoding", "br, gzip, deflate", true);
         } else {
-          httpRequest.headersList.append("accept-encoding", "gzip, deflate", true);
+          httpRequest3.headersList.append("accept-encoding", "gzip, deflate", true);
         }
       }
-      httpRequest.headersList.delete("host", true);
+      httpRequest3.headersList.delete("host", true);
       if (includeCredentials) {
-        if (!httpRequest.headersList.contains("authorization", true)) {
+        if (!httpRequest3.headersList.contains("authorization", true)) {
           let authorizationValue = null;
-          if (hasAuthenticationEntry(httpRequest) && (httpRequest.useURLCredentials === void 0 || !includesCredentials(requestCurrentURL(httpRequest)))) {
-          } else if (includesCredentials(requestCurrentURL(httpRequest)) && isAuthenticationFetch) {
-            const { username, password } = requestCurrentURL(httpRequest);
+          if (hasAuthenticationEntry(httpRequest3) && (httpRequest3.useURLCredentials === void 0 || !includesCredentials(requestCurrentURL(httpRequest3)))) {
+          } else if (includesCredentials(requestCurrentURL(httpRequest3)) && isAuthenticationFetch) {
+            const { username, password } = requestCurrentURL(httpRequest3);
             authorizationValue = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
           }
           if (authorizationValue !== null) {
-            httpRequest.headersList.append("Authorization", authorizationValue, false);
+            httpRequest3.headersList.append("Authorization", authorizationValue, false);
           }
         }
       }
       if (httpCache == null) {
-        httpRequest.cache = "no-store";
+        httpRequest3.cache = "no-store";
       }
-      if (httpRequest.cache !== "no-store" && httpRequest.cache !== "reload") {
+      if (httpRequest3.cache !== "no-store" && httpRequest3.cache !== "reload") {
       }
       if (response == null) {
-        if (httpRequest.cache === "only-if-cached") {
+        if (httpRequest3.cache === "only-if-cached") {
           return makeNetworkError("only if cached");
         }
         const forwardResponse = await httpNetworkFetch(
@@ -21586,7 +21586,7 @@ var require_fetch = __commonJS({
           includeCredentials,
           isNewConnectionFetch
         );
-        if (!safeMethodsSet.has(httpRequest.method) && forwardResponse.status >= 200 && forwardResponse.status <= 399) {
+        if (!safeMethodsSet.has(httpRequest3.method) && forwardResponse.status >= 200 && forwardResponse.status <= 399) {
         }
         if (revalidatingFlag && forwardResponse.status === 304) {
         }
@@ -21594,19 +21594,19 @@ var require_fetch = __commonJS({
           response = forwardResponse;
         }
       }
-      response.urlList = [...httpRequest.urlList];
-      if (httpRequest.headersList.contains("range", true)) {
+      response.urlList = [...httpRequest3.urlList];
+      if (httpRequest3.headersList.contains("range", true)) {
         response.rangeRequested = true;
       }
       response.requestIncludesCredentials = includeCredentials;
-      if (response.status === 401 && httpRequest.responseTainting !== "cors" && includeCredentials && (request.useURLCredentials !== void 0 || isTraversableNavigable(request.traversableForUserPrompts))) {
-        if (request.body != null) {
-          if (request.body.source == null) {
+      if (response.status === 401 && httpRequest3.responseTainting !== "cors" && includeCredentials && (request2.useURLCredentials !== void 0 || isTraversableNavigable(request2.traversableForUserPrompts))) {
+        if (request2.body != null) {
+          if (request2.body.source == null) {
             return response;
           }
-          request.body = safelyExtractBody(request.body.source)[0];
+          request2.body = safelyExtractBody(request2.body.source)[0];
         }
-        if (request.useURLCredentials === void 0 || isAuthenticationFetch) {
+        if (request2.useURLCredentials === void 0 || isAuthenticationFetch) {
           if (isCancelled(fetchParams)) {
             return makeAppropriateNetworkError(fetchParams);
           }
@@ -21616,7 +21616,7 @@ var require_fetch = __commonJS({
         response = await httpNetworkOrCacheFetch(fetchParams, true);
       }
       if (response.status === 407) {
-        if (request.window === "no-window") {
+        if (request2.window === "no-window") {
           return makeNetworkError();
         }
         if (isCancelled(fetchParams)) {
@@ -21628,7 +21628,7 @@ var require_fetch = __commonJS({
         // response’s status is 421
         response.status === 421 && // isNewConnectionFetch is false
         !isNewConnectionFetch && // request’s body is null, or request’s body is non-null and request’s body’s source is non-null
-        (request.body == null || request.body.source != null)
+        (request2.body == null || request2.body.source != null)
       ) {
         if (isCancelled(fetchParams)) {
           return makeAppropriateNetworkError(fetchParams);
@@ -21658,21 +21658,21 @@ var require_fetch = __commonJS({
           }
         }
       };
-      const request = fetchParams.request;
+      const request2 = fetchParams.request;
       let response = null;
       const timingInfo = fetchParams.timingInfo;
       const httpCache = null;
       if (httpCache == null) {
-        request.cache = "no-store";
+        request2.cache = "no-store";
       }
       const newConnection = forceNewConnection ? "yes" : "no";
-      if (request.mode === "websocket") {
+      if (request2.mode === "websocket") {
       } else {
       }
       let requestBody = null;
-      if (request.body == null && fetchParams.processRequestEndOfBody) {
+      if (request2.body == null && fetchParams.processRequestEndOfBody) {
         queueMicrotask(() => fetchParams.processRequestEndOfBody());
-      } else if (request.body != null) {
+      } else if (request2.body != null) {
         const processBodyChunk = async function* (bytes) {
           if (isCancelled(fetchParams)) {
             return;
@@ -21700,7 +21700,7 @@ var require_fetch = __commonJS({
         };
         requestBody = (async function* () {
           try {
-            for await (const bytes of request.body.stream) {
+            for await (const bytes of request2.body.stream) {
               yield* processBodyChunk(bytes);
             }
             processEndOfBody();
@@ -21807,7 +21807,7 @@ var require_fetch = __commonJS({
       }
       return response;
       function dispatch({ body }) {
-        const url2 = requestCurrentURL(request);
+        const url2 = requestCurrentURL(request2);
         const agent = fetchParams.controller.dispatcher;
         const path = url2.pathname + url2.search;
         const hasTrailingQuestionMark = url2.search.length === 0 && url2.href[url2.href.length - url2.hash.length - 1] === "?";
@@ -21815,11 +21815,11 @@ var require_fetch = __commonJS({
           {
             path: hasTrailingQuestionMark ? `${path}?` : path,
             origin: url2.origin,
-            method: request.method,
-            body: agent.isMockActive ? request.body && (request.body.source || request.body.stream) : body,
-            headers: request.headersList.entries,
+            method: request2.method,
+            body: agent.isMockActive ? request2.body && (request2.body.source || request2.body.stream) : body,
+            headers: request2.headersList.entries,
             maxRedirections: 0,
-            upgrade: request.mode === "websocket" ? "websocket" : void 0
+            upgrade: request2.mode === "websocket" ? "websocket" : void 0
           },
           {
             body: null,
@@ -21855,9 +21855,9 @@ var require_fetch = __commonJS({
                 }
               }
               const location = headersList.get("location", true);
-              const willFollow = location && request.redirect === "follow" && redirectStatusSet.has(status);
+              const willFollow = location && request2.redirect === "follow" && redirectStatusSet.has(status);
               const decoders = [];
-              if (request.method !== "HEAD" && request.method !== "CONNECT" && !nullBodyStatus.includes(status) && !willFollow) {
+              if (request2.method !== "HEAD" && request2.method !== "CONNECT" && !nullBodyStatus.includes(status) && !willFollow) {
                 const contentEncoding = headersList.get("content-encoding", true);
                 const codings = contentEncoding ? contentEncoding.toLowerCase().split(",") : [];
                 const maxContentEncodings = 5;
@@ -22054,31 +22054,31 @@ var require_cache3 = __commonJS({
         webidl.util.markAsUncloneable(this);
         this.#relevantRequestResponseList = arguments[1];
       }
-      async match(request, options = {}) {
+      async match(request2, options = {}) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.match";
         webidl.argumentLengthCheck(arguments, 1, prefix);
-        request = webidl.converters.RequestInfo(request);
+        request2 = webidl.converters.RequestInfo(request2);
         options = webidl.converters.CacheQueryOptions(options, prefix, "options");
-        const p = this.#internalMatchAll(request, options, 1);
+        const p = this.#internalMatchAll(request2, options, 1);
         if (p.length === 0) {
           return;
         }
         return p[0];
       }
-      async matchAll(request = void 0, options = {}) {
+      async matchAll(request2 = void 0, options = {}) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.matchAll";
-        if (request !== void 0) request = webidl.converters.RequestInfo(request);
+        if (request2 !== void 0) request2 = webidl.converters.RequestInfo(request2);
         options = webidl.converters.CacheQueryOptions(options, prefix, "options");
-        return this.#internalMatchAll(request, options);
+        return this.#internalMatchAll(request2, options);
       }
-      async add(request) {
+      async add(request2) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.add";
         webidl.argumentLengthCheck(arguments, 1, prefix);
-        request = webidl.converters.RequestInfo(request);
-        const requests = [request];
+        request2 = webidl.converters.RequestInfo(request2);
+        const requests = [request2];
         const responseArrayPromise = this.addAll(requests);
         return await responseArrayPromise;
       }
@@ -22088,19 +22088,19 @@ var require_cache3 = __commonJS({
         webidl.argumentLengthCheck(arguments, 1, prefix);
         const responsePromises = [];
         const requestList = [];
-        for (let request of requests) {
-          if (request === void 0) {
+        for (let request2 of requests) {
+          if (request2 === void 0) {
             throw webidl.errors.conversionFailed({
               prefix,
               argument: "Argument 1",
               types: ["undefined is not allowed"]
             });
           }
-          request = webidl.converters.RequestInfo(request);
-          if (typeof request === "string") {
+          request2 = webidl.converters.RequestInfo(request2);
+          if (typeof request2 === "string") {
             continue;
           }
-          const r = getRequestState(request);
+          const r = getRequestState(request2);
           if (!urlIsHttpHttpsScheme(r.url) || r.method !== "GET") {
             throw webidl.errors.exception({
               header: prefix,
@@ -22109,8 +22109,8 @@ var require_cache3 = __commonJS({
           }
         }
         const fetchControllers = [];
-        for (const request of requests) {
-          const r = getRequestState(new Request(request));
+        for (const request2 of requests) {
+          const r = getRequestState(new Request(request2));
           if (!urlIsHttpHttpsScheme(r.url)) {
             throw webidl.errors.exception({
               header: prefix,
@@ -22187,17 +22187,17 @@ var require_cache3 = __commonJS({
         });
         return cacheJobPromise.promise;
       }
-      async put(request, response) {
+      async put(request2, response) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.put";
         webidl.argumentLengthCheck(arguments, 2, prefix);
-        request = webidl.converters.RequestInfo(request);
+        request2 = webidl.converters.RequestInfo(request2);
         response = webidl.converters.Response(response, prefix, "response");
         let innerRequest = null;
-        if (webidl.is.Request(request)) {
-          innerRequest = getRequestState(request);
+        if (webidl.is.Request(request2)) {
+          innerRequest = getRequestState(request2);
         } else {
-          innerRequest = getRequestState(new Request(request));
+          innerRequest = getRequestState(new Request(request2));
         }
         if (!urlIsHttpHttpsScheme(innerRequest.url) || innerRequest.method !== "GET") {
           throw webidl.errors.exception({
@@ -22268,21 +22268,21 @@ var require_cache3 = __commonJS({
         });
         return cacheJobPromise.promise;
       }
-      async delete(request, options = {}) {
+      async delete(request2, options = {}) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.delete";
         webidl.argumentLengthCheck(arguments, 1, prefix);
-        request = webidl.converters.RequestInfo(request);
+        request2 = webidl.converters.RequestInfo(request2);
         options = webidl.converters.CacheQueryOptions(options, prefix, "options");
         let r = null;
-        if (webidl.is.Request(request)) {
-          r = getRequestState(request);
+        if (webidl.is.Request(request2)) {
+          r = getRequestState(request2);
           if (r.method !== "GET" && !options.ignoreMethod) {
             return false;
           }
         } else {
-          assert2(typeof request === "string");
-          r = getRequestState(new Request(request));
+          assert2(typeof request2 === "string");
+          r = getRequestState(new Request(request2));
         }
         const operations = [];
         const operation = {
@@ -22314,25 +22314,25 @@ var require_cache3 = __commonJS({
        * @param {import('../../../types/cache').CacheQueryOptions} options
        * @returns {Promise<readonly Request[]>}
        */
-      async keys(request = void 0, options = {}) {
+      async keys(request2 = void 0, options = {}) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.keys";
-        if (request !== void 0) request = webidl.converters.RequestInfo(request);
+        if (request2 !== void 0) request2 = webidl.converters.RequestInfo(request2);
         options = webidl.converters.CacheQueryOptions(options, prefix, "options");
         let r = null;
-        if (request !== void 0) {
-          if (webidl.is.Request(request)) {
-            r = getRequestState(request);
+        if (request2 !== void 0) {
+          if (webidl.is.Request(request2)) {
+            r = getRequestState(request2);
             if (r.method !== "GET" && !options.ignoreMethod) {
               return [];
             }
-          } else if (typeof request === "string") {
-            r = getRequestState(new Request(request));
+          } else if (typeof request2 === "string") {
+            r = getRequestState(new Request(request2));
           }
         }
         const promise2 = createDeferredPromise();
         const requests = [];
-        if (request === void 0) {
+        if (request2 === void 0) {
           for (const requestResponse of this.#relevantRequestResponseList) {
             requests.push(requestResponse[0]);
           }
@@ -22344,9 +22344,9 @@ var require_cache3 = __commonJS({
         }
         queueMicrotask(() => {
           const requestList = [];
-          for (const request2 of requests) {
+          for (const request3 of requests) {
             const requestObject = fromInnerRequest(
-              request2,
+              request3,
               void 0,
               new AbortController().signal,
               "immutable"
@@ -22465,9 +22465,9 @@ var require_cache3 = __commonJS({
        * @param {import('../../../types/cache').CacheQueryOptions | undefined} options
        * @returns {boolean}
        */
-      #requestMatchesCachedItem(requestQuery, request, response = null, options) {
+      #requestMatchesCachedItem(requestQuery, request2, response = null, options) {
         const queryURL = new URL(requestQuery.url);
-        const cachedURL = new URL(request.url);
+        const cachedURL = new URL(request2.url);
         if (options?.ignoreSearch) {
           cachedURL.search = "";
           queryURL.search = "";
@@ -22483,7 +22483,7 @@ var require_cache3 = __commonJS({
           if (fieldValue === "*") {
             return false;
           }
-          const requestValue = request.headersList.get(fieldValue);
+          const requestValue = request2.headersList.get(fieldValue);
           const queryValue = requestQuery.headersList.get(fieldValue);
           if (requestValue !== queryValue) {
             return false;
@@ -22491,20 +22491,20 @@ var require_cache3 = __commonJS({
         }
         return true;
       }
-      #internalMatchAll(request, options, maxResponses = Infinity) {
+      #internalMatchAll(request2, options, maxResponses = Infinity) {
         let r = null;
-        if (request !== void 0) {
-          if (webidl.is.Request(request)) {
-            r = getRequestState(request);
+        if (request2 !== void 0) {
+          if (webidl.is.Request(request2)) {
+            r = getRequestState(request2);
             if (r.method !== "GET" && !options.ignoreMethod) {
               return [];
             }
-          } else if (typeof request === "string") {
-            r = getRequestState(new Request(request));
+          } else if (typeof request2 === "string") {
+            r = getRequestState(new Request(request2));
           }
         }
         const responses = [];
-        if (request === void 0) {
+        if (request2 === void 0) {
           for (const requestResponse of this.#relevantRequestResponseList) {
             responses.push(requestResponse[1]);
           }
@@ -22596,21 +22596,21 @@ var require_cachestorage = __commonJS({
         }
         webidl.util.markAsUncloneable(this);
       }
-      async match(request, options = {}) {
+      async match(request2, options = {}) {
         webidl.brandCheck(this, _CacheStorage);
         webidl.argumentLengthCheck(arguments, 1, "CacheStorage.match");
-        request = webidl.converters.RequestInfo(request);
+        request2 = webidl.converters.RequestInfo(request2);
         options = webidl.converters.MultiCacheQueryOptions(options);
         if (options.cacheName != null) {
           if (this.#caches.has(options.cacheName)) {
             const cacheList = this.#caches.get(options.cacheName);
             const cache = new Cache(kConstruct, cacheList);
-            return await cache.match(request, options);
+            return await cache.match(request2, options);
           }
         } else {
           for (const cacheList of this.#caches.values()) {
             const cache = new Cache(kConstruct, cacheList);
-            const response = await cache.match(request, options);
+            const response = await cache.match(request2, options);
             if (response !== void 0) {
               return response;
             }
@@ -23802,12 +23802,12 @@ var require_connection = __commonJS({
     var { WebsocketFrameSend } = require_frame();
     var assert2 = __require("node:assert");
     var { runtimeFeatures } = require_runtime_features();
-    var crypto = runtimeFeatures.has("crypto") ? __require("node:crypto") : null;
+    var crypto2 = runtimeFeatures.has("crypto") ? __require("node:crypto") : null;
     var warningEmitted = false;
     function establishWebSocketConnection(url2, protocols, client, handler, options) {
       const requestURL = url2;
       requestURL.protocol = url2.protocol === "ws:" ? "http:" : "https:";
-      const request = makeRequest({
+      const request2 = makeRequest({
         urlList: [requestURL],
         client,
         serviceWorkers: "none",
@@ -23820,18 +23820,18 @@ var require_connection = __commonJS({
       });
       if (options.headers) {
         const headersList = getHeadersList(new Headers(options.headers));
-        request.headersList = headersList;
+        request2.headersList = headersList;
       }
-      const keyValue = crypto.randomBytes(16).toString("base64");
-      request.headersList.append("sec-websocket-key", keyValue, true);
-      request.headersList.append("sec-websocket-version", "13", true);
+      const keyValue = crypto2.randomBytes(16).toString("base64");
+      request2.headersList.append("sec-websocket-key", keyValue, true);
+      request2.headersList.append("sec-websocket-version", "13", true);
       for (const protocol of protocols) {
-        request.headersList.append("sec-websocket-protocol", protocol, true);
+        request2.headersList.append("sec-websocket-protocol", protocol, true);
       }
       const permessageDeflate = "permessage-deflate; client_max_window_bits";
-      request.headersList.append("sec-websocket-extensions", permessageDeflate, true);
+      request2.headersList.append("sec-websocket-extensions", permessageDeflate, true);
       const controller = fetching({
-        request,
+        request: request2,
         useParallelQueue: true,
         dispatcher: options.dispatcher,
         processResponse(response) {
@@ -23862,7 +23862,7 @@ var require_connection = __commonJS({
             return;
           }
           const secWSAccept = response.headersList.get("Sec-WebSocket-Accept");
-          const digest = crypto.hash("sha1", keyValue + uid, "base64");
+          const digest = crypto2.hash("sha1", keyValue + uid, "base64");
           if (secWSAccept !== digest) {
             failHandshake(handler, response, 1002, "Incorrect hash received in Sec-WebSocket-Accept header.");
             return;
@@ -23878,7 +23878,7 @@ var require_connection = __commonJS({
           }
           const secProtocol = response.headersList.get("Sec-WebSocket-Protocol");
           if (secProtocol !== null) {
-            const requestProtocols = getDecodeSplit("sec-websocket-protocol", request.headersList);
+            const requestProtocols = getDecodeSplit("sec-websocket-protocol", request2.headersList);
             if (requestProtocols === null || !requestProtocols.includes(secProtocol)) {
               failHandshake(handler, response, 1002, "Protocol was not set in the opening handshake.");
               return;
@@ -26125,7 +26125,7 @@ var require_undici = __commonJS({
     var Pool = require_pool();
     var BalancedPool = require_balanced_pool();
     var RoundRobinPool = require_round_robin_pool();
-    var Agent = require_agent();
+    var Agent2 = require_agent();
     var ProxyAgent = require_proxy_agent();
     var Socks5ProxyAgent = require_socks5_proxy_agent();
     var EnvHttpProxyAgent3 = require_env_http_proxy_agent();
@@ -26152,7 +26152,7 @@ var require_undici = __commonJS({
     module.exports.Pool = Pool;
     module.exports.BalancedPool = BalancedPool;
     module.exports.RoundRobinPool = RoundRobinPool;
-    module.exports.Agent = Agent;
+    module.exports.Agent = Agent2;
     module.exports.ProxyAgent = ProxyAgent;
     module.exports.Socks5ProxyAgent = Socks5ProxyAgent;
     module.exports.EnvHttpProxyAgent = EnvHttpProxyAgent3;
@@ -29141,12 +29141,12 @@ var require_service = __commonJS({
       this.requestDelimited = Boolean(requestDelimited);
       this.responseDelimited = Boolean(responseDelimited);
     }
-    Service.prototype.rpcCall = function rpcCall(method, requestCtor, responseCtor, request, callback) {
-      if (!request)
+    Service.prototype.rpcCall = function rpcCall(method, requestCtor, responseCtor, request2, callback) {
+      if (!request2)
         throw TypeError("request must be specified");
       var self2 = this;
       if (!callback)
-        return util.asPromise(rpcCall, self2, method, requestCtor, responseCtor, request);
+        return util.asPromise(rpcCall, self2, method, requestCtor, responseCtor, request2);
       if (!self2.rpcImpl) {
         setTimeout(function() {
           callback(Error("already ended"));
@@ -29156,7 +29156,7 @@ var require_service = __commonJS({
       try {
         return self2.rpcImpl(
           method,
-          requestCtor[self2.requestDelimited ? "encodeDelimited" : "encode"](request).finish(),
+          requestCtor[self2.requestDelimited ? "encodeDelimited" : "encode"](request2).finish(),
           function rpcCallback(err, response) {
             if (err) {
               self2.emit("error", err, method);
@@ -30051,8 +30051,8 @@ var require_service2 = __commonJS({
       this.methodsArray.length; ++i) {
         var methodName = util.lcFirst((method = this._methodsArray[i]).resolve().name).replace(/[^$\w_]/g, "");
         rpcService[methodName] = /* @__PURE__ */ (function(method2, requestType, responseType) {
-          return function rpcMethod(request, callback) {
-            return rpc.Service.prototype.rpcCall.call(this, method2, requestType, responseType, request, callback);
+          return function rpcMethod(request2, callback) {
+            return rpc.Service.prototype.rpcCall.call(this, method2, requestType, responseType, request2, callback);
           };
         })(method, method.resolvedRequestType.ctor, method.resolvedResponseType.ctor);
       }
@@ -33812,22 +33812,22 @@ var require_protobufjs = __commonJS({
 
 // arbiter-cursor/plugin/monitor/launch.mjs
 import { parseArgs } from "node:util";
-import { appendFileSync as appendFileSync2, mkdirSync as mkdirSync6, readFileSync as readFileSync9 } from "node:fs";
-import { join as join14, dirname as dirname5 } from "node:path";
+import { appendFileSync as appendFileSync3, mkdirSync as mkdirSync7, readFileSync as readFileSync14 } from "node:fs";
+import { join as join19 } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
-import { homedir as homedir9 } from "node:os";
+import { homedir as homedir10 } from "node:os";
 
 // arbiter-core/src/daemon/monitor-assembly.ts
 import {
   writeFileSync as writeFileSync5,
-  mkdirSync as mkdirSync4,
+  mkdirSync as mkdirSync6,
   mkdtempSync as mkdtempSync4,
-  renameSync as renameSync3,
-  rmSync as rmSync2
+  renameSync as renameSync7,
+  rmSync as rmSync6
 } from "node:fs";
-import { join as join10 } from "node:path";
-import { randomUUID as randomUUID2 } from "node:crypto";
-import { hostname as osHostname2 } from "node:os";
+import { join as join17 } from "node:path";
+import { randomBytes as randomBytes4, randomUUID as randomUUID2 } from "node:crypto";
+import { homedir as homedir8, hostname as osHostname2 } from "node:os";
 
 // arbiter-core/src/daemon/server.ts
 import { createServer } from "node:http";
@@ -33835,15 +33835,6 @@ import { createServer } from "node:http";
 // arbiter-core/src/daemon/bearer-auth.ts
 import { timingSafeEqual } from "node:crypto";
 var LGR_PREFIX = "lgr_";
-var LEGACY_WARN_INTERVAL_MS = 6e4;
-var lastLegacyWarnMs = 0;
-function warnLegacyAuth(warn) {
-  const now = Date.now();
-  if (lastLegacyWarnMs !== 0 && now - lastLegacyWarnMs < LEGACY_WARN_INTERVAL_MS) return;
-  lastLegacyWarnMs = now;
-  const msg = '[arbiter] {"event":"legacy_loopback_auth","severity":"warn","detail":"inbound request authenticated with the DEPRECATED lgr_ loopback bearer; migrate the shim to the arbd_ loopback bearer (~/.config/arbiter/bearer)"}';
-  (warn ?? ((m) => process.stderr.write(m + "\n")))(msg);
-}
 function constantTimeEqual(incoming, token) {
   const a = Buffer.from(incoming, "utf8");
   const b = Buffer.from(token, "utf8");
@@ -33856,8 +33847,7 @@ function constantTimeEqual(incoming, token) {
   return bytesMatch && a.length === b.length;
 }
 async function applyBearerAuth(req, res, token, opts = {}) {
-  const legacyToken = opts.legacyToken && opts.legacyToken.length > 0 ? opts.legacyToken : void 0;
-  if (!token && !legacyToken) {
+  if (!token) {
     sendUnauthorized(res, "Daemon has no bearer configured");
     return null;
   }
@@ -33868,12 +33858,8 @@ async function applyBearerAuth(req, res, token, opts = {}) {
     return null;
   }
   const incoming = header.slice(prefix.length);
-  if (token && constantTimeEqual(incoming, token)) {
+  if (constantTimeEqual(incoming, token)) {
     return { kind: "bootstrap" };
-  }
-  if (legacyToken && constantTimeEqual(incoming, legacyToken)) {
-    warnLegacyAuth(opts.warn);
-    return { kind: "legacy" };
   }
   if (opts.verifyClient && incoming.startsWith(LGR_PREFIX)) {
     let verified;
@@ -33916,6 +33902,920 @@ function sendJsonStatus(res, status, payload) {
     "Content-Length": Buffer.byteLength(body)
   });
   res.end(body);
+}
+
+// arbiter-core/src/daemon/ipc-mac.ts
+import { createCipheriv, createDecipheriv, createHash, createHmac, hkdfSync, randomBytes, timingSafeEqual as timingSafeEqual2 } from "node:crypto";
+import {
+  closeSync,
+  constants as fsConstants,
+  linkSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  unlinkSync,
+  writeSync
+} from "node:fs";
+import { request as httpRequest } from "node:http";
+import { dirname, join } from "node:path";
+import { homedir } from "node:os";
+var IPC_TS_WINDOW_MS = 3e4;
+var IPC_NONCE_CAPACITY = 1e5;
+var IPC_HEADERS = {
+  ts: "x-arbiter-ts",
+  nonce: "x-arbiter-nonce",
+  mac: "x-arbiter-mac",
+  respMac: "x-arbiter-resp-mac"
+};
+var KEY_RE = /^[0-9a-f]{64}$/;
+var NONCE_RE = /^[0-9a-f]{32}$/;
+var MAC_RE = /^[0-9a-f]{64}$/;
+var TS_RE = /^[0-9]{1,15}$/;
+function runDirPath(env = process.env) {
+  const explicit = (env["ARBITER_RUN_DIR"] ?? "").trim();
+  if (explicit) return explicit;
+  const bearerFile = (env["ARBITER_BEARER_FILE"] ?? "").trim();
+  return join(bearerFile ? dirname(bearerFile) : join(homedir(), ".config", "arbiter"), "run");
+}
+function ensureRunDir(dir, deps = {}) {
+  const platform = deps.platform ?? process.platform;
+  try {
+    if (platform !== "win32") {
+      mkdirSync(dirname(dir), { recursive: true });
+      try {
+        mkdirSync(dir, { mode: 448 });
+      } catch (err) {
+        if (err.code !== "EEXIST") throw err;
+      }
+    }
+    const st = lstatSync(dir);
+    if (st.isSymbolicLink()) return { ok: false, dir, reason: "symlink" };
+    if (!st.isDirectory()) return { ok: false, dir, reason: "not-directory" };
+    if (platform === "win32") return { ok: true, dir };
+    const euid = (deps.geteuid ?? (() => process.geteuid?.() ?? -1))();
+    if (euid >= 0 && st.uid !== euid) return { ok: false, dir, reason: "owner" };
+    if ((st.mode & 63) !== 0) return { ok: false, dir, reason: "mode" };
+    return { ok: true, dir };
+  } catch {
+    return { ok: false, dir, reason: "io" };
+  }
+}
+function readKey(path) {
+  const fd = openSync(path, fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0));
+  try {
+    return readFileSync(fd, "utf8").trim();
+  } finally {
+    closeSync(fd);
+  }
+}
+function loadOrCreateIpcKey(dir, deps = {}) {
+  const run = ensureRunDir(dir, deps);
+  if (!run.ok) return run;
+  const path = join(dir, "ipc-key");
+  const temp = join(dir, `.ipc-key.${process.pid}.${randomBytes(6).toString("hex")}`);
+  try {
+    const fd = openSync(temp, fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY, 384);
+    try {
+      writeSync(fd, `${randomBytes(32).toString("hex")}
+`);
+    } finally {
+      closeSync(fd);
+    }
+    try {
+      linkSync(temp, path);
+    } catch (err) {
+      if (err.code !== "EEXIST") throw err;
+    }
+  } catch {
+  } finally {
+    try {
+      unlinkSync(temp);
+    } catch {
+    }
+  }
+  let key;
+  try {
+    key = readKey(path);
+  } catch {
+    return { ok: false, dir, reason: "key-unreadable" };
+  }
+  return KEY_RE.test(key) ? { ok: true, key, dir } : { ok: false, dir, reason: "key-malformed" };
+}
+function deriveIpcKeys(key) {
+  const master = Buffer.from(key, "hex");
+  return {
+    req: createHmac("sha256", master).update("arbiter-ipc-req-v1").digest(),
+    resp: createHmac("sha256", master).update("arbiter-ipc-resp-v1").digest(),
+    enc: Buffer.from(hkdfSync("sha256", master, Buffer.alloc(0), "arbiter-ipc-enc-v1", 32))
+  };
+}
+var TAG_BYTES = 16;
+var ivFor = (direction, nonce2) => createHash("sha256").update(`arbiter-ipc-iv-v1
+${direction}
+${nonce2}`).digest().subarray(0, 12);
+var requestAad = (bound) => Buffer.from(["req", bound.method.toUpperCase(), bound.path, bound.ts, bound.nonce].join("\n"));
+var responseAad = (bound) => Buffer.from(["resp", bound.nonce, String(bound.status)].join("\n"));
+function seal(keys, iv, aad, plain) {
+  const cipher = createCipheriv("aes-256-gcm", keys.enc, iv);
+  cipher.setAAD(aad);
+  return Buffer.concat([cipher.update(typeof plain === "string" ? Buffer.from(plain, "utf8") : plain), cipher.final(), cipher.getAuthTag()]);
+}
+function open(keys, iv, aad, sealed) {
+  if (sealed.length < TAG_BYTES) return null;
+  const split = sealed.length - TAG_BYTES;
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", keys.enc, iv, { authTagLength: TAG_BYTES });
+    decipher.setAAD(aad);
+    decipher.setAuthTag(sealed.subarray(split));
+    return Buffer.concat([decipher.update(sealed.subarray(0, split)), decipher.final()]);
+  } catch {
+    return null;
+  }
+}
+var sealRequestBody = (keys, bound, plain) => seal(keys, ivFor("req", bound.nonce), requestAad(bound), plain);
+var openRequestBody = (keys, bound, sealed) => open(keys, ivFor("req", bound.nonce), requestAad(bound), sealed);
+var sealResponseBody = (keys, bound, plain) => seal(keys, ivFor("resp", bound.nonce), responseAad(bound), plain);
+var openResponseBody = (keys, bound, sealed) => open(keys, ivFor("resp", bound.nonce), responseAad(bound), sealed);
+var sha256Hex = (body) => createHash("sha256").update(body).digest("hex");
+function requestMac(keys, input2) {
+  const text = [input2.method.toUpperCase(), input2.path, input2.ts, input2.nonce, sha256Hex(input2.body)].join("\n");
+  return createHmac("sha256", keys.req).update(text).digest("hex");
+}
+function responseMac(keys, input2) {
+  const text = [input2.nonce, String(input2.status), sha256Hex(input2.body)].join("\n");
+  return createHmac("sha256", keys.resp).update(text).digest("hex");
+}
+function sealRequest(keys, input2) {
+  const ts = String(input2.now ?? Date.now());
+  const nonce2 = input2.nonce ?? randomBytes(16).toString("hex");
+  const bound = { method: input2.method, path: input2.path, ts, nonce: nonce2 };
+  const body = sealRequestBody(keys, bound, input2.body);
+  const mac3 = requestMac(keys, { ...bound, body });
+  return { nonce: nonce2, body, headers: { [IPC_HEADERS.ts]: ts, [IPC_HEADERS.nonce]: nonce2, [IPC_HEADERS.mac]: mac3 } };
+}
+function sealResponse(keys, input2) {
+  const body = sealResponseBody(keys, input2, input2.body);
+  return { body, mac: responseMac(keys, { nonce: input2.nonce, status: input2.status, body }) };
+}
+function macEquals(given, expected) {
+  if (!MAC_RE.test(given)) return false;
+  return timingSafeEqual2(Buffer.from(given, "hex"), Buffer.from(expected, "hex"));
+}
+function openResponse(keys, input2) {
+  if (typeof input2.mac !== "string" || !macEquals(input2.mac, responseMac(keys, input2))) return null;
+  return openResponseBody(keys, input2, input2.body);
+}
+var one = (headers, name) => {
+  const value = headers[name];
+  return typeof value === "string" ? value : void 0;
+};
+function requestNonce(headers) {
+  const nonce2 = one(headers, IPC_HEADERS.nonce);
+  return nonce2 !== void 0 && NONCE_RE.test(nonce2) ? nonce2 : void 0;
+}
+var IpcRequestVerifier = class {
+  seen = /* @__PURE__ */ new Map();
+  keys;
+  now;
+  startedAt;
+  constructor(keys, options = {}) {
+    this.keys = keys;
+    this.now = options.now ?? Date.now;
+    this.startedAt = this.now();
+  }
+  /** The checks that need no body: the daemon runs them before it reads one. */
+  screen(headers) {
+    const ts = one(headers, IPC_HEADERS.ts);
+    const nonce2 = requestNonce(headers);
+    const mac3 = one(headers, IPC_HEADERS.mac);
+    if (ts === void 0 || !TS_RE.test(ts) || nonce2 === void 0 || mac3 === void 0 || !MAC_RE.test(mac3)) {
+      return { ok: false, reason: "malformed" };
+    }
+    const sentAt = Number(ts);
+    if (Math.abs(this.now() - sentAt) > IPC_TS_WINDOW_MS || sentAt < this.startedAt) return { ok: false, reason: "stale" };
+    return { ok: true, ts, nonce: nonce2, mac: mac3 };
+  }
+  check(request2) {
+    const screened = this.screen(request2.headers);
+    if (!screened.ok) return screened;
+    const { ts, nonce: nonce2, mac: mac3 } = screened;
+    const now = this.now();
+    const sentAt = Number(ts);
+    const expected = requestMac(this.keys, { method: request2.method, path: request2.path, ts, nonce: nonce2, body: request2.body });
+    if (!macEquals(mac3, expected)) return { ok: false, reason: "mac" };
+    const plain = openRequestBody(this.keys, { method: request2.method, path: request2.path, ts, nonce: nonce2 }, request2.body);
+    if (plain === null) return { ok: false, reason: "cipher" };
+    this.prune(now);
+    if (this.seen.has(nonce2)) return { ok: false, reason: "replay" };
+    if (this.seen.size >= IPC_NONCE_CAPACITY) return { ok: false, reason: "full" };
+    this.seen.set(nonce2, sentAt + IPC_TS_WINDOW_MS);
+    return { ok: true, nonce: nonce2, plain };
+  }
+  prune(now) {
+    for (const [nonce2, expires] of this.seen) {
+      if (expires >= now) return;
+      this.seen.delete(nonce2);
+    }
+  }
+};
+function signedHealthProbe(target, keys, timeoutMs = 1e3) {
+  return new Promise((resolve) => {
+    const sealed = sealRequest(keys, { method: "GET", path: "/health", body: "" });
+    const where = "port" in target ? { host: "127.0.0.1", port: target.port } : { socketPath: target.socketPath };
+    const headers = { ...sealed.headers, "content-length": sealed.body.length };
+    let connected = false;
+    let timedOut = false;
+    const req = httpRequest({ ...where, path: "/health", method: "GET", headers, agent: false }, (res) => {
+      const chunks = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("error", () => resolve(timedOut ? "connected-unanswered" : "unreachable"));
+      res.on("end", () => {
+        const signed = openResponse(keys, { nonce: sealed.nonce, status: res.statusCode ?? 0, body: Buffer.concat(chunks), mac: res.headers[IPC_HEADERS.respMac] });
+        resolve(signed !== null ? "answered" : "connected-unanswered");
+      });
+    });
+    req.on("socket", (socket) => socket.once("connect", () => connected = true));
+    req.on("error", () => resolve(timedOut && connected ? "connected-unanswered" : "unreachable"));
+    const timer = setTimeout(() => {
+      timedOut = true;
+      req.destroy(new Error("probe timed out"));
+    }, timeoutMs);
+    req.on("close", () => clearTimeout(timer));
+    req.end(sealed.body);
+  });
+}
+var probeSignedHealth = async (target, keys, timeoutMs = 1e3) => await signedHealthProbe(target, keys, timeoutMs) === "answered";
+
+// arbiter-core/src/daemon/ipc-pipe.ts
+import { randomBytes as randomBytes3 } from "node:crypto";
+import { lstatSync as lstatSync3, mkdtempSync, readFileSync as readFileSync3, renameSync as renameSync2, rmSync as rmSync2, writeFileSync as writeFileSync2 } from "node:fs";
+import { join as join3 } from "node:path";
+
+// arbiter-core/plugin-lib/ipc-auth.mjs
+import { execFileSync } from "node:child_process";
+import { createCipheriv as createCipheriv2, createDecipheriv as createDecipheriv2, createHash as createHash2, createHmac as createHmac2, hkdfSync as hkdfSync2, randomBytes as randomBytes2, timingSafeEqual as timingSafeEqual3 } from "node:crypto";
+import {
+  closeSync as closeSync2,
+  constants as fsConstants2,
+  fstatSync,
+  linkSync as linkSync2,
+  lstatSync as lstatSync2,
+  mkdirSync as mkdirSync2,
+  openSync as openSync2,
+  readFileSync as readFileSync2,
+  renameSync,
+  rmSync,
+  unlinkSync as unlinkSync2,
+  writeFileSync,
+  writeSync as writeSync2
+} from "node:fs";
+import { dirname as dirname2, join as join2, win32 } from "node:path";
+import { homedir as homedir2 } from "node:os";
+var MODE_TABLE = Object.freeze({
+  enforce: Object.freeze({ VERIFIED: "relay", UNVERIFIED: "block", ABSENT: "grace" }),
+  advisory: Object.freeze({ VERIFIED: "relay", UNVERIFIED: "nothing", ABSENT: "nothing" })
+});
+var BODY_LIMIT_BYTES = 4 * 1024 * 1024;
+var POSTURE_LOG_LIMIT_BYTES = 1024 * 1024;
+var EXEC_TIMEOUT_MS = 3e3;
+var RUN_DIR_TRUST_TTL_MS = 60 * 60 * 1e3;
+var UV_FS_O_EXLOCK = 268435456;
+var ALIVE_FILE = "daemon.alive";
+var POWERSHELL = "WindowsPowerShell\\v1.0\\powershell.exe";
+var O_NOFOLLOW = fsConstants2.O_NOFOLLOW ?? 0;
+var SYSTEM_SID = "S-1-5-18";
+var ADMINISTRATORS_SID = "S-1-5-32-544";
+var SDDL_ALIASES = { SY: SYSTEM_SID, BA: ADMINISTRATORS_SID };
+var SDDL_ACCOUNT_RIDS = { LA: "500", LG: "501" };
+var ALLOW_ACE_TYPES = /* @__PURE__ */ new Set(["A", "OA", "XA", "ZA"]);
+var OWNER_PLACEHOLDERS = /* @__PURE__ */ new Set(["CO", "S-1-3-0", "OW", "S-1-3-4"]);
+var SDDL_TRUSTEE = "S-1-[0-9-]+|[A-Z]{2}";
+var SDDL_RE = new RegExp(`^O:(${SDDL_TRUSTEE})(?:G:(?:${SDDL_TRUSTEE}))?D:([A-Z_]*)(.*)$`);
+function parseSddl(sddl) {
+  const parts = SDDL_RE.exec(sddl.trim());
+  if (!parts) return null;
+  if (parts[2].includes("NO_ACCESS_CONTROL")) return null;
+  const text = parts[3];
+  const aces = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charAt(i);
+    if (depth === 0 && char !== "(") return text.startsWith("S:", i) ? { owner: parts[1], aces } : null;
+    if (char === "(" && depth++ === 0) start = i + 1;
+    if (char === ")" && --depth === 0) {
+      const fields = text.slice(start, i).split(";");
+      if (fields.length < 6) return null;
+      aces.push({ type: fields[0], trustee: fields[5] });
+    }
+  }
+  return depth === 0 ? { owner: parts[1], aces } : null;
+}
+function trusteeSid(trustee, userSid) {
+  const alias = SDDL_ALIASES[trustee];
+  if (alias) return alias;
+  const rid = SDDL_ACCOUNT_RIDS[trustee];
+  if (rid && userSid.endsWith(`-${rid}`)) return userSid;
+  return trustee;
+}
+function judgeAcl(sddl, userSid) {
+  const acl = parseSddl(sddl);
+  if (acl === null) return { ok: false, reason: "acl-unreadable", detail: "no owner and DACL in the Get-Acl output" };
+  const allowed = /* @__PURE__ */ new Set([userSid.toUpperCase(), SYSTEM_SID, ADMINISTRATORS_SID]);
+  const foreign = /* @__PURE__ */ new Set();
+  if (!allowed.has(trusteeSid(acl.owner, userSid).toUpperCase())) foreign.add(`O:${acl.owner}`);
+  for (const ace of acl.aces) {
+    if (!ALLOW_ACE_TYPES.has(ace.type) || OWNER_PLACEHOLDERS.has(ace.trustee.toUpperCase())) continue;
+    if (!allowed.has(trusteeSid(ace.trustee, userSid).toUpperCase())) foreign.add(ace.trustee);
+  }
+  return foreign.size === 0 ? { ok: true } : { ok: false, reason: "acl-foreign", principals: [...foreign] };
+}
+function parseUserSid(whoami) {
+  return /\bS-1-\d+(?:-\d+)+\b/.exec(whoami)?.[0] ?? null;
+}
+var ownerOnlyGrants = (userSid) => [userSid, SYSTEM_SID, ADMINISTRATORS_SID].map((sid) => `*${sid}:(OI)(CI)F`);
+function makeOwnerOnlyDir(dir, userSid, exec) {
+  mkdirSync2(dirname2(dir), { recursive: true });
+  try {
+    mkdirSync2(dir);
+  } catch (err) {
+    if (err?.code !== "EEXIST") throw err;
+    return;
+  }
+  try {
+    exec("icacls.exe", [dir, "/inheritance:r", "/grant:r", ...ownerOnlyGrants(userSid)]);
+  } catch (err) {
+    rmSync(dir, { recursive: true, force: true });
+    throw err;
+  }
+}
+var currentUserSid = (exec) => parseUserSid(exec("whoami.exe", ["/user", "/fo", "csv", "/nh"]));
+var powershell = (exec, command, timeoutMs) => exec(POWERSHELL, ["-NoProfile", "-NonInteractive", "-Command", command], timeoutMs);
+var quotedForPowershell = (text) => `'${text.replace(/['\u2018\u2019\u201a\u201b]/g, "$&$&")}'`;
+function readSddls(dirs, exec) {
+  const lines = powershell(exec, `(Get-Acl -LiteralPath ${dirs.map(quotedForPowershell).join(",")}).Sddl`).split(/\r?\n/).filter((line) => line.trim() !== "");
+  return lines.length === dirs.length ? lines : null;
+}
+var runDirTrustDir = (env = process.env) => join2((env.LOCALAPPDATA ?? "").trim() || join2(homedir2(), "AppData", "Local"), "LangGuard", "arbiter-run-trust");
+function secureWindowsRunDir(dir, exec, trustDir) {
+  try {
+    const userSid = currentUserSid(exec);
+    if (userSid === null) return { ok: false, reason: "acl-unreadable", detail: "whoami gave no SID" };
+    const dirs = trustDir === void 0 ? [dir] : [dir, trustDir];
+    for (const each of dirs) makeOwnerOnlyDir(each, userSid, exec);
+    const sddls = readSddls(dirs, exec);
+    if (sddls === null) return { ok: false, reason: "acl-unreadable", detail: "Get-Acl did not give one SDDL for each directory" };
+    for (const [index, sddl] of sddls.entries()) {
+      const judged = judgeAcl(sddl, userSid);
+      if (!judged.ok) return index === 0 ? judged : { ...judged, dir: dirs[index] };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, reason: "acl-unreadable", detail: String(err?.message ?? err) };
+  }
+}
+function system32Exec(env = process.env) {
+  const system32 = win32.join(env.SystemRoot ?? env.SYSTEMROOT ?? "C:\\Windows", "System32");
+  return (file2, args, timeoutMs = EXEC_TIMEOUT_MS) => execFileSync(win32.join(system32, file2), args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true, timeout: timeoutMs });
+}
+function runDirTrustFile(runDir, env = process.env) {
+  return join2(runDirTrustDir(env), `${createHash2("sha256").update(runDir).digest("hex").slice(0, 32)}.json`);
+}
+function readRunDirTrust(runDir, env = process.env) {
+  try {
+    const record2 = JSON.parse(readFileSync2(runDirTrustFile(runDir, env), "utf8"));
+    return (record2?.state === "ok" || record2?.state === "failed") && Number.isFinite(record2.checkedAt) ? record2 : null;
+  } catch {
+    return null;
+  }
+}
+function writeRunDirTrust(runDir, state2, { env = process.env, now = Date.now } = {}) {
+  try {
+    const file2 = runDirTrustFile(runDir, env);
+    const temp = `${file2}.${process.pid}.${randomBytes2(6).toString("hex")}`;
+    writeFileSync(temp, JSON.stringify({ dir: runDir, state: state2, checkedAt: now() }), { mode: 384 });
+    renameSync(temp, file2);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function holdExclusive(path) {
+  if (process.platform !== "win32") throw new Error("an open with share mode 0 is for Windows only");
+  let fd;
+  try {
+    fd = openSync2(path, fsConstants2.O_CREAT | fsConstants2.O_RDWR | UV_FS_O_EXLOCK, 384);
+  } catch (err) {
+    if (err?.code === "EBUSY") return null;
+    throw err;
+  }
+  return {
+    release: () => {
+      if (fd === void 0) return;
+      closeSync2(fd);
+      fd = void 0;
+    }
+  };
+}
+function isHeldExclusive(path) {
+  try {
+    closeSync2(openSync2(path, fsConstants2.O_RDONLY));
+    return false;
+  } catch (err) {
+    return err?.code !== "ENOENT";
+  }
+}
+
+// arbiter-core/src/daemon/ipc-pipe.ts
+var ENDPOINT_FILE = "daemon-endpoint.json";
+var BIND_LOCK_FILE = "daemon-endpoint.lock";
+var PID_FILE = "daemon.pid";
+var HEARTBEAT_FILE = "daemon.heartbeat";
+var HEARTBEAT_INTERVAL_MS = 2500;
+var PIPE_BIND_ATTEMPTS = 4;
+var newPipeName = (random = randomBytes3) => `\\\\.\\pipe\\arbiter-${random(16).toString("hex")}`;
+var endpointPath = (runDir) => join3(runDir, ENDPOINT_FILE);
+function ownerOnlyText(path) {
+  try {
+    const st = lstatSync3(path);
+    if (!st.isFile()) return null;
+    if (process.platform !== "win32" && (st.uid !== process.geteuid?.() || (st.mode & 18) !== 0)) return null;
+    return readFileSync3(path, "utf8");
+  } catch {
+    return null;
+  }
+}
+function readEndpoint(runDir) {
+  try {
+    const parsed = JSON.parse(ownerOnlyText(endpointPath(runDir)) ?? "null");
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function writeEndpoint(runDir, endpoint) {
+  const tmpDir = mkdtempSync(join3(runDir, ".endpoint-tmp-"));
+  try {
+    const tmpFile = join3(tmpDir, ENDPOINT_FILE);
+    writeFileSync2(tmpFile, JSON.stringify(endpoint), { encoding: "utf8", mode: 384 });
+    renameSync2(tmpFile, endpointPath(runDir));
+  } finally {
+    rmSync2(tmpDir, { recursive: true, force: true });
+  }
+}
+function retireEndpoint(runDir, pipe2) {
+  if (readEndpoint(runDir)?.pipe === pipe2) rmSync2(endpointPath(runDir), { force: true });
+}
+function readDaemonPid(runDir) {
+  const pid = Number((ownerOnlyText(join3(runDir, PID_FILE)) ?? "").trim());
+  return Number.isInteger(pid) && pid > 0 ? pid : null;
+}
+function writeHeartbeat(runDir, pid, nowMs) {
+  writeFileSync2(join3(runDir, HEARTBEAT_FILE), `${pid} ${nowMs}`, { encoding: "utf8", mode: 384 });
+}
+function readHeartbeat(runDir) {
+  const [pid, at, ...rest] = (ownerOnlyText(join3(runDir, HEARTBEAT_FILE)) ?? "").split(" ").map(Number);
+  if (pid === void 0 || at === void 0 || rest.length > 0) return null;
+  return Number.isInteger(pid) && Number.isInteger(at) && at > 0 ? { pid, at } : null;
+}
+function listenOnPipe(server, path) {
+  return new Promise((resolve) => {
+    const onError = (err) => {
+      server.off("listening", onListening);
+      resolve(err);
+    };
+    const onListening = () => {
+      server.off("error", onError);
+      resolve(null);
+    };
+    server.once("error", onError);
+    server.once("listening", onListening);
+    server.listen(path);
+  });
+}
+var TAKEOVER_PROBES = 3;
+var TAKEOVER_PROBE_INTERVAL_MS = 15e3;
+var TAKEOVER_SILENCE_MS = TAKEOVER_PROBE_INTERVAL_MS * (TAKEOVER_PROBES - 1);
+var EXIT_WAIT_MS = 5e3;
+var EXIT_POLL_MS = 100;
+var ALIVE_OPEN_ELSEWHERE_BUDGET_MS = 1500;
+var ALIVE_OPEN_ELSEWHERE_RETRY_MS = 20;
+var HELD = { ok: false, reason: "held" };
+async function noTakeoverProbeGetsASignedAnswer(pipe2, deps) {
+  if (!pipe2) return false;
+  for (let probe = 0; probe < TAKEOVER_PROBES; probe++) {
+    if (probe > 0) await deps.sleep(TAKEOVER_PROBE_INTERVAL_MS);
+    if (await deps.probe(pipe2) === "answered") return false;
+  }
+  return true;
+}
+function eventLoopOfTheDaemonIsBlocked(runDir, deps) {
+  const heartbeat = readHeartbeat(runDir);
+  if (heartbeat === null || Math.abs(deps.now() - heartbeat.at) <= TAKEOVER_SILENCE_MS) return false;
+  const pid = readDaemonPid(runDir);
+  const noPidToStopSoTheStopStepLogsIt = pid === null;
+  return noPidToStopSoTheStopStepLogsIt || heartbeat.pid === pid;
+}
+async function freeWithin(path, ms, deps) {
+  for (let waited = 0; waited < ms && deps.exclusive.isHeld(path); waited += EXIT_POLL_MS) await deps.sleep(EXIT_POLL_MS);
+  return !deps.exclusive.isHeld(path);
+}
+async function liveDaemonIsOutOfTheWay(runDir, cause, deps) {
+  const alive = join3(runDir, ALIVE_FILE);
+  if (cause === "silent" && !(await noTakeoverProbeGetsASignedAnswer(readEndpoint(runDir)?.pipe, deps) && eventLoopOfTheDaemonIsBlocked(runDir, deps))) return false;
+  if (!deps.exclusive.isHeld(alive)) return true;
+  const notStopped = (pid2, reason) => {
+    deps.onEvent?.({ event: "recorded_daemon_not_stopped", severity: "error", pid: pid2, cause, reason });
+    return false;
+  };
+  const pid = readDaemonPid(runDir);
+  if (pid === null) return notStopped(null, "unidentified");
+  const who = deps.identify(pid);
+  if (who !== "ours") return notStopped(pid, who);
+  const endedDuringTheLookup = !deps.exclusive.isHeld(alive);
+  if (endedDuringTheLookup) return true;
+  deps.kill(pid);
+  if (!await freeWithin(alive, EXIT_WAIT_MS, deps)) return notStopped(pid, "stuck");
+  deps.onEvent?.({ event: "recorded_daemon_stopped", severity: "warn", pid, cause });
+  return true;
+}
+async function holdWhenNoOtherProcessHasItOpen(path, deps) {
+  for (let waited = 0; ; waited += ALIVE_OPEN_ELSEWHERE_RETRY_MS) {
+    const held = deps.exclusive.hold(path);
+    if (held !== null || waited >= ALIVE_OPEN_ELSEWHERE_BUDGET_MS) return held;
+    await deps.sleep(ALIVE_OPEN_ELSEWHERE_RETRY_MS);
+  }
+}
+async function bindPipe(server, runDir, deps) {
+  const lock = deps.exclusive.hold(join3(runDir, BIND_LOCK_FILE));
+  if (lock === null) return HELD;
+  try {
+    const keyWasReplacedByAnotherLauncher = deps.rotation !== void 0 && !deps.rotation.stillDue();
+    const keyIsOlderThanTheKeyFile = deps.rotation === void 0 && !deps.keyIsCurrent();
+    if (keyWasReplacedByAnotherLauncher || keyIsOlderThanTheKeyFile) return HELD;
+    const alivePath = join3(runDir, ALIVE_FILE);
+    if (deps.exclusive.isHeld(alivePath) && !await liveDaemonIsOutOfTheWay(runDir, deps.rotation ? "key_rotation" : "silent", deps)) return HELD;
+    const alive = await holdWhenNoOtherProcessHasItOpen(alivePath, deps);
+    if (alive === null) return HELD;
+    try {
+      deps.rotation?.rotateKey();
+      writeFileSync2(join3(runDir, PID_FILE), String(deps.pid), { encoding: "utf8", mode: 384 });
+      writeHeartbeat(runDir, deps.pid, deps.now());
+      const tried = [];
+      for (let attempt = 0; attempt < PIPE_BIND_ATTEMPTS; attempt++) {
+        const path = deps.newName();
+        tried.push(path);
+        if (await deps.listen(server, path) !== null) continue;
+        try {
+          writeEndpoint(runDir, { protocol: 2, startedAt: new Date(deps.now()).toISOString(), pipe: path });
+          deps.rotation?.recordDone();
+        } catch (err) {
+          server.close();
+          retireEndpoint(runDir, path);
+          throw err;
+        }
+        return { ok: true, path, alive };
+      }
+      alive.release();
+      return { ok: false, reason: "conflict", tried };
+    } catch (err) {
+      alive.release();
+      throw err;
+    }
+  } finally {
+    lock.release();
+  }
+}
+
+// arbiter-core/src/daemon/ipc-socket.ts
+import { createHash as createHash3 } from "node:crypto";
+import {
+  closeSync as closeSync3,
+  chmodSync,
+  constants as fsConstants3,
+  lstatSync as lstatSync4,
+  openSync as openSync3,
+  readFileSync as readFileSync4,
+  statSync,
+  unlinkSync as unlinkSync3,
+  writeSync as writeSync3
+} from "node:fs";
+import { connect } from "node:net";
+import { dirname as dirname3, join as join4 } from "node:path";
+var SOCKET_PATH_LIMIT = 100;
+var PROBE_MS = 300;
+var LOCK_STALE_MS = 1e4;
+var DEFAULT_DAEMON_PORT = 52746;
+function resolveSocketPath(env = process.env, runDir = runDirPath(env), port = DEFAULT_DAEMON_PORT) {
+  const explicit = (env["ARBITER_SOCKET"] ?? "").trim();
+  if (explicit) return explicit;
+  const primary = join4(runDir, port === DEFAULT_DAEMON_PORT ? "S.arbiter.sock" : `S.arbiter.${port}.sock`);
+  if (Buffer.byteLength(primary) < SOCKET_PATH_LIMIT) return primary;
+  const name = createHash3("sha256").update(primary).digest("hex").slice(0, 12);
+  return join4("/tmp", `arbiter-${process.geteuid?.() ?? 0}`, `S.${name}.sock`);
+}
+function pidAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function createLock(lock) {
+  try {
+    const fd = openSync3(lock, fsConstants3.O_CREAT | fsConstants3.O_EXCL | fsConstants3.O_WRONLY, 384);
+    try {
+      writeSync3(fd, String(process.pid));
+    } finally {
+      closeSync3(fd);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+function claimLock(lock) {
+  if (createLock(lock)) return true;
+  let holder = 0;
+  let age = 0;
+  try {
+    holder = Number(readFileSync4(lock, "utf8").trim());
+    age = Date.now() - statSync(lock).mtimeMs;
+  } catch {
+    return false;
+  }
+  if (pidAlive(holder) && age < LOCK_STALE_MS) return false;
+  try {
+    unlinkSync3(lock);
+  } catch {
+    return false;
+  }
+  return createLock(lock);
+}
+function releaseLock(lock) {
+  try {
+    if (readFileSync4(lock, "utf8").trim() === String(process.pid)) unlinkSync3(lock);
+  } catch {
+  }
+}
+function socketAnswers(path, timeoutMs = PROBE_MS) {
+  return new Promise((resolve) => {
+    const sock = connect({ path });
+    const settle3 = (live) => {
+      clearTimeout(timer);
+      sock.destroy();
+      resolve(live);
+    };
+    const timer = setTimeout(() => settle3(true), timeoutMs);
+    sock.once("connect", () => settle3(true));
+    sock.once("error", () => settle3(false));
+  });
+}
+function listenOnce(server, path) {
+  return new Promise((resolve) => {
+    const onError = (err) => {
+      server.off("listening", onListening);
+      resolve(err);
+    };
+    const onListening = () => {
+      server.off("error", onError);
+      resolve(null);
+    };
+    server.once("error", onError);
+    server.once("listening", onListening);
+    const mask = process.umask(127);
+    try {
+      server.listen(path);
+    } finally {
+      process.umask(mask);
+    }
+  });
+}
+async function bindUnixSocket(server, path) {
+  if (process.platform === "win32") return { ok: false, path, reason: "platform" };
+  const dir = ensureRunDir(dirname3(path));
+  if (!dir.ok) return { ok: false, path, reason: `dir-${dir.reason}` };
+  const lock = `${path}.lock`;
+  if (!claimLock(lock)) return { ok: false, path, reason: "held" };
+  let err = await listenOnce(server, path);
+  if (err?.code === "EADDRINUSE") {
+    if (await socketAnswers(path)) {
+      releaseLock(lock);
+      return { ok: false, path, reason: "held" };
+    }
+    try {
+      if (lstatSync4(path).isDirectory()) throw new Error("a directory holds the socket path");
+      unlinkSync3(path);
+    } catch {
+      releaseLock(lock);
+      return { ok: false, path, reason: "io" };
+    }
+    err = await listenOnce(server, path);
+  }
+  if (err) {
+    releaseLock(lock);
+    return { ok: false, path, reason: err.code === "EADDRINUSE" ? "held" : "io" };
+  }
+  releaseLock(lock);
+  try {
+    chmodSync(path, 384);
+  } catch {
+  }
+  return { ok: true, path };
+}
+async function adoptUnixSocket(server, fd, path) {
+  if (process.platform === "win32") return { ok: false, path, reason: "platform" };
+  const dir = ensureRunDir(dirname3(path));
+  if (!dir.ok) return { ok: false, path, reason: `dir-${dir.reason}` };
+  const lock = `${path}.lock`;
+  if (!claimLock(lock)) return { ok: false, path, reason: "held" };
+  const err = await new Promise((resolve) => {
+    server.once("error", resolve);
+    server.listen({ fd }, () => {
+      server.off("error", resolve);
+      resolve(null);
+    });
+  });
+  const reached = !err && await reachesServer(server, path);
+  releaseLock(lock);
+  if (!reached) {
+    if (!err) server.close();
+    return { ok: false, path, reason: "io" };
+  }
+  return { ok: true, path };
+}
+function reachesServer(server, path, timeoutMs = PROBE_MS) {
+  return new Promise((resolve) => {
+    const probe = connect({ path });
+    const settle3 = (arrived) => {
+      clearTimeout(timer);
+      server.off("connection", onConnection);
+      probe.destroy();
+      resolve(arrived);
+    };
+    const onConnection = () => settle3(true);
+    const timer = setTimeout(() => settle3(false), timeoutMs);
+    server.prependOnceListener("connection", onConnection);
+    probe.once("error", () => settle3(false));
+  });
+}
+function activationFd(env, pid = process.pid) {
+  return env["LISTEN_FDS"] === "1" && Number(env["LISTEN_PID"]) === pid ? 3 : void 0;
+}
+
+// arbiter-core/src/daemon/legacy-daemon.ts
+import { execFileSync as execFileSync2 } from "node:child_process";
+import { lstatSync as lstatSync5, readFileSync as readFileSync5, unlinkSync as unlinkSync4 } from "node:fs";
+import { request as httpRequest2 } from "node:http";
+import { userInfo } from "node:os";
+import { join as join5 } from "node:path";
+var DAEMON_PROTOCOL = 2;
+var LAUNCHER_RE = /(?:^|[\\/\s"'])monitor[\\/]launch\.mjs\b/;
+var OLD_CLI_RE = /(?:^|[\\/\s"'])arbiter(?:\.[mc]?[jt]s)?["']?\s+daemon\b/;
+var OPA_RE = /(?:^|[\\/\s"'])opa(?:\.exe)?["']?\s+run\b.*--server\b/;
+var POLL_MS = 100;
+function ownerOnlyJson(path, platform, owner) {
+  try {
+    const st = lstatSync5(path);
+    if (!st.isFile()) return null;
+    if (platform !== "win32" && (String(st.uid) !== owner || (st.mode & 18) !== 0)) return null;
+    const parsed = JSON.parse(readFileSync5(path, "utf8"));
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function candidates(input2) {
+  const found = [];
+  const state2 = ownerOnlyJson(join5(input2.dataDir, "daemon-state.json"), input2.platform, input2.owner);
+  const lock = ownerOnlyJson(input2.lockfilePath, input2.platform, input2.owner);
+  if (state2 && state2["protocol"] !== DAEMON_PROTOCOL) found.push({ pid: Number(state2["pid"]), port: Number(state2["port"] ?? 52746) });
+  if (lock) found.push({ pid: Number(lock["pid"]), port: Number(lock["port"] ?? 52746) });
+  const seen = /* @__PURE__ */ new Set();
+  return found.filter((c) => {
+    if (!Number.isInteger(c.pid) || c.pid <= 0 || c.pid === input2.selfPid || seen.has(c.pid)) return false;
+    if (!Number.isInteger(c.port) || c.port <= 0 || c.port > 65535) return false;
+    seen.add(c.pid);
+    return true;
+  });
+}
+var sameOwner = (a, b, platform) => platform === "win32" ? a.toLowerCase() === b.toLowerCase() : a === b;
+var isArbiterDaemonCommand = (command) => /arbiter/i.test(command) && (LAUNCHER_RE.test(command) || OLD_CLI_RE.test(command));
+function identifyDaemon(info, owner, platform) {
+  if (info === null) return "unidentified";
+  return sameOwner(info.owner, owner, platform) && isArbiterDaemonCommand(info.command) ? "ours" : "not-ours";
+}
+async function waitGone(deps, pid, ms) {
+  for (let waited = 0; waited <= ms; waited += POLL_MS) {
+    if (deps.processInfo(pid) === null) return true;
+    await deps.sleep(POLL_MS);
+  }
+  return deps.processInfo(pid) === null;
+}
+function retireLockfile(input2, pid) {
+  const lock = ownerOnlyJson(input2.lockfilePath, input2.platform, input2.owner);
+  if (!lock || Number(lock["pid"]) !== pid) return;
+  try {
+    unlinkSync4(input2.lockfilePath);
+  } catch {
+  }
+}
+async function stopLegacyDaemon(input2) {
+  const { deps, platform } = input2;
+  let result = { kind: "none" };
+  for (const candidate of candidates(input2)) {
+    const info = deps.processInfo(candidate.pid);
+    if (!info) {
+      retireLockfile(input2, candidate.pid);
+      continue;
+    }
+    if (!sameOwner(info.owner, input2.owner, platform)) {
+      result = { kind: "refused", pid: info.pid, reason: "owner" };
+      continue;
+    }
+    if (!isArbiterDaemonCommand(info.command)) {
+      result = { kind: "refused", pid: info.pid, reason: "command" };
+      continue;
+    }
+    if (!await deps.speaksLegacy(candidate.port)) {
+      result = { kind: "refused", pid: info.pid, reason: "protocol" };
+      continue;
+    }
+    const opa = deps.childrenOf(info.pid).filter((child) => OPA_RE.test(child.command) && sameOwner(child.owner, input2.owner, platform));
+    deps.kill(info.pid);
+    if (!await waitGone(deps, info.pid, input2.exitWaitMs ?? 5e3)) return { kind: "stuck", pid: info.pid };
+    const stoppedOpa = [];
+    for (const child of opa) {
+      const now = deps.processInfo(child.pid);
+      if (!now || now.command !== child.command || !sameOwner(now.owner, input2.owner, platform)) continue;
+      deps.kill(child.pid);
+      if (await waitGone(deps, child.pid, 2e3)) stoppedOpa.push(child.pid);
+    }
+    retireLockfile(input2, info.pid);
+    return { kind: "stopped", pid: info.pid, opa: stoppedOpa };
+  }
+  return result;
+}
+function unsignedHealth(port, timeoutMs) {
+  return new Promise((resolve) => {
+    const req = httpRequest2({ host: "127.0.0.1", port, path: "/health", method: "GET", agent: false }, (res) => {
+      let text = "";
+      res.on("data", (chunk) => text += chunk.toString("utf8"));
+      res.on("error", () => resolve(false));
+      res.on("end", () => resolve(res.statusCode === 200 && /"status"\s*:\s*"ok"/.test(text)));
+    });
+    req.on("error", () => resolve(false));
+    const timer = setTimeout(() => req.destroy(new Error("timed out")), timeoutMs);
+    req.on("close", () => clearTimeout(timer));
+    req.end();
+  });
+}
+async function legacyAnswers(port, keys, timeoutMs = 1e3) {
+  if (!await unsignedHealth(port, timeoutMs)) return false;
+  return !await probeSignedHealth({ port }, keys, timeoutMs);
+}
+function posixProcesses(args) {
+  let out = "";
+  try {
+    out = execFileSync2("ps", [...args, "-o", "pid=,ppid=,uid=,command="], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  } catch {
+    return [];
+  }
+  return out.split("\n").map((line) => /^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.*)$/.exec(line)).filter((m) => m !== null).map((m) => ({ pid: Number(m[1]), ppid: Number(m[2]), owner: m[3] ?? "", command: m[4] ?? "" }));
+}
+var WINDOWS_PROCESS_QUERY_MS = 1e4;
+function windowsProcesses(filter, exec) {
+  const script = `Get-CimInstance Win32_Process -Filter '${filter}' | ForEach-Object { $o = Invoke-CimMethod -InputObject $_ -MethodName GetOwner; [pscustomobject]@{ pid = $_.ProcessId; ppid = $_.ParentProcessId; owner = "$($o.Domain)\\$($o.User)"; command = [string]$_.CommandLine } } | ConvertTo-Json -Compress`;
+  try {
+    const out = powershell(exec, script, WINDOWS_PROCESS_QUERY_MS).trim();
+    if (!out) return [];
+    const parsed = JSON.parse(out);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch {
+    return [];
+  }
+}
+function realLegacyDeps(platform, keys, exec = system32Exec()) {
+  const win = platform === "win32";
+  return {
+    processInfo: (pid) => (win ? windowsProcesses(`ProcessId=${pid}`, exec) : posixProcesses(["-p", String(pid)]))[0] ?? null,
+    childrenOf: (pid) => win ? windowsProcesses(`ParentProcessId=${pid}`, exec) : posixProcesses(["-A"]).filter((p) => p.ppid === pid),
+    speaksLegacy: (port) => legacyAnswers(port, keys),
+    kill: (pid) => {
+      try {
+        process.kill(pid, "SIGTERM");
+      } catch {
+      }
+    },
+    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+  };
+}
+function currentOwner(platform, env = process.env) {
+  if (platform !== "win32") return String(process.geteuid?.() ?? -1);
+  return `${env["USERDOMAIN"] ?? ""}\\${userInfo().username}`;
 }
 
 // arbiter-core/src/daemon/routes-introspect.ts
@@ -33980,19 +34880,85 @@ function sendJson(res, statusCode, payload) {
   res.end(body);
 }
 
+// arbiter-core/src/quarantine/reply-scope.ts
+import { AsyncLocalStorage } from "node:async_hooks";
+var als = new AsyncLocalStorage();
+function runInQuarantineReplyScope(fn) {
+  return als.run({ answer: void 0 }, fn);
+}
+function noteQuarantineAnswer(answer) {
+  if (answer === void 0) return;
+  const scope = als.getStore();
+  if (scope) scope.answer = answer;
+}
+function currentQuarantineAnswer() {
+  return als.getStore()?.answer;
+}
+
 // arbiter-core/src/daemon/server.ts
-var PortInUseError = class extends Error {
-  port;
-  constructor(port) {
-    super(`Port ${port} is already in use \u2014 another Arbiter daemon owns it (attach/standby).`);
-    this.name = "PortInUseError";
-    this.port = port;
+var IPC_LIMITS = {
+  bodyLimitBytes: 4 * 1024 * 1024,
+  maxConnections: 32,
+  headersTimeoutMs: 5e3,
+  requestTimeoutMs: 1e4,
+  checkIntervalMs: 1e3
+};
+var BodyTooLarge = class extends Error {
+};
+var BODY_HEADERS = /* @__PURE__ */ new Set(["content-type", "content-length"]);
+function sealResponses(res, keys, nonce2) {
+  const writeHead = res.writeHead.bind(res);
+  const end = res.end.bind(res);
+  let held;
+  const patched = res;
+  patched.writeHead = (status, headers = {}) => {
+    held = { status, headers };
+    return res;
+  };
+  patched.end = (body) => {
+    const status = held?.status ?? res.statusCode;
+    const sealed = sealResponse(keys, { nonce: nonce2, status, body: body ?? "" });
+    const kept = Object.fromEntries(Object.entries(held?.headers ?? {}).filter(([name]) => !BODY_HEADERS.has(name.toLowerCase())));
+    writeHead(status, { ...kept, "Content-Type": "application/octet-stream", "Content-Length": sealed.body.length, [IPC_HEADERS.respMac]: sealed.mac });
+    return end(sealed.body);
+  };
+}
+function withQuarantineField(statusCode, payload, localField) {
+  if (statusCode < 200 || statusCode >= 300) return payload;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return payload;
+  if (Object.prototype.hasOwnProperty.call(payload, "quarantine")) return payload;
+  let field = currentQuarantineAnswer();
+  if (field === void 0 && localField) {
+    try {
+      field = localField();
+    } catch {
+      field = void 0;
+    }
+  }
+  if (field === void 0) return payload;
+  return { ...payload, quarantine: field };
+}
+var PipeConflictError = class extends Error {
+  tried;
+  constructor(tried) {
+    super(`no named pipe could be made in ${tried.length} attempts \u2014 each name was in use or the listen failed`);
+    this.name = "PipeConflictError";
+    this.tried = tried;
+  }
+};
+var AlreadyRunningError = class extends Error {
+  endpoint;
+  constructor(endpoint) {
+    super(`${endpoint} is already in use \u2014 another Arbiter daemon owns it (attach/standby).`);
+    this.name = "AlreadyRunningError";
+    this.endpoint = String(endpoint);
   }
 };
 var VALID_EVENTS = /* @__PURE__ */ new Set(["screen", "enforce", "evidence", "verify"]);
 async function startDaemon(opts) {
   const log2 = opts.log ?? ((msg) => console.error(`[arbiter-daemon] ${msg}`));
   const handlers = /* @__PURE__ */ new Map();
+  const limits = { ...IPC_LIMITS, ...opts.ipcAuth?.limits };
   const allowedHosts = opts.allowedHosts ?? ["localhost", "127.0.0.1", "::1"];
   const rejectOrigin = opts.rejectOrigin ?? true;
   function registerHookHandler2(event, handler) {
@@ -34010,16 +34976,49 @@ async function startDaemon(opts) {
       sendJson2(res, 403, { error: "Forbidden" });
       return;
     }
-    if (isHealth) {
+    const signedHealth = isHealth && opts.ipcAuth !== void 0 && req.headers[IPC_HEADERS.mac] !== void 0;
+    if (isHealth && !signedHealth) {
       sendJson2(res, 200, { status: "ok" });
       return;
     }
-    const principal = await applyBearerAuth(req, res, opts.bearerToken, {
-      legacyToken: opts.legacyBearerToken,
-      warn: log2,
-      verifyClient: opts.verifyClient
-    });
+    let macBody;
+    let principal;
+    if (opts.ipcAuth) {
+      const screened = opts.ipcAuth.verifier.screen(req.headers);
+      if (!screened.ok) {
+        if (req.headers[IPC_HEADERS.mac] !== void 0) opts.ipcAuth.onRefused?.(screened.reason);
+        refuse(req, res, 401, "Unauthorized");
+        return;
+      }
+      if (Number(req.headers["content-length"] ?? 0) > limits.bodyLimitBytes) {
+        refuse(req, res, 413, "Request body too large");
+        return;
+      }
+      let raw;
+      try {
+        raw = await readBodyBytes(req, limits.bodyLimitBytes);
+      } catch (err) {
+        if (err instanceof BodyTooLarge) refuse(req, res, 413, "Request body too large");
+        else req.socket.destroy();
+        return;
+      }
+      const checked = opts.ipcAuth.verifier.check({ method, path: url2, headers: req.headers, body: raw });
+      if (!checked.ok) {
+        opts.ipcAuth.onRefused?.(checked.reason);
+        sendJson2(res, 401, { error: "Unauthorized" });
+        return;
+      }
+      sealResponses(res, opts.ipcAuth.keys, checked.nonce);
+      macBody = checked.plain.toString("utf8");
+      principal = { kind: "bootstrap" };
+    } else {
+      principal = await applyBearerAuth(req, res, opts.bearerToken ?? "", { verifyClient: opts.verifyClient });
+    }
     if (!principal) return;
+    if (signedHealth) {
+      sendJson2(res, 200, { status: "ok" });
+      return;
+    }
     if (opts.rateLimitPrincipal && !opts.rateLimitPrincipal(principal)) {
       sendJson2(res, 429, { error: "Too many requests" });
       return;
@@ -34042,8 +35041,8 @@ async function startDaemon(opts) {
           sendJson2(res, 501, { error: `No handler registered for event: ${event}` });
           return;
         }
-        runInContext(principal, () => {
-          readBody(req).then((raw) => {
+        runInContext(principal, () => runInQuarantineReplyScope(() => {
+          (macBody !== void 0 ? Promise.resolve(macBody) : readBody(req)).then((raw) => {
             let body;
             try {
               body = JSON.parse(raw);
@@ -34061,7 +35060,7 @@ async function startDaemon(opts) {
             const ctx = {
               body,
               req,
-              reply: (statusCode, payload) => sendJson2(res, statusCode, payload),
+              reply: (statusCode, payload) => sendJson2(res, statusCode, withQuarantineField(statusCode, payload, opts.quarantineReplyField)),
               replyError: (statusCode, message) => sendJson2(res, statusCode, { error: message })
             };
             handler(ctx).catch((err) => {
@@ -34074,26 +35073,88 @@ async function startDaemon(opts) {
             log2(`Body read error: ${String(err)}`);
             if (!res.writableEnded) sendJson2(res, 500, { error: "Failed to read request body" });
           });
-        });
+        }));
         return;
       }
     }
     sendJson2(res, 404, { error: "Not found" });
   }
   const host2 = opts.host ?? "127.0.0.1";
-  const server = createServer((req, res) => {
+  const listener = (req, res) => {
     void dispatch(req, res).catch((err) => {
       log2(`dispatch error: ${String(err)}`);
       if (!res.writableEnded) sendJson2(res, 500, { error: "Internal server error" });
     });
-  });
-  const port = await bindWithRetry(server, opts.port ?? 52746, log2, opts.bindMode ?? "increment", host2);
-  log2(`Listening on ${host2}:${port}`);
+  };
+  let port = 0;
+  const server = opts.ipcAuth ? createServer(
+    { headersTimeout: limits.headersTimeoutMs, requestTimeout: limits.requestTimeoutMs, connectionsCheckingInterval: limits.checkIntervalMs },
+    listener
+  ) : createServer(listener);
+  if (opts.ipcAuth && opts.socketPath === void 0) server.maxConnections = limits.maxConnections;
+  let pipePath;
+  let alive;
+  let heartbeat;
+  if (opts.socketPath !== void 0) {
+    if (!opts.ipcAuth) throw new TypeError("a daemon on a Unix socket needs ipcAuth");
+    const bound = opts.listenFd === void 0 ? await bindUnixSocket(server, opts.socketPath) : await adoptUnixSocket(server, opts.listenFd, opts.socketPath);
+    if (!bound.ok) {
+      if (bound.reason === "held") throw new AlreadyRunningError(bound.path);
+      throw new Error(`Unix socket bind failed (${bound.reason}): ${bound.path}`);
+    }
+    log2(`Listening on ${bound.path}`);
+  } else if (opts.pipe !== void 0) {
+    if (!opts.ipcAuth) throw new TypeError("a daemon on a named pipe needs ipcAuth");
+    const keys = opts.ipcAuth.keys;
+    const runDir = opts.pipe.runDir;
+    const processes = realLegacyDeps(process.platform, keys);
+    const owner = currentOwner(process.platform);
+    const bound = await bindPipe(server, runDir, {
+      listen: listenOnPipe,
+      newName: newPipeName,
+      probe: (path) => signedHealthProbe({ socketPath: path }, keys),
+      identify: (pid) => identifyDaemon(processes.processInfo(pid), owner, process.platform),
+      kill: processes.kill,
+      keyIsCurrent: () => {
+        const onDisk = loadOrCreateIpcKey(runDir);
+        return onDisk.ok && deriveIpcKeys(onDisk.key).enc.equals(keys.enc);
+      },
+      exclusive: { hold: holdExclusive, isHeld: isHeldExclusive },
+      sleep: processes.sleep,
+      onEvent: (event) => log2(`[arbiter] ${JSON.stringify(event)}`),
+      now: Date.now,
+      pid: process.pid,
+      ...opts.pipe.deps
+    });
+    if (!bound.ok) {
+      if (bound.reason === "held") throw new AlreadyRunningError("The Arbiter pipe");
+      throw new PipeConflictError(bound.tried);
+    }
+    alive = bound.alive;
+    pipePath = bound.path;
+    heartbeat = setInterval(() => {
+      try {
+        writeHeartbeat(runDir, process.pid, Date.now());
+      } catch (err) {
+        log2(`heartbeat write failed: ${String(err)}`);
+      }
+    }, opts.pipe.heartbeatMs ?? HEARTBEAT_INTERVAL_MS);
+    heartbeat.unref();
+    log2(`Listening on ${bound.path}`);
+  } else {
+    port = await bindTcp(server, opts.port ?? DEFAULT_DAEMON_PORT, host2);
+    log2(`Listening on ${host2}:${port}`);
+  }
   return {
     server,
     port,
+    ...opts.socketPath !== void 0 ? { socketPath: opts.socketPath } : {},
+    ...pipePath !== void 0 ? { pipePath } : {},
     registerHookHandler: registerHookHandler2,
     close: () => new Promise((resolve, reject) => {
+      if (opts.pipe !== void 0 && pipePath !== void 0) retireEndpoint(opts.pipe.runDir, pipePath);
+      clearInterval(heartbeat);
+      alive?.release();
       server.close((err) => err ? reject(err) : resolve());
     })
   };
@@ -34128,48 +35189,47 @@ function sendJson2(res, statusCode, payload) {
   });
   res.end(body);
 }
-function readBody(req) {
+function refuse(req, res, statusCode, message) {
+  res.setHeader("Connection", "close");
+  req.removeAllListeners("data");
+  req.resume();
+  sendJson2(res, statusCode, { error: message });
+}
+function readBodyBytes(req, limitBytes = Infinity) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    let size = 0;
+    const onData = (chunk) => {
+      size += chunk.length;
+      if (size > limitBytes) {
+        req.off("data", onData);
+        chunks.length = 0;
+        reject(new BodyTooLarge("request body over the limit"));
+        return;
+      }
+      chunks.push(chunk);
+    };
+    req.on("data", onData);
+    req.on("end", () => resolve(Buffer.concat(chunks)));
     req.on("error", reject);
   });
 }
-async function bindWithRetry(server, basePort, log2, bindMode = "increment", host2 = "127.0.0.1", maxTries = 3) {
-  if (bindMode === "attach") {
-    try {
-      await new Promise((resolve, reject) => {
-        server.once("error", reject);
-        server.listen(basePort, host2, resolve);
-      });
-      return basePort;
-    } catch (err) {
-      server.removeAllListeners("error");
-      const code = err.code;
-      if (code === "EADDRINUSE") throw new PortInUseError(basePort);
-      throw err;
-    }
+function readBody(req) {
+  return readBodyBytes(req).then((raw) => raw.toString("utf8"));
+}
+async function bindTcp(server, port, host2) {
+  try {
+    await new Promise((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(port, host2, resolve);
+    });
+  } catch (err) {
+    server.removeAllListeners("error");
+    if (err.code === "EADDRINUSE") throw new AlreadyRunningError(port);
+    throw err;
   }
-  for (let i = 0; i < maxTries; i++) {
-    const port = basePort + i;
-    try {
-      await new Promise((resolve, reject) => {
-        server.once("error", reject);
-        server.listen(port, host2, resolve);
-      });
-      return port;
-    } catch (err) {
-      const code = err.code;
-      if (code === "EADDRINUSE" && i < maxTries - 1) {
-        log2(`Port ${port} in use, trying ${port + 1}`);
-        server.removeAllListeners("error");
-        continue;
-      }
-      throw err;
-    }
-  }
-  throw new Error(`Could not bind to any port in range ${basePort}\u2013${basePort + maxTries - 1}`);
+  const address = server.address();
+  return typeof address === "object" && address ? address.port : port;
 }
 
 // arbiter-core/src/daemon/active-harness-tracker.ts
@@ -34239,33 +35299,33 @@ var ActiveHarnessTracker = class {
 
 // arbiter-core/src/daemon/command-executor.ts
 var import_undici = __toESM(require_undici(), 1);
-import { readFileSync as readFileSync2 } from "node:fs";
-import { join as join3 } from "node:path";
-import { homedir as homedir2 } from "node:os";
+import { readFileSync as readFileSync7 } from "node:fs";
+import { join as join8 } from "node:path";
+import { homedir as homedir4 } from "node:os";
 
 // arbiter-core/src/lifecycle/secure-file.ts
 import {
-  writeFileSync,
-  mkdirSync,
-  mkdtempSync,
-  renameSync,
-  chmodSync,
-  openSync,
-  writeSync,
-  closeSync,
-  fstatSync,
+  writeFileSync as writeFileSync3,
+  mkdirSync as mkdirSync3,
+  mkdtempSync as mkdtempSync2,
+  renameSync as renameSync3,
+  chmodSync as chmodSync2,
+  openSync as openSync4,
+  writeSync as writeSync4,
+  closeSync as closeSync4,
+  fstatSync as fstatSync2,
   appendFileSync,
   existsSync,
-  rmSync,
-  constants as fsConstants
+  rmSync as rmSync3,
+  constants as fsConstants4
 } from "node:fs";
-import { execFileSync } from "node:child_process";
-import { dirname, join, basename } from "node:path";
-var O_NOFOLLOW = fsConstants.O_NOFOLLOW ?? 0;
+import { execFileSync as execFileSync3 } from "node:child_process";
+import { dirname as dirname4, join as join6, basename } from "node:path";
+var O_NOFOLLOW2 = fsConstants4.O_NOFOLLOW ?? 0;
 var DANGEROUS_SIDS = ["S-1-1-0", "S-1-5-11", "S-1-5-32-545"];
 var ALLOWED_WELLKNOWN_SIDS = ["S-1-5-18", "S-1-5-32-544"];
 function defaultExecFileSync(file2, args) {
-  return execFileSync(file2, args, { encoding: "utf8", timeout: 5e3 });
+  return execFileSync3(file2, args, { encoding: "utf8", timeout: 5e3 });
 }
 function resolveCurrentUser(exec) {
   const out = exec("whoami", ["/user", "/fo", "csv", "/nh"]);
@@ -34323,9 +35383,9 @@ function assertOwnerOnlyWindows(filePath, deps) {
 }
 function assertOwnerOnlyPosix(filePath, deps) {
   const geteuid = deps.geteuid ?? (typeof process.geteuid === "function" ? () => process.geteuid() : () => -1);
-  const fd = openSync(filePath, fsConstants.O_RDONLY | O_NOFOLLOW);
+  const fd = openSync4(filePath, fsConstants4.O_RDONLY | O_NOFOLLOW2);
   try {
-    const st = fstatSync(fd);
+    const st = fstatSync2(fd);
     if ((st.mode & 63) !== 0) {
       throw new Error(
         `secure-file: insecure permissions on ${filePath}: mode ${(st.mode & 511).toString(8)} (group/other bits set)`
@@ -34336,7 +35396,7 @@ function assertOwnerOnlyPosix(filePath, deps) {
       throw new Error(`secure-file: ownership mismatch on ${filePath}: file uid ${st.uid} != euid ${euid}`);
     }
   } finally {
-    closeSync(fd);
+    closeSync4(fd);
   }
 }
 function assertOwnerOnly(filePath, deps = {}) {
@@ -34346,23 +35406,23 @@ function assertOwnerOnly(filePath, deps = {}) {
 }
 function writeOwnerOnly(filePath, data, deps = {}) {
   const platform = deps.platform ?? process.platform;
-  const dir = dirname(filePath);
-  mkdirSync(dir, { recursive: true });
+  const dir = dirname4(filePath);
+  mkdirSync3(dir, { recursive: true });
   if (platform === "win32") restrictDirAclWindows(dir, deps);
-  const tmpDir = mkdtempSync(join(dir, ".arbiter-sec-tmp-"));
-  const tmpFile = join(tmpDir, basename(filePath));
+  const tmpDir = mkdtempSync2(join6(dir, ".arbiter-sec-tmp-"));
+  const tmpFile = join6(tmpDir, basename(filePath));
   try {
-    writeFileSync(tmpFile, data, { mode: 384 });
-    renameSync(tmpFile, filePath);
+    writeFileSync3(tmpFile, data, { mode: 384 });
+    renameSync3(tmpFile, filePath);
   } finally {
     try {
-      rmSync(tmpDir, { recursive: true, force: true });
+      rmSync3(tmpDir, { recursive: true, force: true });
     } catch {
     }
   }
   if (platform !== "win32") {
     try {
-      chmodSync(filePath, 384);
+      chmodSync2(filePath, 384);
     } catch {
     }
   }
@@ -34370,19 +35430,19 @@ function writeOwnerOnly(filePath, data, deps = {}) {
 }
 function createOwnerOnlyExclusive(filePath, data, deps = {}) {
   const platform = deps.platform ?? process.platform;
-  const dir = dirname(filePath);
-  mkdirSync(dir, { recursive: true });
+  const dir = dirname4(filePath);
+  mkdirSync3(dir, { recursive: true });
   if (platform === "win32") restrictDirAclWindows(dir, deps);
-  const fd = openSync(filePath, fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY, 384);
+  const fd = openSync4(filePath, fsConstants4.O_CREAT | fsConstants4.O_EXCL | fsConstants4.O_WRONLY, 384);
   try {
-    if (typeof data === "string") writeSync(fd, data);
-    else writeSync(fd, data);
+    if (typeof data === "string") writeSync4(fd, data);
+    else writeSync4(fd, data);
   } finally {
-    closeSync(fd);
+    closeSync4(fd);
   }
   if (platform !== "win32") {
     try {
-      chmodSync(filePath, 384);
+      chmodSync2(filePath, 384);
     } catch {
     }
   }
@@ -34391,14 +35451,14 @@ function createOwnerOnlyExclusive(filePath, data, deps = {}) {
 function appendOwnerOnly(filePath, data, deps = {}) {
   const platform = deps.platform ?? process.platform;
   if (!existsSync(filePath)) {
-    const dir = dirname(filePath);
-    mkdirSync(dir, { recursive: true });
+    const dir = dirname4(filePath);
+    mkdirSync3(dir, { recursive: true });
     if (platform === "win32") restrictDirAclWindows(dir, deps);
-    const fd = openSync(filePath, fsConstants.O_CREAT | fsConstants.O_WRONLY | O_NOFOLLOW, 384);
-    closeSync(fd);
+    const fd = openSync4(filePath, fsConstants4.O_CREAT | fsConstants4.O_WRONLY | O_NOFOLLOW2, 384);
+    closeSync4(fd);
     if (platform !== "win32") {
       try {
-        chmodSync(filePath, 384);
+        chmodSync2(filePath, 384);
       } catch {
       }
     }
@@ -37474,9 +38534,9 @@ var {
 } = yaml;
 
 // arbiter-core/src/config/config-loader.ts
-import { readFileSync } from "node:fs";
-import { join as join2 } from "node:path";
-import { homedir } from "node:os";
+import { readFileSync as readFileSync6 } from "node:fs";
+import { join as join7 } from "node:path";
+import { homedir as homedir3 } from "node:os";
 
 // node_modules/zod/v4/classic/external.js
 var external_exports = {};
@@ -40279,23 +41339,23 @@ function canParseURL(input2) {
     return false;
   }
 }
-function validateURL(trimmed, def) {
+function validateURL(trimmed2, def) {
   if (!("normalize" in def) && !("hostname" in def) && !("protocol" in def)) {
-    return canParseURL(trimmed) || URL_UNPARSEABLE;
+    return canParseURL(trimmed2) || URL_UNPARSEABLE;
   }
-  return parseURLObject(trimmed, def);
+  return parseURLObject(trimmed2, def);
 }
-function parseURLObject(trimmed, def) {
-  if (!def.normalize && def.protocol?.source === httpProtocol.source && !/^https?:\/\//i.test(trimmed)) {
+function parseURLObject(trimmed2, def) {
+  if (!def.normalize && def.protocol?.source === httpProtocol.source && !/^https?:\/\//i.test(trimmed2)) {
     return URL_BAD_FORMAT;
   }
   try {
     if (typeof URL !== "undefined") {
       const URLStatic = URL;
       if (typeof URLStatic.parse === "function")
-        return URLStatic.parse(trimmed) ?? URL_UNPARSEABLE;
+        return URLStatic.parse(trimmed2) ?? URL_UNPARSEABLE;
     }
-    return new URL(trimmed);
+    return new URL(trimmed2);
   } catch {
     return URL_UNPARSEABLE;
   }
@@ -40316,8 +41376,8 @@ var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
   $ZodStringFormat.init(inst, def);
   inst._zod.check = (payload) => {
     try {
-      const trimmed = payload.value.trim();
-      const url2 = validateURL(trimmed, def);
+      const trimmed2 = payload.value.trim();
+      const url2 = validateURL(trimmed2, def);
       if (url2 === URL_BAD_FORMAT) {
         payload.issues.push({
           code: "invalid_format",
@@ -40340,7 +41400,7 @@ var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
         return;
       }
       if (url2 === true) {
-        payload.value = stripTabAndNewline(trimmed);
+        payload.value = stripTabAndNewline(trimmed2);
         return;
       }
       if (def.hostname && !urlHostnameOk(url2, def.hostname)) {
@@ -40365,7 +41425,7 @@ var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
           continue: !def.abort
         });
       }
-      payload.value = def.normalize ? url2.href : stripTabAndNewline(trimmed);
+      payload.value = def.normalize ? url2.href : stripTabAndNewline(trimmed2);
       return;
     } catch (_) {
       payload.issues.push({
@@ -42694,7 +43754,7 @@ function bucketFor(state2, inst) {
   return bucket;
 }
 var handoff;
-var open = [];
+var open2 = [];
 var memo = {
   alloc(_inst, payload, empty) {
     const bucket = handoff;
@@ -42703,7 +43763,7 @@ var memo = {
     handoff = void 0;
     const entry = { value: empty, issues: null };
     bucket.set(payload.value, entry);
-    open.push(entry);
+    open2.push(entry);
     return empty;
   },
   guard(inst) {
@@ -42774,10 +43834,10 @@ var memo = {
           return payload;
         }
         handoff = bucket;
-        const depth = open.length;
+        const depth = open2.length;
         const result = base(payload, ctx);
         handoff = void 0;
-        const entry = open.length > depth ? open.pop() : void 0;
+        const entry = open2.length > depth ? open2.pop() : void 0;
         if (result instanceof Promise) {
           return result.then((r) => {
             if (entry)
@@ -43095,7 +44155,7 @@ function az_default() {
 }
 
 // node_modules/zod/v4/locales/be.js
-function getBelarusianPlural(count, one, few, many) {
+function getBelarusianPlural(count, one2, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
   const lastTwoDigits = absCount % 100;
@@ -43103,7 +44163,7 @@ function getBelarusianPlural(count, one, few, many) {
     return many;
   }
   if (lastDigit === 1) {
-    return one;
+    return one2;
   }
   if (lastDigit >= 2 && lastDigit <= 4) {
     return few;
@@ -45743,8 +46803,8 @@ function hu_default() {
 }
 
 // node_modules/zod/v4/locales/hy.js
-function getArmenianPlural(count, one, many) {
-  return Math.abs(count) === 1 ? one : many;
+function getArmenianPlural(count, one2, many) {
+  return Math.abs(count) === 1 ? one2 : many;
 }
 function withDefiniteArticle(word) {
   if (!word)
@@ -48482,7 +49542,7 @@ function ro_default() {
 }
 
 // node_modules/zod/v4/locales/ru.js
-function getRussianPlural(count, one, few, many) {
+function getRussianPlural(count, one2, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
   const lastTwoDigits = absCount % 100;
@@ -48490,7 +49550,7 @@ function getRussianPlural(count, one, few, many) {
     return many;
   }
   if (lastDigit === 1) {
-    return one;
+    return one2;
   }
   if (lastDigit >= 2 && lastDigit <= 4) {
     return few;
@@ -57195,11 +58255,24 @@ function date4(params) {
   return _coercedDate(ZodDate, params);
 }
 
+// arbiter-core/src/contract/defaults.ts
+var DEFAULT_CATASTROPHIC_DENY_LIST = [
+  "rm -rf /",
+  "rm -rf ~",
+  "mkfs.",
+  "dd if=",
+  ":(){:|:&};:",
+  "git push --force",
+  "git push -f"
+];
+var PII_SCAN_MAX_CHARS_FALLBACK = 1e4;
+
 // arbiter-core/src/config/schema.ts
 var ArbiterConfigSchema = external_exports.object({
   /**
-   * Port the loopback daemon listens on. Auto-increments on EADDRINUSE;
-   * the resolved port is written to the lockfile after bind.
+   * The daemon port. Windows: the TCP port on 127.0.0.1. macOS and Linux: the daemon
+   * listens on a Unix socket only, and a port other than 52746 names its socket file.
+   * A port that is held is not incremented: the launcher is a standby or records a conflict.
    */
   daemonPort: external_exports.number().int().min(1024).max(65535).default(52746),
   /**
@@ -57231,7 +58304,7 @@ var ArbiterConfigSchema = external_exports.object({
    *    ASK path as engine-unreachable — never a silent ALLOW), and the shim
    *    treats a dead/never-started daemon (past a bounded cold-start grace) as a
    *    BLOCK. Recommended default for managed/enterprise rollout. Trade-off: if the
-   *    daemon genuinely cannot start (no Node, OPA download fails) the user is
+   *    daemon genuinely cannot start (no Node, bind failure) the user is
    *    blocked from mcp__* calls until it is fixed — the bounded startup grace only
    *    covers a normal cold start, not a persistent failure.
    */
@@ -57282,17 +58355,7 @@ var ArbiterConfigSchema = external_exports.object({
    * Each string is matched as a substring against the full bash command / tool call.
    * Kept purposely short — not meant to replace a proper classifier.
    */
-  catastrophicDenyList: external_exports.array(external_exports.string()).default([
-    "rm -rf /",
-    "rm -rf ~",
-    "mkfs.",
-    "dd if=",
-    ":(){:|:&};:",
-    // fork bomb
-    "git push --force",
-    // force-push to any remote
-    "git push -f"
-  ]),
+  catastrophicDenyList: external_exports.array(external_exports.string()).default([...DEFAULT_CATASTROPHIC_DENY_LIST]),
   /**
    * Maximum size of the GRAIL audit ring-buffer (ALLOW events).
    * BLOCK/ASK go to the priority lane and are never dropped before ALLOWs.
@@ -57302,7 +58365,7 @@ var ArbiterConfigSchema = external_exports.object({
    * LangGuard server API key (lgr_ prefix) used as the bearer for the REMOTE
    * policy engine and GRAIL audit. Env var LANGGUARD_API_KEY takes precedence
    * over this field (see resolveServerApiKey). Never written to .claude/settings.json.
-   * Distinct from the loopback daemon's arbd_ lockfile bearer (local hook auth only).
+   * It never goes to the loopback daemon: a hook signs each loopback request with run/ipc-key.
    */
   apiKey: external_exports.string().min(1).optional(),
   /**
@@ -57357,14 +58420,14 @@ function mergeConfigs(global2, project) {
 
 // arbiter-core/src/config/config-loader.ts
 function globalConfigPath() {
-  return process.env["ARBITER_GLOBAL_CONFIG"] ?? join2(homedir(), ".config", "arbiter", "config.yaml");
+  return process.env["ARBITER_GLOBAL_CONFIG"] ?? join7(homedir3(), ".config", "arbiter", "config.yaml");
 }
 function projectConfigPath(cwd = process.cwd()) {
-  return process.env["ARBITER_PROJECT_CONFIG"] ?? join2(cwd, ".arbiter.yaml");
+  return process.env["ARBITER_PROJECT_CONFIG"] ?? join7(cwd, ".arbiter.yaml");
 }
 function loadYamlFile(filePath) {
   try {
-    const text = readFileSync(filePath, "utf8");
+    const text = readFileSync6(filePath, "utf8");
     return load(text) ?? {};
   } catch (err) {
     const code = err.code;
@@ -57405,11 +58468,11 @@ function loadConfig(opts = {}) {
 // arbiter-core/src/daemon/command-executor.ts
 var ENFORCEMENT_MODES = /* @__PURE__ */ new Set(["cooperative", "strict"]);
 function defaultCommandAuditPath() {
-  return join3(homedir2(), ".config", "arbiter", "command-audit.log");
+  return join8(homedir4(), ".config", "arbiter", "command-audit.log");
 }
 function defaultReadConfigRaw(path) {
   try {
-    return readFileSync2(path, "utf8");
+    return readFileSync7(path, "utf8");
   } catch (err) {
     if (err.code === "ENOENT") return null;
     throw err;
@@ -57667,7 +58730,7 @@ function restoreUsage(rows) {
 }
 
 // arbiter-core/src/daemon/heartbeat.ts
-function buildBody(opts, usage) {
+function buildBody(opts, usage, posture) {
   const base = {
     session_id: opts.sessionId,
     version: opts.version
@@ -57687,9 +58750,17 @@ function buildBody(opts, usage) {
       const rev = safeCall(opts.bundleRevision);
       return rev ? { bundle_revision: rev } : {};
     })(),
-    ...usage.length > 0 ? { usage } : {}
+    ...usage.length > 0 ? { usage } : {},
+    ...(() => {
+      if (!opts.quarantine) return {};
+      try {
+        return { quarantine: opts.quarantine() };
+      } catch {
+        return {};
+      }
+    })()
   };
-  return { ...base, ...full };
+  return { ...base, ...full, ...posture ? { ipc: posture.ipc, opa: posture.opa } : {} };
 }
 function safeCall(fn) {
   if (!fn) return void 0;
@@ -57701,6 +58772,7 @@ function safeCall(fn) {
 }
 async function send(opts, usageMode) {
   let usage = [];
+  let posture;
   let delivered = false;
   try {
     const token = await opts.tokenProvider();
@@ -57709,6 +58781,7 @@ async function send(opts, usageMode) {
       usage = takeUsageForSend(opts.now?.() ?? Date.now(), usageMode === "final");
     }
     if (usageMode === "final" && usage.length === 0) return false;
+    if (opts.installId) posture = safeCall(opts.posture?.take);
     const url2 = `${opts.serverUrl.replace(/\/$/, "")}/api/arbiter/heartbeat`;
     const fetchOpts = {
       method: "POST",
@@ -57716,7 +58789,7 @@ async function send(opts, usageMode) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify(buildBody(opts, usage)),
+      body: JSON.stringify(buildBody(opts, usage, posture)),
       signal: AbortSignal.timeout(5e3),
       ...opts.dispatcher ? { dispatcher: opts.dispatcher } : {}
     };
@@ -57726,6 +58799,7 @@ async function send(opts, usageMode) {
       return false;
     }
     delivered = true;
+    if (posture) safeCall(opts.posture?.commit);
     if (opts.onCommands) {
       try {
         const parsed = await resp.json();
@@ -57743,6 +58817,7 @@ async function send(opts, usageMode) {
     return false;
   } finally {
     if (!delivered && usage.length > 0) restoreUsage(usage);
+    if (!delivered && posture) safeCall(opts.posture?.restore);
   }
 }
 function startHeartbeat(opts) {
@@ -57772,19 +58847,98 @@ function startHeartbeat(opts) {
   };
 }
 
+// arbiter-core/src/daemon/ipc-posture.ts
+import { appendFileSync as appendFileSync2, existsSync as existsSync2, readFileSync as readFileSync8, renameSync as renameSync4, unlinkSync as unlinkSync5 } from "node:fs";
+import { join as join9 } from "node:path";
+function readOrEmpty(path) {
+  try {
+    return readFileSync8(path, "utf8");
+  } catch {
+    return "";
+  }
+}
+var lineCount = (text) => text.split("\n").filter((line) => line.trim() !== "").length;
+var IpcPostureCounter = class {
+  pendingFailures = 0;
+  sentFailures = 0;
+  log;
+  sent;
+  constructor(runDir) {
+    this.log = runDir === void 0 ? void 0 : join9(runDir, "posture.jsonl");
+    this.sent = runDir === void 0 ? void 0 : join9(runDir, "posture.sent.jsonl");
+  }
+  noteAuthFailure() {
+    this.pendingFailures++;
+  }
+  take() {
+    this.sentFailures += this.pendingFailures;
+    this.pendingFailures = 0;
+    return { authFailures: this.sentFailures, unverifiedEvents: this.takeEvents() };
+  }
+  commit() {
+    this.sentFailures = 0;
+    if (this.sent === void 0) return;
+    try {
+      unlinkSync5(this.sent);
+    } catch {
+    }
+  }
+  restore() {
+    this.pendingFailures += this.sentFailures;
+    this.sentFailures = 0;
+  }
+  takeEvents() {
+    if (this.log === void 0 || this.sent === void 0) return 0;
+    const taking = `${this.log}.taking`;
+    try {
+      if (!existsSync2(taking)) renameSync4(this.log, taking);
+      appendFileSync2(this.sent, readOrEmpty(taking), { mode: 384 });
+      unlinkSync5(taking);
+    } catch {
+    }
+    return lineCount(readOrEmpty(this.sent));
+  }
+};
+
+// arbiter-core/src/daemon/run-dir-trust.ts
+import { rmSync as rmSync4 } from "node:fs";
+import { join as join10 } from "node:path";
+function secureRunDirAtStart(runDir, deps) {
+  const acl = secureWindowsRunDir(runDir, deps.exec, runDirTrustDir(deps.env));
+  if (!acl.ok) {
+    if (acl.reason === "acl-foreign") writeRunDirTrust(runDir, "failed", deps);
+    return acl;
+  }
+  if (readRunDirTrust(runDir, deps.env)?.state !== "failed") {
+    writeRunDirTrust(runDir, "ok", deps);
+    return acl;
+  }
+  return {
+    ok: true,
+    keyRotation: {
+      stillFailed: () => readRunDirTrust(runDir, deps.env)?.state === "failed",
+      removeKeyAndEndpoint: () => {
+        rmSync4(join10(runDir, "ipc-key"), { force: true });
+        rmSync4(join10(runDir, ENDPOINT_FILE), { force: true });
+      },
+      recordTrusted: () => writeRunDirTrust(runDir, "ok", deps)
+    }
+  };
+}
+
 // arbiter-core/src/lifecycle/install-id.ts
-import { createHash, randomUUID } from "node:crypto";
-import { execFileSync as execFileSync2 } from "node:child_process";
-import { readFileSync as readFileSync3, mkdirSync as mkdirSync2 } from "node:fs";
-import { homedir as homedir3, hostname as osHostname } from "node:os";
-import { dirname as dirname2, join as join4 } from "node:path";
+import { createHash as createHash4, randomUUID } from "node:crypto";
+import { execFileSync as execFileSync4 } from "node:child_process";
+import { readFileSync as readFileSync9, mkdirSync as mkdirSync4 } from "node:fs";
+import { homedir as homedir5, hostname as osHostname } from "node:os";
+import { dirname as dirname5, join as join11 } from "node:path";
 function defaultInstallIdPath() {
-  return join4(homedir3(), ".config", "arbiter", "install-id");
+  return join11(homedir5(), ".config", "arbiter", "install-id");
 }
 function readLinuxMachineId() {
   for (const p of ["/etc/machine-id", "/var/lib/dbus/machine-id"]) {
     try {
-      const v = readFileSync3(p, "utf8").trim();
+      const v = readFileSync9(p, "utf8").trim();
       if (v) return v;
     } catch {
     }
@@ -57793,7 +58947,7 @@ function readLinuxMachineId() {
 }
 function readDarwinMachineId() {
   try {
-    const out = execFileSync2("ioreg", ["-rd1", "-c", "IOPlatformExpertDevice"], {
+    const out = execFileSync4("ioreg", ["-rd1", "-c", "IOPlatformExpertDevice"], {
       encoding: "utf8",
       timeout: 3e3
     });
@@ -57805,7 +58959,7 @@ function readDarwinMachineId() {
 }
 function readWindowsMachineId() {
   try {
-    const out = execFileSync2(
+    const out = execFileSync4(
       "reg",
       ["query", "HKLM\\SOFTWARE\\Microsoft\\Cryptography", "/v", "MachineGuid"],
       { encoding: "utf8", timeout: 3e3 }
@@ -57829,11 +58983,11 @@ function defaultReadMachineId(platform) {
   }
 }
 function derive(seed, host2) {
-  return createHash("sha256").update(`${seed}|${host2}`).digest("hex").slice(0, 32);
+  return createHash4("sha256").update(`${seed}|${host2}`).digest("hex").slice(0, 32);
 }
 function tryRead(path) {
   try {
-    const v = readFileSync3(path, "utf8").trim();
+    const v = readFileSync9(path, "utf8").trim();
     return v || null;
   } catch {
     return null;
@@ -57862,7 +59016,7 @@ function safeMachineId(readMachineId, platform, log2) {
 }
 function persistExclusive(path, id, log2) {
   try {
-    mkdirSync2(dirname2(path), { recursive: true });
+    mkdirSync4(dirname5(path), { recursive: true });
   } catch {
   }
   try {
@@ -57879,58 +59033,232 @@ function persistExclusive(path, id, log2) {
   }
 }
 
-// arbiter-core/src/lifecycle/bearer-store.ts
-import { randomBytes } from "node:crypto";
-import { readFileSync as readFileSync4, writeFileSync as writeFileSync2 } from "node:fs";
-import { join as join5 } from "node:path";
-import { homedir as homedir4 } from "node:os";
-var BEARER_RE = /^arbd_[0-9a-f]{64}$/;
-function defaultBearerPath() {
-  return process.env["ARBITER_BEARER_FILE"] ?? join5(homedir4(), ".config", "arbiter", "bearer");
-}
-function generateBearer() {
-  return `arbd_${randomBytes(32).toString("hex")}`;
-}
-function loadOrCreateBearer(filePath = defaultBearerPath()) {
-  try {
-    const existing = readFileSync4(filePath, "utf8").trim();
-    if (BEARER_RE.test(existing)) return existing;
-  } catch {
-  }
-  const bearer = generateBearer();
-  try {
-    writeOwnerOnly(filePath, bearer + "\n");
-  } catch (err) {
-    process.stderr.write(
-      `[arbiter] WARNING: could not secure bearer file ${filePath}: ${String(err)} \u2014 continuing to bind (loopback bearer in use, file permissions UNVERIFIED)
-`
-    );
-    try {
-      writeFileSync2(filePath, bearer + "\n", { mode: 384 });
-    } catch {
-    }
-  }
-  return bearer;
-}
-
 // arbiter-core/src/lifecycle/version.ts
-import { readFileSync as readFileSync5 } from "node:fs";
+import { readFileSync as readFileSync10 } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname as dirname3, join as join6 } from "node:path";
+import { dirname as dirname6, join as join12 } from "node:path";
 var cached2;
 function getDaemonVersion(env = process.env) {
   const fromEnv = env["ARBITER_VERSION"];
   if (fromEnv) return fromEnv;
   if (cached2 !== void 0) return cached2;
   try {
-    const here = dirname3(fileURLToPath(import.meta.url));
-    const pkgPath = join6(here, "..", "..", "package.json");
-    const pkg = JSON.parse(readFileSync5(pkgPath, "utf8"));
+    const here = dirname6(fileURLToPath(import.meta.url));
+    const pkgPath = join12(here, "..", "..", "package.json");
+    const pkg = JSON.parse(readFileSync10(pkgPath, "utf8"));
     cached2 = typeof pkg.version === "string" && pkg.version ? pkg.version : "0.0.0";
   } catch {
     cached2 = "0.0.0";
   }
   return cached2;
+}
+
+// arbiter-core/src/quarantine/marker.ts
+import { readFileSync as readFileSync11, rmSync as rmSync5 } from "node:fs";
+import { join as join13 } from "node:path";
+import { homedir as homedir6 } from "node:os";
+var AGENT_QUARANTINE_DEVICE_MESSAGE = "LangGuard: this agent is quarantined. Contact your administrator.";
+var QUARANTINE_RESPONSE_HEADER = "x-langguard-quarantine";
+var AI_APP_ID_REQUEST_HEADER = "x-langguard-ai-app-id";
+var QUARANTINE_HEADER_NONE = "none";
+var QUARANTINE_APPLIED_RULE = "agent_quarantine";
+var MAX_ID_LENGTH = 128;
+function quarantineMarkerPath(env = process.env) {
+  const fromEnv = (env["ARBITER_QUARANTINE_FILE"] ?? "").trim();
+  if (fromEnv) return fromEnv;
+  return join13(homedir6(), ".config", "arbiter", "quarantine.json");
+}
+function validId(v) {
+  return typeof v === "string" && v.trim().length > 0 && v.length <= MAX_ID_LENGTH;
+}
+function validExpiry(v) {
+  return v === null || typeof v === "string" && v.length > 0 && !Number.isNaN(Date.parse(v));
+}
+function parseQuarantineHeader(value) {
+  if (value == null) return void 0;
+  const v = value.trim();
+  if (v === QUARANTINE_HEADER_NONE) return null;
+  const sep = v.indexOf(";");
+  if (sep <= 0) return void 0;
+  const id = v.slice(0, sep).trim();
+  const exp = v.slice(sep + 1).trim();
+  if (!validId(id)) return void 0;
+  if (exp && Number.isNaN(Date.parse(exp))) return void 0;
+  return { id, expiresAt: exp || null };
+}
+function parseQuarantineField(value) {
+  if (value === null) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return void 0;
+  const v = value;
+  if (!validId(v["id"])) return void 0;
+  const exp = v["expiresAt"] === void 0 ? null : v["expiresAt"];
+  if (!validExpiry(exp)) return void 0;
+  return { id: v["id"].trim(), expiresAt: exp };
+}
+function isExpired(state2, nowMs) {
+  if (!state2.expiresAt) return false;
+  const t = Date.parse(state2.expiresAt);
+  return Number.isFinite(t) && t <= nowMs;
+}
+function readQuarantineMarker(io = {}) {
+  const path = io.path ?? quarantineMarkerPath();
+  const nowMs = (io.now ?? Date.now)();
+  let raw;
+  try {
+    raw = readFileSync11(path, "utf8");
+  } catch {
+    return null;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = void 0;
+  }
+  const state2 = parseQuarantineField(parsed);
+  if (!state2) {
+    io.log?.(`[quarantine] marker at ${path} is malformed \u2014 treated as present (fail-closed)`);
+    return { id: "unknown", expiresAt: null, learnedAt: new Date(nowMs).toISOString() };
+  }
+  if (isExpired(state2, nowMs)) {
+    deleteQuarantineMarker({ ...io, path });
+    return null;
+  }
+  const learnedAt = parsed && typeof parsed["learnedAt"] === "string" ? parsed["learnedAt"] : new Date(nowMs).toISOString();
+  return { ...state2, learnedAt };
+}
+function writeQuarantineMarker(state2, io = {}) {
+  const path = io.path ?? quarantineMarkerPath();
+  const nowMs = (io.now ?? Date.now)();
+  const marker = {
+    id: state2.id,
+    expiresAt: state2.expiresAt,
+    learnedAt: new Date(nowMs).toISOString()
+  };
+  try {
+    writeOwnerOnly(path, `${JSON.stringify(marker)}
+`);
+  } catch (err) {
+    io.log?.(`[quarantine] marker write problem at ${path}: ${String(err)}`);
+  }
+}
+function deleteQuarantineMarker(io = {}) {
+  const path = io.path ?? quarantineMarkerPath();
+  try {
+    rmSync5(path, { force: true });
+  } catch (err) {
+    io.log?.(`[quarantine] marker delete problem at ${path}: ${String(err)}`);
+  }
+}
+function applyQuarantineAnswer(answer, io = {}) {
+  if (answer === void 0) return;
+  if (answer === null) {
+    deleteQuarantineMarker(io);
+    return;
+  }
+  const nowMs = (io.now ?? Date.now)();
+  if (isExpired(answer, nowMs)) {
+    deleteQuarantineMarker(io);
+    return;
+  }
+  const current = readQuarantineMarker(io);
+  if (current && current.id === answer.id && current.expiresAt === answer.expiresAt) return;
+  writeQuarantineMarker(answer, io);
+}
+var DeviceQuarantine = class {
+  io;
+  constructor(io = {}) {
+    this.io = { ...io, path: io.path ?? quarantineMarkerPath() };
+  }
+  get path() {
+    return this.io.path;
+  }
+  /** The active marker, or null. Deletes an expired marker. */
+  read() {
+    return readQuarantineMarker(this.io);
+  }
+  /** Apply one server answer (see applyQuarantineAnswer). Never throws. */
+  apply(answer) {
+    try {
+      applyQuarantineAnswer(answer, this.io);
+    } catch (err) {
+      this.io.log?.(`[quarantine] apply error (ignored): ${String(err)}`);
+    }
+  }
+  /** The loopback reply field: `{ id, expiresAt }` or null. */
+  replyField() {
+    const m = this.read();
+    return m ? { id: m.id, expiresAt: m.expiresAt } : null;
+  }
+  /** The heartbeat field: `{ id }` or null. */
+  heartbeatField() {
+    const m = this.read();
+    return m ? { id: m.id } : null;
+  }
+};
+var activeDevice = null;
+function enableDeviceQuarantine(io = {}) {
+  activeDevice = new DeviceQuarantine(io);
+  return activeDevice;
+}
+function activeDeviceQuarantine() {
+  return activeDevice;
+}
+
+// arbiter-core/src/quarantine/device-context.ts
+var HARNESS_REQUEST_HEADER = "x-langguard-harness";
+var USER_ID_REQUEST_HEADER = "x-langguard-user-id";
+var DEVICE_HARNESSES = /* @__PURE__ */ new Set([
+  "claude",
+  "codex",
+  "cursor",
+  "antigravity",
+  "shell"
+]);
+var MAX_USER_ID_LENGTH = 256;
+function headerSafe(v) {
+  return /^[\x20-\x7e]+$/.test(v);
+}
+var DeviceContext = class {
+  harnesses = /* @__PURE__ */ new Set();
+  userId;
+  /** Record a harness that this daemon serves. Unknown literals are ignored. */
+  noteHarness(harness) {
+    if (typeof harness !== "string") return;
+    const h = harness.trim().toLowerCase();
+    if (DEVICE_HARNESSES.has(h)) this.harnesses.add(h);
+  }
+  /** Record the user_id that this daemon reported on a hooks call. */
+  noteUserId(userId) {
+    if (typeof userId !== "string") return;
+    const u = userId.trim();
+    if (!u || u.length > MAX_USER_ID_LENGTH || !headerSafe(u)) return;
+    this.userId = u;
+  }
+  /** The harness literals in a stable order. */
+  harnessList() {
+    return [...DEVICE_HARNESSES].filter((h) => this.harnesses.has(h));
+  }
+  /** The last reported user_id, or undefined. */
+  lastUserId() {
+    return this.userId;
+  }
+  /** The request headers of a bundle poll. A value that is not known is left out. */
+  requestHeaders() {
+    const out = {};
+    const list = this.harnessList();
+    if (list.length > 0) out[HARNESS_REQUEST_HEADER] = list.join(",");
+    if (this.userId) out[USER_ID_REQUEST_HEADER] = this.userId;
+    return out;
+  }
+};
+var activeContext = null;
+function enableDeviceContext() {
+  activeContext = new DeviceContext();
+  return activeContext;
+}
+function activeDeviceContext() {
+  return activeContext;
 }
 
 // arbiter-core/src/daemon/session-state.ts
@@ -58045,21 +59373,21 @@ var SessionStore = class {
 
 // arbiter-core/src/bundle/bundle-sync.ts
 var import_undici3 = __toESM(require_undici(), 1);
-import { createHash as createHash2 } from "node:crypto";
+import { createHash as createHash5 } from "node:crypto";
 
 // arbiter-core/src/bundle/bundle-cache.ts
 import {
-  readFileSync as readFileSync6,
-  writeFileSync as writeFileSync3,
-  mkdirSync as mkdirSync3,
-  renameSync as renameSync2,
-  existsSync as existsSync2,
-  mkdtempSync as mkdtempSync2
+  readFileSync as readFileSync12,
+  writeFileSync as writeFileSync4,
+  mkdirSync as mkdirSync5,
+  renameSync as renameSync5,
+  existsSync as existsSync3,
+  mkdtempSync as mkdtempSync3
 } from "node:fs";
-import { join as join7, dirname as dirname4 } from "node:path";
-import { homedir as homedir5 } from "node:os";
+import { join as join14, dirname as dirname7 } from "node:path";
+import { homedir as homedir7 } from "node:os";
 function defaultBundleBaseDir() {
-  return process.env["ARBITER_BUNDLE_DIR"] ?? join7(homedir5(), ".config", "arbiter", "bundle");
+  return process.env["ARBITER_BUNDLE_DIR"] ?? join14(homedir7(), ".config", "arbiter", "bundle");
 }
 function assertSafeTenant(tenant) {
   if (typeof tenant !== "string" || tenant.trim() === "") {
@@ -58073,28 +59401,28 @@ function assertSafeTenant(tenant) {
 }
 function tenantDir(tenant, baseDir) {
   assertSafeTenant(tenant);
-  return join7(baseDir, tenant);
+  return join14(baseDir, tenant);
 }
 function bundleFile(tenant, baseDir) {
-  return join7(tenantDir(tenant, baseDir), "bundle.tar.gz");
+  return join14(tenantDir(tenant, baseDir), "bundle.tar.gz");
 }
 function etagFile(tenant, baseDir) {
-  return join7(tenantDir(tenant, baseDir), "bundle.etag");
+  return join14(tenantDir(tenant, baseDir), "bundle.etag");
 }
 function revisionFile(tenant, baseDir) {
-  return join7(tenantDir(tenant, baseDir), "bundle.revision");
+  return join14(tenantDir(tenant, baseDir), "bundle.revision");
 }
 function atomicWrite(destPath, data) {
-  const dir = dirname4(destPath);
-  mkdirSync3(dir, { recursive: true });
-  const tmpDir = mkdtempSync2(join7(dir, ".arbiter-cache-tmp-"));
-  const tmpFile = join7(tmpDir, "tmp");
+  const dir = dirname7(destPath);
+  mkdirSync5(dir, { recursive: true });
+  const tmpDir = mkdtempSync3(join14(dir, ".arbiter-cache-tmp-"));
+  const tmpFile = join14(tmpDir, "tmp");
   if (typeof data === "string") {
-    writeFileSync3(tmpFile, data, "utf8");
+    writeFileSync4(tmpFile, data, "utf8");
   } else {
-    writeFileSync3(tmpFile, data);
+    writeFileSync4(tmpFile, data);
   }
-  renameSync2(tmpFile, destPath);
+  renameSync5(tmpFile, destPath);
 }
 function writeBundleCache(tenant, entry, baseDir = defaultBundleBaseDir()) {
   atomicWrite(bundleFile(tenant, baseDir), entry.bundleBytes);
@@ -58105,11 +59433,11 @@ function readBundleCache(tenant, baseDir = defaultBundleBaseDir()) {
   const bf = bundleFile(tenant, baseDir);
   const ef = etagFile(tenant, baseDir);
   const rf = revisionFile(tenant, baseDir);
-  if (!existsSync2(bf) || !existsSync2(ef) || !existsSync2(rf)) return null;
+  if (!existsSync3(bf) || !existsSync3(ef) || !existsSync3(rf)) return null;
   try {
-    const bundleBytes = readFileSync6(bf);
-    const etag = readFileSync6(ef, "utf8").trim();
-    const revision = readFileSync6(rf, "utf8").trim();
+    const bundleBytes = readFileSync12(bf);
+    const etag = readFileSync12(ef, "utf8").trim();
+    const revision = readFileSync12(rf, "utf8").trim();
     return { bundleBytes, etag, revision };
   } catch {
     return null;
@@ -58118,7 +59446,7 @@ function readBundleCache(tenant, baseDir = defaultBundleBaseDir()) {
 function getCachedEtag(tenant, baseDir = defaultBundleBaseDir()) {
   const ef = etagFile(tenant, baseDir);
   try {
-    return readFileSync6(ef, "utf8").trim();
+    return readFileSync12(ef, "utf8").trim();
   } catch {
     return "";
   }
@@ -58126,18 +59454,32 @@ function getCachedEtag(tenant, baseDir = defaultBundleBaseDir()) {
 function getCachedRevision(tenant, baseDir = defaultBundleBaseDir()) {
   const rf = revisionFile(tenant, baseDir);
   try {
-    return readFileSync6(rf, "utf8").trim();
+    return readFileSync12(rf, "utf8").trim();
   } catch {
     return "";
   }
 }
 
 // arbiter-core/src/bundle/bundle-sync.ts
+var LONG_POLL_SECONDS = 20;
+var LONG_POLL_FOLLOW_MS = 250;
+var LONG_POLL_RETRY_MS = 3e3;
+var LONG_POLL_RETRIES_MAX = 5;
+var MIN_HELD_MS = 5e3;
+var RAPID_ACTIVATION_MS = 5e3;
+var RAPID_BACKOFF_MS = [1e3, 3e3];
 var BundleSync = class {
   opts;
   timer = null;
   running = false;
+  supportsWait = false;
+  retries = 0;
+  activatedAt = 0;
+  rapid = false;
   currentRevision = "";
+  aiAppId;
+  onQuarantine;
+  deviceHeaders;
   constructor(opts) {
     assertSecureUrl(opts.serverUrl);
     assertSafeTenant(opts.tenant);
@@ -58151,12 +59493,15 @@ var BundleSync = class {
       log: opts.log ?? ((msg) => console.log(`[bundle-sync] ${msg}`)),
       onActivate: opts.onActivate ?? null
     };
+    this.aiAppId = opts.aiAppId?.trim() || void 0;
+    this.onQuarantine = opts.onQuarantine;
+    this.deviceHeaders = opts.deviceHeaders;
     this.currentRevision = getCachedRevision(this.opts.tenant, this.opts.bundleCacheDir);
   }
   start() {
     if (this.running) return;
     this.running = true;
-    this.schedulePoll();
+    this.schedulePoll(LONG_POLL_FOLLOW_MS);
   }
   stop() {
     this.running = false;
@@ -58165,61 +59510,111 @@ var BundleSync = class {
       this.timer = null;
     }
   }
-  schedulePoll() {
+  schedulePoll(delayMs) {
     if (!this.running) return;
     const base = this.opts.pollIntervalMs;
     const jitter = Math.floor(Math.random() * 4e3) - 2e3;
-    const delay = Math.max(1e3, base + jitter);
+    const delay = delayMs ?? Math.max(1e3, base + jitter);
     this.timer = setTimeout(() => {
-      this.poll().catch(
-        (err) => this.opts.log(`Poll error: ${String(err)}`)
-      ).finally(() => this.schedulePoll());
+      this.poll().then(
+        (next) => this.schedulePoll(next ?? void 0),
+        (err) => {
+          this.opts.log(`Poll error: ${String(err)}`);
+          this.schedulePoll();
+        }
+      );
     }, delay);
     if (this.timer.unref) this.timer.unref();
   }
+  /**
+   * Hand the `x-langguard-quarantine` header to onQuarantine. Absent or malformed →
+   * no call (a failed or old answer must never delete the marker). Never throws.
+   */
+  readQuarantineHeader(resp) {
+    if (!this.onQuarantine) return;
+    try {
+      const answer = parseQuarantineHeader(resp.headers.get(QUARANTINE_RESPONSE_HEADER));
+      if (answer !== void 0) this.onQuarantine(answer);
+    } catch (err) {
+      this.opts.log(`quarantine header handling error (ignored): ${String(err)}`);
+    }
+  }
+  /** The delay before the next poll when it must not wait for the interval, or null. */
   async poll() {
+    const next = await this.pollOnce();
+    if (next === "held") {
+      this.supportsWait = true;
+      this.retries = 0;
+      const [min, max] = RAPID_BACKOFF_MS;
+      return this.rapid ? min + Math.floor(Math.random() * (max - min)) : LONG_POLL_FOLLOW_MS;
+    }
+    if (next === "failed") {
+      if (!this.supportsWait || this.retries >= LONG_POLL_RETRIES_MAX) return null;
+      this.retries += 1;
+      return LONG_POLL_RETRY_MS;
+    }
+    this.supportsWait = false;
+    return null;
+  }
+  /** One poll. Exposed for tests; production calls it from the timer. */
+  async pollOnce() {
+    this.rapid = false;
     const etag = getCachedEtag(this.opts.tenant, this.opts.bundleCacheDir);
     const url2 = `${this.opts.serverUrl}/api/arbiter/bundle`;
     const headers = {
-      "Authorization": `Bearer ${this.opts.bearer}`
+      "Authorization": `Bearer ${this.opts.bearer}`,
+      "Prefer": `wait=${LONG_POLL_SECONDS}`
     };
     if (etag) headers["If-None-Match"] = etag;
+    if (this.aiAppId) headers[AI_APP_ID_REQUEST_HEADER] = this.aiAppId;
+    if (this.deviceHeaders) {
+      try {
+        for (const [k, v] of Object.entries(this.deviceHeaders())) {
+          if (k === HARNESS_REQUEST_HEADER || k === USER_ID_REQUEST_HEADER) headers[k] = v;
+        }
+      } catch (err) {
+        this.opts.log(`device identity headers error (ignored): ${String(err)}`);
+      }
+    }
+    const startedAt = Date.now();
     let resp;
     try {
       resp = await (0, import_undici3.fetch)(url2, {
         method: "GET",
         headers,
-        signal: AbortSignal.timeout(15e3)
+        signal: AbortSignal.timeout(etag ? (LONG_POLL_SECONDS + 10) * 1e3 : 15e3)
       });
     } catch (err) {
       this.opts.log(`Bundle poll network error: ${String(err)}`);
-      return;
+      return "failed";
     }
+    if (resp.status === 200 || resp.status === 304) this.readQuarantineHeader(resp);
+    const held = resp.headers.get("preference-applied") !== null;
     if (resp.status === 304) {
-      return;
+      return held && Date.now() - startedAt >= MIN_HELD_MS ? "held" : "plain";
     }
     if (resp.status === 503) {
-      this.opts.log("Bundle not ready (503 bundle_not_ready) \u2014 using last-good on disk");
-      return;
+      this.opts.log("Bundle not ready (503 bundle_not_ready), using last-good on disk");
+      return "failed";
     }
     if (!resp.ok) {
       this.opts.log(`Bundle poll HTTP ${resp.status}`);
-      return;
+      return "failed";
     }
     const newEtag = resp.headers.get("etag") ?? "";
     const newRevision = newEtag.replace(/^"(.*)"$/, "$1") || newEtag || Date.now().toString();
     if (this.currentRevision && newRevision === this.currentRevision) {
-      return;
+      return held ? "held" : "plain";
     }
     const bundleBytes = Buffer.from(await resp.arrayBuffer());
     const serverContentSha = resp.headers.get("x-bundle-sha256");
     if (serverContentSha) {
-      const actualSha = createHash2("sha256").update(bundleBytes).digest("hex");
+      const actualSha = createHash5("sha256").update(bundleBytes).digest("hex");
       if (actualSha !== serverContentSha) {
         this.opts.log(
           `Bundle integrity check FAILED: server claims sha256=${serverContentSha} but got ${actualSha}. Discarding download \u2014 keeping last-good on disk.`
         );
-        return;
+        return "failed";
       }
     }
     writeBundleCache(this.opts.tenant, {
@@ -58228,140 +59623,860 @@ var BundleSync = class {
       revision: newRevision
     }, this.opts.bundleCacheDir);
     this.currentRevision = newRevision;
+    this.rapid = Date.now() - this.activatedAt < RAPID_ACTIVATION_MS;
+    this.activatedAt = Date.now();
     setBundleRevision(newRevision);
     this.opts.log(`Bundle activated: revision=${newRevision} (${bundleBytes.length} bytes)`);
     const bundlePath = `${this.opts.bundleCacheDir}/${this.opts.tenant}/bundle.tar.gz`;
     this.opts.onActivate?.(bundlePath, newRevision);
+    return held ? "held" : "plain";
   }
 };
 
-// arbiter-core/src/bundle/opa-sidecar.ts
-var import_undici4 = __toESM(require_undici(), 1);
-import { spawn } from "node:child_process";
-import { writeFileSync as writeFileSync4, mkdtempSync as mkdtempSync3 } from "node:fs";
-import { join as join8 } from "node:path";
-import { homedir as homedir6, tmpdir } from "node:os";
-function resolveOpaBinary(override) {
-  if (override) return override;
-  if (process.env["ARBITER_OPA_PATH"]) return process.env["ARBITER_OPA_PATH"];
-  const local = join8(homedir6(), ".config", "arbiter", "bin", "opa");
-  return local;
-}
-function generateOpaConfig(bundlePath, port) {
-  return `
-services:
-  - name: arbiter-bundle-server
-    url: "http://127.0.0.1:${port + 1e3}"
+// arbiter-core/src/bundle/machine-opa.ts
+var import_undici5 = __toESM(require_undici(), 1);
+import { execFile } from "node:child_process";
+import { createHash as createHash6 } from "node:crypto";
+import { closeSync as closeSync5, constants as fsConstants5, existsSync as existsSync4, openSync as openSync5, readFileSync as readFileSync13, renameSync as renameSync6, statSync as statSync2, unlinkSync as unlinkSync6, writeSync as writeSync5 } from "node:fs";
+import { request } from "node:http";
+import { join as join15 } from "node:path";
 
-bundles:
-  arbiter:
-    service: arbiter-bundle-server
-    resource: /bundle.tar.gz
-    persist: true
-    polling:
-      min_delay_seconds: 10
-      max_delay_seconds: 20
-`.trim();
-}
-async function waitForHealth(port, maxWaitMs = 1e4) {
-  const deadline = Date.now() + maxWaitMs;
-  while (Date.now() < deadline) {
+// arbiter-core/src/decision/local-eval.ts
+var import_undici4 = __toESM(require_undici(), 1);
+var LocalOpaClient = class {
+  baseUrl;
+  timeoutMs;
+  dispatcher;
+  pinned;
+  constructor(opts) {
+    if (opts.socketPath !== void 0) {
+      this.baseUrl = "http://localhost";
+      this.dispatcher = new import_undici4.Agent({ connect: { socketPath: opts.socketPath } });
+    } else if (opts.baseUrl !== void 0) {
+      this.baseUrl = opts.baseUrl.replace(/\/$/, "");
+      this.dispatcher = void 0;
+    } else {
+      throw new TypeError("LocalOpaClient needs a socketPath or a baseUrl");
+    }
+    this.timeoutMs = opts.timeoutMs ?? 500;
+    this.pinned = opts.pinned;
+  }
+  /**
+   * Evaluate a Rego package/rule with the given input.
+   * Returns { available: false } when the sidecar is not reachable or the
+   * bundle is not yet loaded (OPA returns 404 for an unknown package).
+   */
+  async evalRule(regoPackage, regoRule, input2) {
+    const path = `${regoPackage.replace(/\./g, "/")}/${regoRule}`;
+    const url2 = `${this.baseUrl}/v1/data/${path}`;
+    let resp;
     try {
-      const resp = await (0, import_undici4.fetch)(`http://127.0.0.1:${port}/health`, {
-        signal: AbortSignal.timeout(1e3)
+      resp = await (0, import_undici4.fetch)(url2, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: input2 }),
+        signal: AbortSignal.timeout(this.timeoutMs),
+        ...this.dispatcher ? { dispatcher: this.dispatcher } : {}
       });
-      if (resp.ok) return true;
     } catch {
+      return { available: false };
     }
-    await new Promise((r) => setTimeout(r, 300));
+    if (resp.status === 404) {
+      return { available: false };
+    }
+    if (!resp.ok) {
+      return { available: false };
+    }
+    const data = await resp.json();
+    return { available: true, result: data.result };
   }
-  return false;
-}
-async function startOpaSidecar(opts = {}) {
-  const port = opts.opaPort ?? 8181;
-  const maxRestarts = opts.maxRestarts ?? 5;
-  const log2 = opts.log ?? ((msg) => console.log(`[opa-sidecar] ${msg}`));
-  const opaBin = resolveOpaBinary(opts.opaPath);
-  const tmpDir = mkdtempSync3(join8(tmpdir(), "arbiter-opa-"));
-  const configFile = join8(tmpDir, "opa-config.yaml");
-  const bundlePath = opts.bundlePath ?? "";
-  const args = [
-    "run",
-    "--server",
-    `--addr=127.0.0.1:${port}`,
-    "--log-level=error"
-  ];
-  if (bundlePath) {
-    args.push(bundlePath);
-  } else {
-    const cfgContent = generateOpaConfig("", port);
-    writeFileSync4(configFile, cfgContent, "utf8");
-    args.push("--config-file", configFile);
+  /**
+   * Health check — returns true when the OPA sidecar is up.
+   */
+  async isHealthy() {
+    try {
+      const resp = await (0, import_undici4.fetch)(`${this.baseUrl}/health`, {
+        method: "GET",
+        signal: AbortSignal.timeout(2e3),
+        ...this.dispatcher ? { dispatcher: this.dispatcher } : {}
+      });
+      return resp.ok;
+    } catch {
+      return false;
+    }
   }
-  let child = null;
-  let stopped = false;
-  let restarts = 0;
-  function spawnOpa() {
-    if (stopped) return;
-    log2(`Spawning OPA: ${opaBin} ${args.join(" ")}`);
-    child = spawn(opaBin, args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env }
-    });
-    child.stdout?.on("data", () => {
-    });
-    child.stderr?.on("data", (data) => {
-      const msg = data.toString().trim();
-      if (msg) log2(`opa stderr: ${msg}`);
-    });
-    child.on("exit", (code) => {
-      if (stopped) return;
-      restarts += 1;
-      if (restarts > maxRestarts) {
-        log2(`OPA exited (code=${String(code)}); max restarts reached \u2014 giving up`);
-        return;
-      }
-      const delayMs = Math.min(Math.pow(2, restarts) * 500, 3e4);
-      log2(`OPA exited (code=${String(code)}); restart ${restarts}/${maxRestarts} in ${delayMs}ms`);
-      setTimeout(spawnOpa, delayMs);
-    });
-    child.on("error", (err) => {
-      log2(`OPA spawn error: ${String(err)}`);
-    });
+};
+async function localEval(input2, client) {
+  const phase = input2.phase ? { phase: input2.phase } : {};
+  if (client.pinned && !await client.pinned().catch(() => false)) return { available: false };
+  const tierResult = await client.evalRule("langguard.scope_tier", "tier", {
+    tool: input2.tool,
+    tenant_id: input2.tenant_id,
+    ...phase
+  });
+  if (!tierResult.available) {
+    return { available: false };
   }
-  spawnOpa();
-  const healthy = await waitForHealth(port);
-  if (!healthy) {
-    log2(`OPA did not become healthy within 10s on port ${port}`);
-  } else {
-    log2(`OPA sidecar ready on port ${port}`);
-  }
+  const rawTier = tierResult.result;
+  const scopeTier = isRiskTier(rawTier) ? rawTier : null;
+  const violationsInput = {
+    tool: input2.tool,
+    tenant_id: input2.tenant_id,
+    session_actions: input2.session_actions ?? [],
+    ...phase,
+    ...input2.raw_tool ? { raw_tool: input2.raw_tool } : {},
+    ...input2.agent_name ? { agent_name: input2.agent_name } : {},
+    ...input2.ai_app_id ? { ai_app_id: input2.ai_app_id } : {}
+  };
+  const violationsResult = await client.evalRule(
+    "langguard.violations",
+    "result",
+    violationsInput
+  );
+  const violations = violationsResult.available ? Array.isArray(violationsResult.result) ? violationsResult.result : [] : [];
+  const approvalResult = await client.evalRule(
+    "langguard.violations",
+    "approval_status",
+    violationsInput
+  );
+  const approvalAuthoritative = approvalResult.available && isApprovalStatus(approvalResult.result);
+  const approvalStatus = approvalAuthoritative ? approvalResult.result : "unresolved";
+  const modeResult = await client.evalRule(
+    "langguard.violations",
+    "effective_mode",
+    violationsInput
+  );
+  const modeAuthoritative = modeResult.available && (modeResult.result === "enforce" || modeResult.result === "permissive");
+  const mode = modeAuthoritative && modeResult.result === "permissive" ? "permissive" : "enforce";
+  const remoteOnlyResult = await client.evalRule(
+    "langguard.violations",
+    "remote_only_classes_active",
+    violationsInput
+  );
+  const remoteOnlyClassesActive = !(remoteOnlyResult.available && remoteOnlyResult.result === false);
+  const windowResult = await client.evalRule(
+    "langguard.violations",
+    "pii_scan_max_chars",
+    violationsInput
+  );
+  const piiScanMaxChars = windowResult.available && typeof windowResult.result === "number" && Number.isFinite(windowResult.result) && windowResult.result > 0 ? windowResult.result : PII_SCAN_MAX_CHARS_FALLBACK;
+  if (client.pinned && !await client.pinned().catch(() => false)) return { available: false };
   return {
-    port,
-    stop() {
-      stopped = true;
-      child?.kill("SIGTERM");
-    }
+    available: true,
+    violations,
+    scopeTier,
+    approvalStatus,
+    approvalAuthoritative,
+    mode,
+    modeAuthoritative,
+    remoteOnlyClassesActive,
+    piiScanMaxChars
   };
 }
+function isRiskTier(value) {
+  return value === "low" || value === "medium" || value === "high" || value === "critical";
+}
+function isApprovalStatus(value) {
+  return value === "approved" || value === "not_approved" || value === "banned" || value === "unresolved";
+}
 
-// arbiter-core/src/lifecycle/lockfile.ts
-import { readFileSync as readFileSync7, unlinkSync } from "node:fs";
-import { join as join9 } from "node:path";
-import { homedir as homedir7 } from "node:os";
-function defaultLockfilePath() {
-  return join9(homedir7(), ".config", "arbiter", "daemon.json");
+// arbiter-core/src/contract/opa-launch.ts
+var OPA_BEARER_ENV = "ARBITER_OPA_BEARER";
+var OPA_PUBKEY_ENV = "ARBITER_OPA_PUBKEY";
+var OPA_SERVICE = "langguard";
+var OPA_BUNDLE = "arbiter";
+var OPA_KEY_NAME = "langguard";
+var OPA_SIGNING_ALGORITHM = "RS256";
+var OPA_KEY_LABEL = "arbiter_key";
+var OPA_LONG_POLL_SECONDS = 20;
+var OPA_POLL_MIN_SECONDS = 30;
+var OPA_POLL_MAX_SECONDS = 60;
+var OPA_LAUNCH_VERSION = "v2";
+var OPA_LAUNCH_LABEL = "arbiter_launch";
+var OPA_BUNDLE_PROFILE_HEADER = "X-Arbiter-Bundle-Profile";
+var OPA_BUNDLE_PROFILE_LOCAL = "local";
+var SOCKET_PATH_LIMIT2 = 100;
+var K = new Uint32Array([
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+]);
+var rotr = (x, n) => x >>> n | x << 32 - n;
+function sha256Hex2(text) {
+  const bytes = new TextEncoder().encode(text);
+  const total = bytes.length + 9 + 63 & ~63;
+  const block = new Uint8Array(total);
+  block.set(bytes);
+  block[bytes.length] = 128;
+  const view = new DataView(block.buffer);
+  view.setUint32(total - 8, Math.floor(bytes.length * 8 / 4294967296));
+  view.setUint32(total - 4, bytes.length * 8 >>> 0);
+  const h = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]);
+  const w = new Uint32Array(64);
+  for (let at = 0; at < total; at += 64) {
+    for (let i = 0; i < 16; i++) w[i] = view.getUint32(at + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const a2 = w[i - 15];
+      const b2 = w[i - 2];
+      w[i] = w[i - 16] + (rotr(a2, 7) ^ rotr(a2, 18) ^ a2 >>> 3) + w[i - 7] + (rotr(b2, 17) ^ rotr(b2, 19) ^ b2 >>> 10) >>> 0;
+    }
+    let [a, b, c, d, e, f, g, hh] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + (e & f ^ ~e & g) + K[i] + w[i] >>> 0;
+      const t2 = (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + (a & b ^ a & c ^ b & c) >>> 0;
+      hh = g;
+      g = f;
+      f = e;
+      e = d + t1 >>> 0;
+      d = c;
+      c = b;
+      b = a;
+      a = t1 + t2 >>> 0;
+    }
+    [a, b, c, d, e, f, g, hh].forEach((v, i) => {
+      h[i] = h[i] + v >>> 0;
+    });
+  }
+  return [...h].map((v) => v.toString(16).padStart(8, "0")).join("");
 }
-function writeLockfile(data, filePath = defaultLockfilePath()) {
-  const content = JSON.stringify(data, null, 2);
-  writeOwnerOnly(filePath, content);
+var trimmed = (host2) => host2.trim().replace(/\/+$/, "").toLowerCase();
+var hostHash = (host2) => sha256Hex2(trimmed(host2)).slice(0, 16);
+var opaDir = (home) => `${home.replace(/\/+$/, "")}/.config/arbiter/opa`;
+var opaSocketPath = (home, host2) => `${opaDir(home)}/${hostHash(host2)}.sock`;
+var opaLogPath = (home, host2) => `${opaDir(home)}/${hostHash(host2)}.log`;
+var opaPersistDir = (home, host2) => `${opaDir(home)}/${hostHash(host2)}.bundles`;
+var opaStartLockPath = (home, host2) => `${opaDir(home)}/${hostHash(host2)}.start`;
+var socketPathFits = (path) => new TextEncoder().encode(path).length < SOCKET_PATH_LIMIT2;
+var opaKeyFingerprint = (publicKeyPem) => `fp-${sha256Hex2(publicKeyPem.trim()).slice(0, 16)}`;
+var OPA_AUTHZ_INSTANCE_LABEL = "arbiter_instance";
+var OPA_AUTHZ_DIGEST_LABEL = "arbiter_authz";
+var envRef = (name) => `\${${name}}`;
+function opaLaunchArgs(options) {
+  const host2 = options.host.trim().replace(/\/+$/, "");
+  const bundle = `bundles.${OPA_BUNDLE}`;
+  const service = `services.${OPA_SERVICE}`;
+  const sets = [
+    `${service}.url=${host2}/api/arbiter`,
+    `${service}.credentials.bearer.token=${envRef(options.bearerEnv)}`,
+    `${service}.headers.${OPA_BUNDLE_PROFILE_HEADER}=${OPA_BUNDLE_PROFILE_LOCAL}`,
+    `${bundle}.service=${OPA_SERVICE}`,
+    `${bundle}.resource=bundle`,
+    `${bundle}.persist=true`,
+    `${bundle}.polling.long_polling_timeout_seconds=${OPA_LONG_POLL_SECONDS}`,
+    `${bundle}.polling.min_delay_seconds=${OPA_POLL_MIN_SECONDS}`,
+    `${bundle}.polling.max_delay_seconds=${OPA_POLL_MAX_SECONDS}`,
+    `persistence_directory=${options.persistDir}`,
+    `labels.${OPA_AUTHZ_INSTANCE_LABEL}=${options.authz.instance}`,
+    `labels.${OPA_AUTHZ_DIGEST_LABEL}=${options.authz.digest}`,
+    `labels.${OPA_LAUNCH_LABEL}=${OPA_LAUNCH_VERSION}`
+  ];
+  if (options.signing !== void 0) {
+    sets.push(
+      `keys.${OPA_KEY_NAME}.key=${envRef(options.signing.keyEnv)}`,
+      `keys.${OPA_KEY_NAME}.algorithm=${OPA_SIGNING_ALGORITHM}`,
+      `${bundle}.signing.keyid=${OPA_KEY_NAME}`
+    );
+    if (options.signing.scope !== void 0) sets.push(`${bundle}.signing.scope=${options.signing.scope}`);
+    if (options.signing.fingerprint !== void 0) sets.push(`labels.${OPA_KEY_LABEL}=${options.signing.fingerprint}`);
+  }
+  return [
+    "run",
+    "--server",
+    "--addr",
+    `unix://${options.socketPath}`,
+    "--unix-socket-perm",
+    "700",
+    "--authorization=basic",
+    "--log-level",
+    "error",
+    "--log-format",
+    "json",
+    ...sets.flatMap((set3) => ["--set", set3]),
+    options.authz.path
+  ];
 }
-function removeLockfile(filePath = defaultLockfilePath()) {
+
+// arbiter-core/src/bundle/machine-opa-connect.ts
+var PROBE_MS2 = 300;
+var START_WAIT_MS = 1e4;
+var BUNDLE_WAIT_MS = 3e3;
+var LOCK_STALE_MS2 = 2e4;
+var POLL_MS2 = 200;
+var BUNDLE_PERIOD_MS = 6e4;
+var STUCK_MS = 3 * BUNDLE_PERIOD_MS;
+var DOWNLOAD_MS = 12e4;
+var SCOPE_SHAPE = /^[A-Za-z0-9._-]{1,128}$/;
+var TOKEN_SHAPE = /^[A-Za-z0-9_-]+$/;
+var ASSETS = {
+  "Darwin arm64": "opa_darwin_arm64",
+  "Darwin x86_64": "opa_darwin_amd64",
+  "Linux x86_64": "opa_linux_amd64",
+  "Linux aarch64": "opa_linux_arm64_static",
+  "Linux arm64": "opa_linux_arm64_static"
+};
+var isPublicKey = (value) => typeof value === "string" && value.includes("PUBLIC KEY");
+function heldSigningOf(stored, host2) {
+  const { host: from, scope, key } = typeof stored === "object" && stored !== null ? stored : {};
+  return from === host2 && typeof scope === "string" && SCOPE_SHAPE.test(scope) && isPublicKey(key) ? { key, scope } : null;
+}
+var regexEscape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+var failed = (cause) => ({ local: "off-failed", cause });
+async function within(io, work, ms) {
+  const stop = new AbortController();
+  const late = io.sleep(ms, stop.signal).then(() => "late", () => "late");
   try {
-    unlinkSync(filePath);
-  } catch (err) {
-    const code = err.code;
-    if (code !== "ENOENT") throw err;
+    return await Promise.race([work.then((value) => ({ value }), () => "failed"), late]);
+  } finally {
+    stop.abort();
+  }
+}
+var settle2 = (io, ms) => io.sleep(ms, new AbortController().signal).catch(() => void 0);
+async function ran(io, argv2, init) {
+  try {
+    return await io.run(argv2, init);
+  } catch {
+    return null;
+  }
+}
+async function probeOpa(io, socketPath) {
+  const answer = await within(io, io.fetch("http://localhost/health?bundles", { socketPath }), PROBE_MS2);
+  if (answer === "late") return "busy";
+  if (answer === "failed") return "down";
+  return answer.value.status === 200 ? "ready" : "loading";
+}
+async function opaRevision(io, socketPath) {
+  const answer = await within(io, io.fetch("http://localhost/v1/data/system/bundles/arbiter/manifest/revision", { socketPath }), PROBE_MS2);
+  if (answer === "late" || answer === "failed" || answer.value.status !== 200) return null;
+  try {
+    const result = JSON.parse(answer.value.text).result;
+    return typeof result === "string" ? result : null;
+  } catch {
+    return null;
+  }
+}
+async function sha256Of(io, path) {
+  for (const argv2 of [["shasum", "-a", "256", path], ["sha256sum", path]]) {
+    const out = await ran(io, argv2);
+    const hash2 = out?.exitCode === 0 ? /^([0-9a-f]{64})\b/.exec(out.stdout.trim())?.[1] : void 0;
+    if (hash2 !== void 0) return hash2;
+  }
+  return null;
+}
+async function provision(io, setup, asset, expected, target) {
+  const base = (setup.checksums.downloadBaseUrl ?? "https://openpolicyagent.org/downloads").replace(/\/+$/, "");
+  const temp = `${target}.${Math.random().toString(36).slice(2)}.tmp`;
+  const folder = target.slice(0, target.lastIndexOf("/"));
+  const got = await ran(io, ["/bin/sh", "-c", 'mkdir -p "$1" && curl -fsSL -o "$2" "$3"', "sh", folder, temp, `${base}/v${setup.checksums.version}/${asset}`], { timeoutMs: DOWNLOAD_MS });
+  if (got?.exitCode !== 0) {
+    await ran(io, ["rm", "-f", temp]);
+    return { cause: "download-failed" };
+  }
+  if (await sha256Of(io, temp) !== expected) {
+    await ran(io, ["rm", "-f", temp]);
+    return { cause: "sha-mismatch" };
+  }
+  const placed = await ran(io, ["/bin/sh", "-c", 'chmod 755 "$1" && mv -f "$1" "$2"', "sh", temp, target]);
+  if (placed?.exitCode !== 0) {
+    await ran(io, ["rm", "-f", temp]);
+    return { cause: "download-failed" };
+  }
+  return { path: target };
+}
+async function verifiedBinary(io, setup, platform) {
+  const asset = ASSETS[platform];
+  const expected = asset === void 0 ? void 0 : setup.checksums.assets[asset];
+  if (asset === void 0 || expected === void 0) return { cause: "binary-missing" };
+  const path = `${setup.home.replace(/\/+$/, "")}/.config/arbiter/bin/opa`;
+  const present = (await ran(io, ["test", "-f", path]))?.exitCode === 0;
+  if (present && await sha256Of(io, path) === expected) return { path };
+  return provision(io, setup, asset, expected, path);
+}
+async function signingFor(io, setup) {
+  const unreachable = () => ({ signing: setup.held ?? "unavailable" });
+  const reply = await within(io, io.fetch(`${setup.host}/api/arbiter/bundle-key`, { headers: { Authorization: `Bearer ${setup.token}` } }), START_WAIT_MS);
+  if (reply === "late" || reply === "failed") return unreachable();
+  if (reply.value.status === 404) return { signing: null, ...setup.held === null ? {} : { hold: null } };
+  if (reply.value.status !== 200) return unreachable();
+  try {
+    const body = JSON.parse(reply.value.text);
+    const scope = typeof body.scope === "string" && SCOPE_SHAPE.test(body.scope) ? body.scope : void 0;
+    const key = isPublicKey(body.public_key_pem) ? body.public_key_pem : void 0;
+    if (key === void 0 || scope === void 0) return unreachable();
+    return { signing: { key, scope }, ...setup.held?.key === key && setup.held.scope === scope ? {} : { hold: { key, scope } } };
+  } catch {
+    return unreachable();
+  }
+}
+var known = (key, value) => typeof value === "string" && value !== "" ? { [key]: value } : {};
+async function observedFacts(io, socketPath) {
+  const answer = await within(io, io.fetch("http://localhost/v1/data/system/authz/attest", { socketPath }), PROBE_MS2);
+  if (answer === "late" || answer === "failed" || answer.value.status !== 200) return null;
+  try {
+    const result = JSON.parse(answer.value.text).result;
+    if (result === void 0 || result === null || typeof result !== "object") return null;
+    return {
+      authz: result.authz === true,
+      ...known("authzDigest", result.authz_digest),
+      ...known("keyid", result.keyid),
+      ...known("scope", result.scope),
+      ...known("fingerprint", result.fingerprint),
+      ...known("instance", result.instance),
+      ...known("launch", result.launch)
+    };
+  } catch {
+    return null;
+  }
+}
+async function refusesPolicyList(io, socketPath) {
+  const answer = await within(io, io.fetch("http://localhost/v1/policies", { socketPath }), PROBE_MS2);
+  return answer !== "late" && answer !== "failed" && (answer.value.status === 401 || answer.value.status === 403);
+}
+var lockedLike = (observed, authz) => observed.authz && observed.authzDigest === authz.digest && observed.launch === OPA_LAUNCH_VERSION;
+function startedLike(observed, signing) {
+  if (signing === null) return observed.keyid === void 0;
+  return observed.keyid === OPA_KEY_NAME && observed.scope === signing.scope && observed.fingerprint === opaKeyFingerprint(signing.key);
+}
+var OWN_FOLDER = '[ -e "$1" ] || [ -L "$1" ] || mkdir -p -m 700 "$1"; [ ! -L "$1" ] && [ -d "$1" ] && [ -O "$1" ] || exit 1; case "$(ls -ldn "$1")" in d???------*) exit 0 ;; esac; exit 1';
+async function ownFolder(io, home) {
+  const out = await ran(io, ["/bin/sh", "-c", OWN_FOLDER, "sh", opaDir(home)]);
+  return out?.exitCode === 0;
+}
+async function waitFor(io, socketPath, budgetMs, until) {
+  let waited = 0;
+  let last = await probeOpa(io, socketPath);
+  while (!until(last) && waited < budgetMs) {
+    await settle2(io, POLL_MS2);
+    waited += POLL_MS2;
+    last = await probeOpa(io, socketPath);
+  }
+  return last;
+}
+var outcomeOf = (probe, started, signedBy = null) => probe === "ready" ? { local: "on", started, signed: signedBy !== null, ...signedBy === null ? {} : { instance: signedBy } } : probe === "loading" || probe === "busy" ? { local: "starting", started } : failed("bind-failed");
+var nonce = () => Math.random().toString(36).slice(2);
+async function breakStale(io, lock) {
+  const made = await io.stat(lock).catch(() => null);
+  if (made === null || io.now() - made.mtimeMs <= LOCK_STALE_MS2) return false;
+  const moved = `${lock}.${nonce()}`;
+  if ((await ran(io, ["mv", lock, moved]))?.exitCode !== 0) return false;
+  const aged = await io.stat(moved).catch(() => null);
+  const stale = aged !== null && io.now() - aged.mtimeMs > LOCK_STALE_MS2;
+  if (!stale) await ran(io, ["/bin/sh", "-c", '[ -e "$2" ] || mv "$1" "$2"', "sh", moved, lock]);
+  await ran(io, ["rmdir", moved]);
+  return stale;
+}
+async function takeLock(io, lock, socketPath) {
+  let waited = 0;
+  let broke2 = false;
+  for (; ; ) {
+    if ((await ran(io, ["mkdir", lock]))?.exitCode === 0) return "held";
+    if (await probeOpa(io, socketPath) !== "down") return "alive";
+    if (!broke2 && await breakStale(io, lock)) {
+      broke2 = true;
+      continue;
+    }
+    if (waited >= START_WAIT_MS) return "timeout";
+    await settle2(io, POLL_MS2);
+    waited += POLL_MS2;
+  }
+}
+var newInstance = () => {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+async function startOpa(io, setup, authz, binary2, socketPath, signing) {
+  const args = opaLaunchArgs({
+    host: setup.host,
+    socketPath,
+    persistDir: opaPersistDir(setup.home, setup.host),
+    bearerEnv: OPA_BEARER_ENV,
+    authz: { ...authz, instance: newInstance() },
+    ...signing === null ? {} : { signing: { keyEnv: OPA_PUBKEY_ENV, ...signing.scope === void 0 ? {} : { scope: signing.scope }, fingerprint: opaKeyFingerprint(signing.key) } }
+  });
+  const env = { [OPA_BEARER_ENV]: setup.token, ARBITER_OPA_LOG: opaLogPath(setup.home, setup.host) };
+  if (signing !== null) env[OPA_PUBKEY_ENV] = signing.key;
+  await ran(io, ["rm", "-f", socketPath]);
+  const launched = await ran(io, ["/bin/sh", "-c", 'set -m; nohup "$0" "$@" >>"$ARBITER_OPA_LOG" 2>&1 </dev/null &', binary2, ...args], { env });
+  if (launched?.exitCode !== 0) return failed("spawn-failed");
+  const alive = await waitFor(io, socketPath, START_WAIT_MS, (probe) => probe !== "down");
+  if (alive === "down") return failed(await opaProcessAlive(io, socketPath) ? "bind-failed" : "spawn-failed");
+  const loaded = alive === "ready" ? alive : await waitFor(io, socketPath, BUNDLE_WAIT_MS, (probe) => probe === "ready");
+  const observed = signing === null || loaded !== "ready" ? null : await observedFacts(io, socketPath);
+  return outcomeOf(loaded, true, observed?.instance ?? null);
+}
+var processPattern = (socketPath) => `unix://${regexEscape(socketPath)}( |$)`;
+async function opaProcessAlive(io, socketPath) {
+  return (await ran(io, ["pgrep", "-f", "--", processPattern(socketPath)]))?.exitCode === 0;
+}
+async function bundleStuck(io, socketPath) {
+  const made = await io.stat(socketPath).catch(() => null);
+  return made !== null && io.now() - made.mtimeMs > STUCK_MS;
+}
+async function attachable(io, socketPath, authz, route) {
+  const probe = await probeOpa(io, socketPath);
+  if (probe === "down") return null;
+  if (probe === "busy") return await opaProcessAlive(io, socketPath) ? { local: "starting", started: false } : null;
+  if (probe === "loading" && await bundleStuck(io, socketPath)) return null;
+  const observed = await observedFacts(io, socketPath);
+  if (observed === null || !lockedLike(observed, authz) || !await refusesPolicyList(io, socketPath)) return null;
+  const { signing } = await route();
+  let signedBy = null;
+  if (signing !== "unavailable") {
+    if (!startedLike(observed, signing)) return null;
+    signedBy = signing !== null ? observed.instance ?? null : null;
+  }
+  return outcomeOf(probe, false, signedBy);
+}
+async function connectOpa(io, setup) {
+  if (setup.host === "" || setup.token === "" || setup.home === "" || !TOKEN_SHAPE.test(setup.token)) return failed("not-configured");
+  const platform = await io.run(["uname", "-sm"]).then((out) => out.exitCode === 0 ? out.stdout.trim() : null, () => "off-surface");
+  if (platform === "off-surface") return { local: "off-surface" };
+  if (platform === null) return failed("spawn-failed");
+  const socketPath = opaSocketPath(setup.home, setup.host);
+  if (!socketPathFits(socketPath)) return failed("bind-failed");
+  const { authz } = setup;
+  if (authz === null) return failed("spawn-failed");
+  let asked = null;
+  const route = () => {
+    asked ??= signingFor(io, setup).then((answer) => {
+      if (answer.hold !== void 0) setup.hold(answer.hold);
+      return answer;
+    });
+    return asked;
+  };
+  if (!await ownFolder(io, setup.home)) return failed("folder-unsafe");
+  const found = await attachable(io, socketPath, authz, route);
+  if (found !== null) return found;
+  const binary2 = await verifiedBinary(io, setup, platform);
+  if ("cause" in binary2) return failed(binary2.cause);
+  const { signing } = await route();
+  if (signing === "unavailable") return failed("key-unavailable");
+  const lock = opaStartLockPath(setup.home, setup.host);
+  const took = await takeLock(io, lock, socketPath);
+  if (took === "timeout") return { local: "starting", started: false };
+  if (took === "alive") return outcomeOf(await probeOpa(io, socketPath), false);
+  try {
+    const now = await attachable(io, socketPath, authz, route);
+    if (now !== null) return now;
+    await ran(io, ["pkill", "-f", "--", processPattern(socketPath)]);
+    return await startOpa(io, setup, authz, binary2.path, socketPath, signing);
+  } finally {
+    await ran(io, ["rmdir", lock]);
+  }
+}
+
+// arbiter-core/src/bundle/machine-opa.ts
+function nodeOpaIo() {
+  return {
+    run: (argv2, init) => new Promise((resolve, reject) => {
+      const [file2, ...args] = argv2;
+      execFile(file2, args, { env: { ...process.env, ...init?.env ?? {} }, timeout: init?.timeoutMs ?? 3e4 }, (error62, stdout, stderr) => {
+        if (error62 && typeof error62.code !== "number") return reject(error62);
+        resolve({ exitCode: typeof error62?.code === "number" ? error62.code : 0, stdout, stderr });
+      });
+    }),
+    // The socket through node:http; the key route through undici, so the proxy dispatcher of the daemon applies.
+    fetch: async (url2, init) => {
+      if (init?.socketPath === void 0) {
+        const res = await (0, import_undici5.fetch)(url2, { headers: init?.headers ?? {} });
+        return { status: res.status, ok: res.ok, text: await res.text() };
+      }
+      const socketPath = init.socketPath;
+      return new Promise((resolve, reject) => {
+        const u = new URL(url2);
+        const req = request({ socketPath, path: u.pathname + u.search, headers: init.headers ?? {}, method: "GET" }, (res) => {
+          let text = "";
+          res.on("data", (c) => text += c);
+          res.on("end", () => resolve({ status: res.statusCode ?? 0, ok: (res.statusCode ?? 0) < 300, text }));
+        });
+        req.on("error", reject);
+        req.end();
+      });
+    },
+    stat: async (path) => existsSync4(path) ? { mtimeMs: statSync2(path).mtimeMs } : null,
+    sleep: (ms, signal) => new Promise((resolve, reject) => {
+      const timer = setTimeout(resolve, ms);
+      signal.addEventListener("abort", () => {
+        clearTimeout(timer);
+        reject(new Error("aborted"));
+      });
+    }),
+    now: () => Date.now()
+  };
+}
+function readSigning(file2, host2) {
+  try {
+    return heldSigningOf(JSON.parse(readFileSync13(file2, "utf8")), host2);
+  } catch {
+    return null;
+  }
+}
+function writeSigning(file2, host2, held) {
+  try {
+    if (held === null) {
+      unlinkSync6(file2);
+      return;
+    }
+    const temp = `${file2}.${process.pid}.tmp`;
+    const fd = openSync5(temp, fsConstants5.O_CREAT | fsConstants5.O_TRUNC | fsConstants5.O_WRONLY | (fsConstants5.O_NOFOLLOW ?? 0), 384);
+    try {
+      writeSync5(fd, JSON.stringify({ host: host2, ...held }));
+    } finally {
+      closeSync5(fd);
+    }
+    renameSync6(temp, file2);
+  } catch {
+  }
+}
+var MachineOpa = class {
+  opts;
+  io;
+  socketPath;
+  outcome = null;
+  connecting = null;
+  timer;
+  local;
+  constructor(opts) {
+    this.opts = opts;
+    this.io = opts.io ?? nodeOpaIo();
+    this.socketPath = opaSocketPath(opts.home, opts.host);
+  }
+  start() {
+    void this.connect();
+    this.timer = setInterval(() => {
+      if (!this.signedOn()) void this.connect();
+    }, this.opts.retryMs ?? 6e4);
+    this.timer.unref?.();
+  }
+  stop() {
+    clearInterval(this.timer);
+  }
+  connect() {
+    this.connecting ??= this.connectOnce().finally(() => {
+      this.connecting = null;
+    });
+    return this.connecting;
+  }
+  async signingKnown(held) {
+    if (held !== null) return true;
+    try {
+      const answer = await this.io.fetch(`${this.opts.host.replace(/\/+$/, "")}/api/arbiter/bundle-key`, { headers: { Authorization: `Bearer ${this.opts.token}` } });
+      return answer.status === 200;
+    } catch {
+      return false;
+    }
+  }
+  async connectOnce() {
+    const held = readSigning(this.opts.signingFile, this.opts.host);
+    if (!await this.signingKnown(held)) {
+      this.outcome = { local: "off-failed", cause: "key-unavailable" };
+      return;
+    }
+    let authz = null;
+    try {
+      authz = { path: this.opts.authzPath, digest: createHash6("sha256").update(readFileSync13(this.opts.authzPath)).digest("hex") };
+    } catch {
+    }
+    const outcome = await connectOpa(this.io, {
+      host: this.opts.host,
+      home: this.opts.home,
+      token: this.opts.token,
+      authz,
+      checksums: this.opts.checksums,
+      held,
+      hold: (held2) => writeSigning(this.opts.signingFile, this.opts.host, held2)
+    }).catch(() => ({ local: "off-failed", cause: "spawn-failed" }));
+    this.outcome = outcome;
+    this.opts.log?.(
+      `[arbiter] {"event":"machine_opa","local":"${outcome.local}","signed":${outcome.signed === true}${outcome.cause ? `,"cause":"${outcome.cause}"` : ""}}`
+    );
+  }
+  signedOn() {
+    return this.outcome?.local === "on" && this.outcome.signed === true && typeof this.outcome.instance === "string";
+  }
+  posture() {
+    const local = this.outcome?.local;
+    return { present: local === "on" || local === "starting", bundleSigned: this.signedOn() };
+  }
+  client() {
+    if (!this.signedOn()) return void 0;
+    const instance = this.outcome?.instance;
+    if (this.local?.instance !== instance) {
+      this.local = { instance, client: new LocalOpaClient({ socketPath: this.socketPath, pinned: () => this.pinned(instance) }) };
+    }
+    return this.local.client;
+  }
+  async pinned(instance) {
+    const expected = this.opts.expectedRevision();
+    if (expected === null) return false;
+    const [revision, seen] = await Promise.all([opaRevision(this.io, this.socketPath), this.instanceOnSocket()]);
+    if (seen !== instance) {
+      this.outcome = null;
+      void this.connect();
+      return false;
+    }
+    return revision === expected;
+  }
+  async instanceOnSocket() {
+    try {
+      const answer = await this.io.fetch("http://localhost/v1/data/system/authz/instance", { socketPath: this.socketPath });
+      const result = answer.status === 200 ? JSON.parse(answer.text).result : void 0;
+      return typeof result === "string" ? result : null;
+    } catch {
+      return null;
+    }
+  }
+};
+function pluginOpaAssets(opaFolder) {
+  try {
+    const checksums = JSON.parse(readFileSync13(join15(opaFolder, "opa-checksums.json"), "utf8"));
+    const authzPath = join15(opaFolder, "system-authz.rego");
+    if (!existsSync4(authzPath)) return null;
+    return { authzPath, checksums };
+  } catch {
+    return null;
+  }
+}
+var signingFileIn = (runDir) => join15(runDir, "opa-signing.json");
+
+// arbiter-core/src/bundle/screen-from-bundle.ts
+import { gunzipSync } from "node:zlib";
+import { readdirSync } from "node:fs";
+import { join as join16 } from "node:path";
+function untarEntry(tar, wantName) {
+  let pos = 0;
+  while (pos + 512 <= tar.length) {
+    const nameEnd = tar.subarray(pos, pos + 100).indexOf(0);
+    const name = tar.toString("utf8", pos, pos + (nameEnd === -1 ? 100 : nameEnd));
+    if (name === "") break;
+    const size = parseInt(
+      tar.toString("ascii", pos + 124, pos + 136).replace(/\0.*$/, "").trim(),
+      8
+    );
+    if (Number.isNaN(size)) break;
+    if (name === wantName) {
+      return tar.subarray(pos + 512, pos + 512 + size);
+    }
+    pos += 512 + Math.ceil(size / 512) * 512;
+  }
+  return null;
+}
+var RISK_TIERS = /* @__PURE__ */ new Set(["low", "medium", "high", "critical"]);
+function strArray(v) {
+  return Array.isArray(v) ? v.filter((s) => typeof s === "string") : [];
+}
+function screenFromBundleCache(opts = {}) {
+  const baseDir = opts.baseDir ?? defaultBundleBaseDir();
+  let tenant = opts.tenant;
+  if (!tenant) {
+    const dirs = readdirSync(baseDir, { withFileTypes: true }).filter((d) => d.isDirectory() && !d.name.startsWith(".")).map((d) => d.name);
+    if (dirs.length !== 1) {
+      throw new Error(
+        `screen-from-bundle: expected exactly one tenant cache dir under ${baseDir}, found ${dirs.length}`
+      );
+    }
+    tenant = dirs[0];
+  }
+  const cache = readBundleCache(tenant, baseDir);
+  if (!cache) {
+    throw new Error(`screen-from-bundle: no cached bundle for tenant at ${join16(baseDir, tenant)}`);
+  }
+  const tar = gunzipSync(cache.bundleBytes);
+  const dataBytes = untarEntry(tar, "data.json");
+  if (!dataBytes) {
+    throw new Error("screen-from-bundle: bundle has no data.json");
+  }
+  const data = JSON.parse(dataBytes.toString("utf8"));
+  const screen = data.langguard?.screen;
+  if (!screen || typeof screen !== "object") {
+    throw new Error("screen-from-bundle: bundle data has no langguard.screen (older server?)");
+  }
+  const posture = screen.posture && typeof screen.posture === "object" ? screen.posture : {};
+  const rawTier = posture.scope_default_tier;
+  const scopeDefaultTier = typeof rawTier === "string" && RISK_TIERS.has(rawTier) ? rawTier : "medium";
+  return {
+    bundle_revision: cache.revision,
+    banned: strArray(screen.banned),
+    requires_ask: strArray(screen.requires_ask),
+    posture: {
+      compliance_regimes: strArray(posture.compliance_regimes),
+      enforce_not_approved: posture.enforce_not_approved === true,
+      scope_default_tier: scopeDefaultTier
+    },
+    guardrails: strArray(screen.guardrails)
+  };
+}
+function cachedManifestRevision(tenant, baseDir = defaultBundleBaseDir()) {
+  try {
+    const cache = readBundleCache(tenant, baseDir);
+    if (!cache) return null;
+    const manifest = untarEntry(gunzipSync(cache.bundleBytes), ".manifest");
+    if (!manifest) return null;
+    const revision = JSON.parse(manifest.toString("utf8")).revision;
+    return typeof revision === "string" && revision !== "" ? revision : null;
+  } catch {
+    return null;
   }
 }
 
@@ -58372,41 +60487,38 @@ var throwingRegisterHooks = () => {
   );
 };
 function daemonStatePath(dataDir2) {
-  return join10(dataDir2, "daemon-state.json");
+  return join17(dataDir2, "daemon-state.json");
 }
 function writeDaemonState(dataDir2, state2) {
-  mkdirSync4(dataDir2, { recursive: true });
-  const tmpDir = mkdtempSync4(join10(dataDir2, ".arbiter-state-tmp-"));
-  const tmpFile = join10(tmpDir, "daemon-state.json");
-  writeFileSync5(tmpFile, JSON.stringify(state2, null, 2), "utf8");
-  renameSync3(tmpFile, daemonStatePath(dataDir2));
+  mkdirSync6(dataDir2, { recursive: true });
+  const tmpDir = mkdtempSync4(join17(dataDir2, ".arbiter-state-tmp-"));
+  const tmpFile = join17(tmpDir, "daemon-state.json");
+  writeFileSync5(tmpFile, JSON.stringify(state2, null, 2), { encoding: "utf8", mode: 384 });
+  renameSync7(tmpFile, daemonStatePath(dataDir2));
   try {
-    rmSync2(tmpDir, { recursive: true, force: true });
+    rmSync6(tmpDir, { recursive: true, force: true });
   } catch {
   }
 }
-var ARBD_BEARER_RE = /^arbd_[0-9a-f]{64}$/;
 async function assembleMonitor(opts) {
   const log2 = opts.log ?? (() => {
   });
   const env = opts.env ?? process.env;
   const deps = {
-    ensureOpaBinary: opts.deps?.ensureOpaBinary ?? (async () => null),
     startDaemon: opts.deps?.startDaemon ?? startDaemon,
-    startOpaSidecar: opts.deps?.startOpaSidecar ?? startOpaSidecar,
     registerArbiterClaudeHooks: opts.deps?.registerArbiterClaudeHooks ?? throwingRegisterHooks,
     makeBundleSync: opts.deps?.makeBundleSync ?? ((o) => new BundleSync(o)),
     writeState: opts.deps?.writeState ?? writeDaemonState,
     loadConfig: opts.deps?.loadConfig ?? loadConfig,
-    // Default lockfile path honors the ARBITER_LOCKFILE env seam the shims already read
-    // (tests / parallel installs); production leaves it unset → ~/.config/arbiter/daemon.json.
-    writeLockfile: opts.deps?.writeLockfile ?? ((d) => writeLockfile(d, (opts.env ?? process.env)["ARBITER_LOCKFILE"] ?? void 0)),
-    removeLockfile: opts.deps?.removeLockfile ?? (() => removeLockfile((opts.env ?? process.env)["ARBITER_LOCKFILE"] ?? void 0)),
-    loadOrCreateBearer: opts.deps?.loadOrCreateBearer ?? (() => loadOrCreateBearer()),
-    now: opts.deps?.now ?? (() => Date.now())
+    loadOrCreateIpcKey: opts.deps?.loadOrCreateIpcKey ?? (() => loadOrCreateIpcKey(runDirPath(env))),
+    secureRunDir: opts.deps?.secureRunDir ?? ((dir) => secureRunDirAtStart(dir, { exec: system32Exec(env), env, now: opts.deps?.now ?? Date.now })),
+    startNetworkHeartbeat: opts.deps?.startNetworkHeartbeat ?? startHeartbeat,
+    makeMachineOpa: opts.deps?.makeMachineOpa ?? ((o) => new MachineOpa(o)),
+    now: opts.deps?.now ?? (() => Date.now()),
+    platform: opts.deps?.platform ?? process.platform,
+    legacyDeps: opts.deps?.legacyDeps ?? ((keys) => realLegacyDeps(opts.deps?.platform ?? process.platform, keys))
   };
   const port = opts.port ?? 52746;
-  const opaPort = opts.opaPort ?? 8181;
   const tenant = opts.tenant ?? env["ARBITER_TENANT_ID"] ?? "default";
   const bundleCacheDir = opts.bundleCacheDir ?? defaultBundleBaseDir();
   const heartbeatIntervalMs = opts.heartbeatIntervalMs ?? 2500;
@@ -58416,11 +60528,11 @@ async function assembleMonitor(opts) {
     try {
       deps.writeState(opts.dataDir, {
         schemaVersion: 1,
+        protocol: DAEMON_PROTOCOL,
         pid: process.pid,
         port,
         startedAt,
         ready: false,
-        opaProvisioning: false,
         lastHeartbeat: iso(deps.now()),
         error: reason
       });
@@ -58447,6 +60559,8 @@ async function assembleMonitor(opts) {
   }
   const harnessTracker = new ActiveHarnessTracker();
   harnessTracker.record({ harness: ownerHarness });
+  const deviceContext = enableDeviceContext();
+  deviceContext.noteHarness(ownerHarness);
   const HARNESS_WHITELIST2 = /* @__PURE__ */ new Set(["claude", "cursor", "codex", "antigravity", "shell"]);
   const onHook = (_event, body) => {
     const b = body ?? {};
@@ -58454,46 +60568,101 @@ async function assembleMonitor(opts) {
     const harness = stamped && HARNESS_WHITELIST2.has(stamped) ? stamped : ownerHarness;
     const sessionId = typeof b["session_id"] === "string" ? b["session_id"] : void 0;
     const pluginVersion = typeof b["arbiter_plugin_version"] === "string" ? b["arbiter_plugin_version"] : void 0;
+    deviceContext.noteHarness(harness);
     harnessTracker.record({
       harness,
       ...sessionId ? { sessionId } : {},
       ...pluginVersion ? { pluginVersion } : {}
     });
   };
-  let loopbackBearer;
-  try {
-    loopbackBearer = deps.loadOrCreateBearer();
-  } catch (err) {
-    const reason = `Loopback bearer resolution failed: ${String(err?.message ?? err)}`;
-    log2(reason);
+  const deviceQuarantine = enableDeviceQuarantine({
+    path: quarantineMarkerPath(env),
+    log: (m) => log2(m)
+  });
+  const aiAppId = (env["ARBITER_AI_APP_ID"] ?? "").trim() || void 0;
+  let keyRotation;
+  if (deps.platform === "win32") {
+    const runDir = runDirPath(env);
+    const acl = deps.secureRunDir(runDir);
+    if (acl.ok) keyRotation = acl.keyRotation;
+    else {
+      log2(
+        `[arbiter] {"event":"dir_unverified","severity":"error","dir":${JSON.stringify(runDir)},${JSON.stringify(acl).slice(1, -1)},"detail":"only this user, SYSTEM and Administrators may have access to the run directory; hooks block until it is so"}`
+      );
+      const reason = `Run directory ACL not verified (${acl.reason}): ${runDir}`;
+      writeErrorState(reason);
+      return { mode: "error", port, error: reason, stop: async () => {
+      } };
+    }
+  }
+  const ipcKey = keyRotation ? { ok: true, key: randomBytes4(32).toString("hex"), dir: runDirPath(env) } : deps.loadOrCreateIpcKey();
+  if (!ipcKey.ok) {
+    log2(
+      `[arbiter] {"event":"ipc_key_unavailable","severity":"error","reason":"${ipcKey.reason}","dir":${JSON.stringify(ipcKey.dir)},"detail":"the run directory must be a directory of this user with mode 0700; hooks block until it is"}`
+    );
+    const reason = `IPC key unavailable (${ipcKey.reason}): ${ipcKey.dir}`;
     writeErrorState(reason);
     return { mode: "error", port, error: reason, stop: async () => {
     } };
   }
-  if (!ARBD_BEARER_RE.test(loopbackBearer)) {
-    const reason = "Refusing to bind: loopback bearer is empty or malformed (expected arbd_<64 hex>). Enforcement gate NOT armed \u2014 check ~/.config/arbiter/bearer permissions/contents.";
-    log2(reason);
-    writeErrorState(reason);
-    return { mode: "error", port, error: reason, stop: async () => {
-    } };
+  const ipcKeys = deriveIpcKeys(ipcKey.key);
+  const onSocket = deps.platform !== "win32";
+  const posture = new IpcPostureCounter(ipcKey.dir);
+  let lastRefusedLogMs = 0;
+  const onRefused = (reason) => {
+    posture.noteAuthFailure();
+    const nowMs = deps.now();
+    if (lastRefusedLogMs !== 0 && nowMs - lastRefusedLogMs < 6e4) return;
+    lastRefusedLogMs = nowMs;
+    log2(`[arbiter] {"event":"ipc_auth_failed","severity":"warn","reason":"${reason}"}`);
+  };
+  const transport = onSocket ? "unix" : "pipe";
+  const ipcAuth = { keys: ipcKeys, verifier: new IpcRequestVerifier(ipcKeys, { now: deps.now }), onRefused };
+  const rotation = keyRotation && {
+    stillDue: keyRotation.stillFailed,
+    rotateKey: () => {
+      keyRotation.removeKeyAndEndpoint();
+      const fresh = deps.loadOrCreateIpcKey();
+      if (!fresh.ok) throw new Error(`no new IPC key (${fresh.reason}): ${fresh.dir}`);
+      ipcAuth.keys = deriveIpcKeys(fresh.key);
+      ipcAuth.verifier = new IpcRequestVerifier(ipcAuth.keys, { now: deps.now });
+    },
+    recordDone: () => {
+      if (!keyRotation.recordTrusted()) throw new Error(`the run directory check was not recorded after the key was replaced: ${ipcKey.dir}`);
+    }
+  };
+  if (opts.legacyLockfile) {
+    const legacy = await stopLegacyDaemon({
+      dataDir: opts.dataDir,
+      lockfilePath: opts.legacyLockfile,
+      owner: currentOwner(deps.platform, env),
+      selfPid: process.pid,
+      platform: deps.platform,
+      deps: deps.legacyDeps(ipcKeys)
+    });
+    if (legacy.kind !== "none") log2(`[arbiter] {"event":"legacy_daemon",${JSON.stringify(legacy).slice(1, -1)}}`);
   }
+  const listenFd = onSocket ? activationFd(env) : void 0;
   let handle;
   try {
     handle = await deps.startDaemon({
-      port,
-      bearerToken: loopbackBearer,
-      legacyBearerToken: opts.apiToken,
-      bindMode: "attach",
+      ...onSocket ? { socketPath: resolveSocketPath(env, ipcKey.dir, port) } : { pipe: { runDir: ipcKey.dir, ...rotation ? { deps: { rotation } } : {} } },
+      ...listenFd !== void 0 ? { listenFd } : {},
       log: log2,
-      onHook
+      onHook,
+      quarantineReplyField: () => deviceQuarantine.replyField(),
+      ipcAuth
     });
   } catch (err) {
-    if (err instanceof PortInUseError) {
-      log2(`Port ${port} already owned \u2014 this session is a passive standby.`);
+    if (err instanceof PipeConflictError) {
+      log2(`[arbiter] {"event":"pipe_conflict","severity":"error","tried":${JSON.stringify(err.tried)}}`);
+    }
+    if (err instanceof AlreadyRunningError) {
+      log2(`${err.endpoint} already owned \u2014 this session is a passive standby.`);
       return { mode: "standby", port, stop: async () => {
       } };
     }
-    const reason = `Daemon bind failed on port ${port}: ${String(err?.message ?? err)}`;
+    const reason = `Daemon bind failed: ${String(err?.message ?? err)}`;
     log2(reason);
     writeErrorState(reason);
     return { mode: "error", port, error: reason, stop: async () => {
@@ -58503,46 +60672,28 @@ async function assembleMonitor(opts) {
     try {
       deps.writeState(opts.dataDir, {
         schemaVersion: 1,
+        protocol: DAEMON_PROTOCOL,
         pid: process.pid,
         port,
         startedAt,
         ready: false,
-        opaProvisioning: false,
         lastHeartbeat: iso(deps.now()),
+        ...handle.socketPath ? { socketPath: handle.socketPath } : {},
+        ...handle.pipePath ? { pipePath: handle.pipePath } : {},
         ...patch
       });
     } catch (e) {
       log2(`state write failed: ${String(e)}`);
     }
   };
-  writeOwnerState({ ready: false, opaProvisioning: true });
-  try {
-    deps.writeLockfile({ port, pid: process.pid, bundle_revision: "", bearer: loopbackBearer });
-  } catch (e) {
-    log2(`lockfile publish failed (attach-by-lockfile disabled): ${String(e)}`);
-  }
-  let opaBin = null;
-  let sidecar = null;
+  writeOwnerState({ ready: false });
   let bundleSync = null;
   let runtime;
   let hbTimer;
   let stopNetworkHeartbeat;
   let stopped = false;
+  let machineOpa;
   try {
-    try {
-      opaBin = await deps.ensureOpaBinary();
-    } catch (err) {
-      log2(`OPA provisioning failed (continuing remote-only): ${String(err?.message ?? err)}`);
-      opaBin = null;
-    }
-    if (opaBin) {
-      try {
-        sidecar = await deps.startOpaSidecar({ opaPort, opaPath: opaBin, log: log2 });
-      } catch (err) {
-        log2(`OPA sidecar failed (continuing remote-only): ${String(err?.message ?? err)}`);
-        sidecar = null;
-      }
-    }
     const config3 = opts.enforcementMode ? { ...deps.loadConfig(), enforcementMode: opts.enforcementMode } : deps.loadConfig();
     let cachedRevision = "";
     try {
@@ -58553,18 +60704,27 @@ async function assembleMonitor(opts) {
     const childEnv = {
       ...env,
       ARBITER_SERVER_URL: opts.host,
-      ARBITER_OPA_PORT: String(opaPort),
-      ARBITER_GRAIL_ENDPOINT: opts.host,
-      ...opaBin ? { ARBITER_OPA_PATH: opaBin } : {}
+      ARBITER_GRAIL_ENDPOINT: opts.host
     };
     const sessionStore = new SessionStore({ stopBlockCap: config3.stopBlockCap });
-    configureIntrospect({ store: sessionStore, port: handle.port, bundleRevision: cachedRevision });
+    configureIntrospect({ store: sessionStore, port, bundleRevision: cachedRevision });
+    if (opts.machineOpa && onSocket) {
+      machineOpa = deps.makeMachineOpa({
+        host: opts.host,
+        token: opts.apiToken,
+        home: opts.machineOpa.home ?? homedir8(),
+        authzPath: opts.machineOpa.authzPath,
+        checksums: opts.machineOpa.checksums,
+        signingFile: signingFileIn(ipcKey.dir),
+        expectedRevision: () => cachedManifestRevision(tenant, bundleCacheDir),
+        log: log2
+      });
+    }
+    const localTier = machineOpa;
     runtime = await deps.registerArbiterClaudeHooks({
+      ...localTier ? { localOpa: () => localTier.client() } : {},
       handle,
-      // arbd_ loopbackBearer (Fix 1). NOTE: this lockfile.bearer param is a DEAD param
-      // downstream — wire-claude-hooks reads only bundle_revision, never bearer — but we
-      // switch it off the lgr_ key for consistency so no lgr_ lands on the loopback surface.
-      lockfile: { bearer: loopbackBearer, bundle_revision: cachedRevision },
+      lockfile: { bundle_revision: cachedRevision },
       store: sessionStore,
       config: config3,
       env: childEnv,
@@ -58583,6 +60743,7 @@ async function assembleMonitor(opts) {
       bundleCacheDir,
       bundleTenant: tenant
     });
+    machineOpa?.start();
     try {
       bundleSync = deps.makeBundleSync({
         serverUrl: opts.host,
@@ -58593,17 +60754,21 @@ async function assembleMonitor(opts) {
         bundleCacheDir,
         ...opts.pollIntervalMs !== void 0 ? { pollIntervalMs: opts.pollIntervalMs } : {},
         onActivate: (p, r) => log2(`[bundle] activated revision=${r} (${p})`),
-        log: log2
+        log: log2,
+        // Agent Quarantine (§8.2 steps 1–2): send the ai_app_id, store each answer.
+        ...aiAppId ? { aiAppId } : {},
+        onQuarantine: (answer) => deviceQuarantine.apply(answer),
+        deviceHeaders: () => deviceContext.requestHeaders()
       });
       bundleSync.start();
     } catch (e) {
       log2(`bundle sync disabled: ${String(e)}`);
       bundleSync = null;
     }
-    writeOwnerState({ ready: true, opaProvisioning: false });
+    writeOwnerState({ ready: true });
     hbTimer = setInterval(() => {
       if (stopped) return;
-      writeOwnerState({ ready: true, opaProvisioning: false });
+      writeOwnerState({ ready: true });
     }, heartbeatIntervalMs);
     if (typeof hbTimer.unref === "function") hbTimer.unref();
     try {
@@ -58623,7 +60788,7 @@ async function assembleMonitor(opts) {
         onRevokeSelf: () => stop(),
         log: log2
       }) : void 0;
-      stopNetworkHeartbeat = startHeartbeat({
+      stopNetworkHeartbeat = deps.startNetworkHeartbeat({
         serverUrl: runtime.serverUrl,
         tokenProvider: runtime.tokenProvider,
         sessionId: randomUUID2(),
@@ -58644,6 +60809,16 @@ async function assembleMonitor(opts) {
         },
         pid: process.pid,
         activeHarnesses: () => harnessTracker.snapshot(),
+        // Agent Quarantine device confirmation (§8.4).
+        quarantine: () => deviceQuarantine.heartbeatField(),
+        posture: {
+          take: () => ({
+            ipc: { transport, ...posture.take() },
+            opa: machineOpa?.posture() ?? { present: false, bundleSigned: false }
+          }),
+          commit: () => posture.commit(),
+          restore: () => posture.restore()
+        },
         ...executor ? { onCommands: (cmds) => executor.handleAll(cmds) } : {}
       });
     } catch (e) {
@@ -58659,17 +60834,10 @@ async function assembleMonitor(opts) {
     } catch {
     }
     try {
-      deps.removeLockfile();
-    } catch {
-    }
-    try {
-      sidecar?.stop();
-    } catch {
-    }
-    try {
       bundleSync?.stop();
     } catch {
     }
+    machineOpa?.stop();
     try {
       await handle.close();
     } catch {
@@ -58680,18 +60848,14 @@ async function assembleMonitor(opts) {
     if (stopped) return;
     stopped = true;
     clearInterval(hbTimer);
+    machineOpa?.stop();
     let finalHeartbeat;
     try {
       finalHeartbeat = stopNetworkHeartbeat?.();
     } catch (e) {
       log2(`network heartbeat stop error: ${String(e)}`);
     }
-    writeOwnerState({ ready: false, opaProvisioning: false, error: "stopped" });
-    try {
-      deps.removeLockfile();
-    } catch (e) {
-      log2(`lockfile remove error: ${String(e)}`);
-    }
+    writeOwnerState({ ready: false, error: "stopped" });
     try {
       await runtime?.stop();
     } catch (e) {
@@ -58701,11 +60865,6 @@ async function assembleMonitor(opts) {
       bundleSync?.stop();
     } catch (e) {
       log2(`bundleSync.stop error: ${String(e)}`);
-    }
-    try {
-      sidecar?.stop();
-    } catch (e) {
-      log2(`sidecar.stop error: ${String(e)}`);
     }
     await finalHeartbeat?.catch(() => {
     });
@@ -58719,130 +60878,11 @@ async function assembleMonitor(opts) {
   return { mode: "owner", port, stop };
 }
 
-// arbiter-core/src/bundle/opa-provision.ts
-import {
-  existsSync as existsSync3,
-  readFileSync as readFileSync8,
-  writeFileSync as writeFileSync6,
-  mkdirSync as mkdirSync5,
-  mkdtempSync as mkdtempSync5,
-  renameSync as renameSync4,
-  rmSync as rmSync3,
-  chmodSync as chmodSync2
-} from "node:fs";
-import { join as join11 } from "node:path";
-import { createHash as createHash3 } from "node:crypto";
-function opaAssetName(platform, arch) {
-  const a = arch === "x64" ? "amd64" : arch === "arm64" ? "arm64" : arch;
-  switch (platform) {
-    case "darwin":
-      if (a === "amd64") return "opa_darwin_amd64";
-      if (a === "arm64") return "opa_darwin_arm64";
-      break;
-    case "linux":
-      if (a === "amd64") return "opa_linux_amd64";
-      if (a === "arm64") return "opa_linux_arm64_static";
-      break;
-    case "win32":
-      return "opa_windows_amd64.exe";
-  }
-  throw new Error(`opa-provision: unsupported platform/arch: ${platform}/${arch}`);
-}
-function readMarker(markerPath) {
-  try {
-    return readFileSync8(markerPath, "utf8").trim();
-  } catch {
-    return null;
-  }
-}
-function writeMarker(markerPath, version2) {
-  writeFileSync6(markerPath, version2, "utf8");
-}
-function sha256File(filePath) {
-  return createHash3("sha256").update(readFileSync8(filePath)).digest("hex");
-}
-async function ensureOpaBinary(opts) {
-  const platform = opts.platform ?? process.platform;
-  const arch = opts.arch ?? process.arch;
-  const env = opts.env ?? process.env;
-  const log2 = opts.log ?? (() => {
-  });
-  const version2 = opts.checksums.version;
-  const preset = env["ARBITER_OPA_PATH"];
-  if (preset && existsSync3(preset)) {
-    log2(`Using preset OPA binary at ${preset} (ARBITER_OPA_PATH)`);
-    return preset;
-  }
-  const asset = opaAssetName(platform, arch);
-  const expectedSha = opts.checksums.assets[asset];
-  if (!expectedSha) {
-    throw new Error(
-      `opa-provision: no checksum for asset "${asset}" in checksums v${version2} \u2014 cannot verify a download`
-    );
-  }
-  const binDir = join11(opts.dataDir, "bin");
-  const binName = platform === "win32" ? "opa.exe" : "opa";
-  const target = join11(binDir, binName);
-  const marker = join11(binDir, "opa.version");
-  if (existsSync3(target)) {
-    const have = readMarker(marker);
-    let bytesOk = false;
-    try {
-      bytesOk = sha256File(target) === expectedSha;
-    } catch {
-      bytesOk = false;
-    }
-    if (bytesOk) {
-      if (have === version2) {
-        log2(`OPA ${version2} already provisioned at ${target} (sha256 re-verified)`);
-      } else {
-        writeMarker(marker, version2);
-        log2(`Pre-seeded OPA at ${target} matches pinned checksum \u2014 adopting as ${version2}`);
-      }
-      return target;
-    }
-    log2(`OPA at ${target} failed re-verification (marker=${have ?? "none"}) \u2014 re-provisioning ${version2}`);
-  }
-  if (!opts.download) {
-    throw new Error(
-      `opa-provision: OPA binary missing at ${target} and no download function provided (air-gapped? pre-seed ${target} or set ARBITER_OPA_PATH to a trusted OPA ${version2} binary)`
-    );
-  }
-  const base = (opts.downloadBaseUrl ?? opts.checksums.downloadBaseUrl ?? env["ARBITER_OPA_DOWNLOAD_BASE"] ?? "https://openpolicyagent.org/downloads").replace(/\/$/, "");
-  const url2 = `${base}/v${version2}/${asset}`;
-  log2(`Downloading OPA ${version2} from ${url2}`);
-  const bytes = await opts.download(url2);
-  const actualSha = createHash3("sha256").update(bytes).digest("hex");
-  if (actualSha !== expectedSha) {
-    throw new Error(
-      `opa-provision: SHA-256 mismatch for ${asset} \u2014 expected ${expectedSha}, got ${actualSha}. Refusing to install an unverified OPA binary.`
-    );
-  }
-  mkdirSync5(binDir, { recursive: true });
-  const tmpDir = mkdtempSync5(join11(binDir, ".opa-tmp-"));
-  const tmpFile = join11(tmpDir, binName);
-  writeFileSync6(tmpFile, bytes);
-  if (platform !== "win32") {
-    try {
-      chmodSync2(tmpFile, 493);
-    } catch {
-    }
-  }
-  renameSync4(tmpFile, target);
-  try {
-    rmSync3(tmpDir, { recursive: true, force: true });
-  } catch {
-  }
-  writeMarker(marker, version2);
-  log2(`OPA ${version2} installed at ${target} (sha256 verified)`);
-  return target;
-}
-
 // arbiter-core/src/net/proxy.ts
-var import_undici5 = __toESM(require_undici(), 1);
+var import_undici6 = __toESM(require_undici(), 1);
 function installGlobalProxyDispatcher() {
-  (0, import_undici5.setGlobalDispatcher)(
-    new import_undici5.EnvHttpProxyAgent({ keepAliveTimeout: 3e4, keepAliveMaxTimeout: 6e4 })
+  (0, import_undici6.setGlobalDispatcher)(
+    new import_undici6.EnvHttpProxyAgent({ keepAliveTimeout: 3e4, keepAliveMaxTimeout: 6e4 })
   );
 }
 
@@ -58863,10 +60903,10 @@ function resolveServerHost(config3, env = process.env) {
 
 // arbiter-core/src/daemon/wire-claude-hooks.ts
 import { spawnSync } from "node:child_process";
-import { userInfo } from "node:os";
+import { userInfo as userInfo2 } from "node:os";
 
 // arbiter-core/src/decision/remote-client.ts
-var import_undici6 = __toESM(require_undici(), 1);
+var import_undici7 = __toESM(require_undici(), 1);
 import { randomUUID as randomUUID3 } from "node:crypto";
 
 // arbiter-core/src/decision/policy-engine-client.ts
@@ -58885,8 +60925,71 @@ var NoCredential = class extends Error {
   }
 };
 
-// arbiter-core/src/decision/remote-client.ts
+// arbiter-core/src/contract/interceptor-wire.ts
 var INTERCEPTOR_NAME = "default";
+function buildInvokeRequest(body, id) {
+  return {
+    jsonrpc: "2.0",
+    id,
+    method: "interceptor/invoke",
+    params: {
+      name: INTERCEPTOR_NAME,
+      event: "tools/call",
+      phase: body.phase === "enforce" ? "request" : "response",
+      payload: { method: "tools/call", params: { name: body.tool } },
+      context: { sessionId: body.session_id },
+      config: {
+        langguard: {
+          surface: "hooks",
+          session_id: body.session_id,
+          phase: body.phase,
+          // Omit, never default: the server reads a missing checkpoint as no signal, which puts all four checkpoints in play.
+          ...body.checkpoint !== void 0 ? { checkpoint: body.checkpoint } : {},
+          ...body.raw_tool !== void 0 ? { raw_tool: body.raw_tool } : {},
+          ...body.args_hash !== void 0 ? { args_hash: body.args_hash } : {},
+          ...body.content !== void 0 ? { content: body.content } : {},
+          ...body.session_actions !== void 0 ? { session_actions: body.session_actions } : {},
+          ...body.local_bundle_revision !== void 0 ? { local_bundle_revision: body.local_bundle_revision } : {},
+          ...body.install_id !== void 0 ? { install_id: body.install_id } : {},
+          ...body.daemon_version !== void 0 ? { daemon_version: body.daemon_version } : {},
+          ...body.agent_name !== void 0 ? { agent_name: body.agent_name } : {},
+          ...body.user_id !== void 0 ? { user_id: body.user_id } : {},
+          ...body.ai_app_id !== void 0 ? { ai_app_id: body.ai_app_id } : {},
+          ...body.department !== void 0 ? { department: body.department } : {},
+          ...body.environment !== void 0 ? { environment: body.environment } : {}
+        }
+      }
+    }
+  };
+}
+var VERDICTS = ["ALLOW", "BLOCK", "ASK"];
+function isVerdict(value) {
+  return typeof value === "string" && VERDICTS.includes(value);
+}
+function parseInvokeReply(json3) {
+  if (json3.error) {
+    throw new EngineUnreachable(
+      `interceptor invoke error ${json3.error.code}: ${json3.error.message}`
+    );
+  }
+  const lg = json3.result?.langguard;
+  if (!lg || !isVerdict(lg.verdict)) {
+    throw new EngineUnreachable("interceptor invoke returned no langguard verdict");
+  }
+  return {
+    verdict: lg.verdict,
+    ...lg.reason !== void 0 ? { reason: lg.reason } : {},
+    ...lg.block !== void 0 ? { block: lg.block } : {},
+    violations: lg.violations ?? [],
+    bundle_revision: lg.bundle_revision ?? "",
+    evaluated: lg.evaluated ?? "remote",
+    // Pass the raw field on; the gate parses it (parseQuarantineField) and treats a
+    // malformed value as "no answer".
+    ...Object.prototype.hasOwnProperty.call(lg, "quarantine") ? { quarantine: lg.quarantine } : {}
+  };
+}
+
+// arbiter-core/src/decision/remote-client.ts
 var RemoteArbiterClient = class {
   baseUrl;
   tokenProvider;
@@ -58901,7 +61004,7 @@ var RemoteArbiterClient = class {
     this.baseUrl = opts.baseUrl.replace(/\/$/, "");
     this.tokenProvider = opts.tokenProvider;
     this.timeoutMs = opts.timeoutMs ?? 8e3;
-    this.dispatcher = opts.dispatcher ?? new import_undici6.EnvHttpProxyAgent({ keepAliveTimeout: 3e4, keepAliveMaxTimeout: 6e4 });
+    this.dispatcher = opts.dispatcher ?? new import_undici7.EnvHttpProxyAgent({ keepAliveTimeout: 3e4, keepAliveMaxTimeout: 6e4 });
     this.installId = opts.installId;
     this.daemonVersion = opts.daemonVersion;
   }
@@ -58916,61 +61019,11 @@ var RemoteArbiterClient = class {
   }
   async verdict(req) {
     const body = this.withIdentity(req);
-    const rpc = {
-      jsonrpc: "2.0",
-      id: randomUUID3(),
-      method: "interceptor/invoke",
-      params: {
-        name: INTERCEPTOR_NAME,
-        event: "tools/call",
-        phase: body.phase === "enforce" ? "request" : "response",
-        payload: { method: "tools/call", params: { name: body.tool } },
-        context: { sessionId: body.session_id },
-        config: {
-          langguard: {
-            surface: "hooks",
-            session_id: body.session_id,
-            phase: body.phase,
-            // The checkpoint this leg inspects, alongside (not instead of) the
-            // seam phase above — the server stamps it onto the OPA input as
-            // `input.phase`, which helpers.rego intersects with each policy's
-            // declared set. Omitted when the gate could not derive one, and an
-            // omitted checkpoint is the no-signal case: all four in play.
-            ...body.checkpoint !== void 0 ? { checkpoint: body.checkpoint } : {},
-            ...body.raw_tool !== void 0 ? { raw_tool: body.raw_tool } : {},
-            ...body.args_hash !== void 0 ? { args_hash: body.args_hash } : {},
-            ...body.content !== void 0 ? { content: body.content } : {},
-            ...body.session_actions !== void 0 ? { session_actions: body.session_actions } : {},
-            ...body.local_bundle_revision !== void 0 ? { local_bundle_revision: body.local_bundle_revision } : {},
-            ...body.install_id !== void 0 ? { install_id: body.install_id } : {},
-            ...body.daemon_version !== void 0 ? { daemon_version: body.daemon_version } : {},
-            ...body.agent_name !== void 0 ? { agent_name: body.agent_name } : {},
-            ...body.user_id !== void 0 ? { user_id: body.user_id } : {},
-            ...body.ai_app_id !== void 0 ? { ai_app_id: body.ai_app_id } : {},
-            ...body.department !== void 0 ? { department: body.department } : {},
-            ...body.environment !== void 0 ? { environment: body.environment } : {}
-          }
-        }
-      }
-    };
-    const json3 = await this.post("/api/interceptor", rpc);
-    if (json3.error) {
-      throw new EngineUnreachable(
-        `interceptor invoke error ${json3.error.code}: ${json3.error.message}`
-      );
-    }
-    const lg = json3.result?.langguard;
-    if (!lg || typeof lg.verdict !== "string") {
-      throw new EngineUnreachable("interceptor invoke returned no langguard verdict");
-    }
-    return {
-      verdict: lg.verdict,
-      ...lg.reason !== void 0 ? { reason: lg.reason } : {},
-      ...lg.block !== void 0 ? { block: lg.block } : {},
-      violations: lg.violations ?? [],
-      bundle_revision: lg.bundle_revision ?? "",
-      evaluated: lg.evaluated ?? "remote"
-    };
+    const json3 = await this.post(
+      "/api/interceptor",
+      buildInvokeRequest(body, randomUUID3())
+    );
+    return parseInvokeReply(json3);
   }
   async context(_req) {
     throw new EngineUnreachable(
@@ -59016,205 +61069,55 @@ var RemoteArbiterClient = class {
         signal: AbortSignal.timeout(this.timeoutMs),
         dispatcher: this.dispatcher
       };
-      return await (0, import_undici6.fetch)(url2, fetchOpts);
+      return await (0, import_undici7.fetch)(url2, fetchOpts);
     } catch (err) {
       throw new EngineUnreachable(`arbiter remote unreachable at ${url2}: ${String(err)}`, err);
     }
   }
 };
 
-// arbiter-core/src/bundle/screen-from-bundle.ts
-import { gunzipSync } from "node:zlib";
-import { readdirSync } from "node:fs";
-import { join as join12 } from "node:path";
-function untarEntry(tar, wantName) {
-  let pos = 0;
-  while (pos + 512 <= tar.length) {
-    const nameEnd = tar.subarray(pos, pos + 100).indexOf(0);
-    const name = tar.toString("utf8", pos, pos + (nameEnd === -1 ? 100 : nameEnd));
-    if (name === "") break;
-    const size = parseInt(
-      tar.toString("ascii", pos + 124, pos + 136).replace(/\0.*$/, "").trim(),
-      8
-    );
-    if (Number.isNaN(size)) break;
-    if (name === wantName) {
-      return tar.subarray(pos + 512, pos + 512 + size);
-    }
-    pos += 512 + Math.ceil(size / 512) * 512;
-  }
-  return null;
-}
-var RISK_TIERS = /* @__PURE__ */ new Set(["low", "medium", "high", "critical"]);
-function strArray(v) {
-  return Array.isArray(v) ? v.filter((s) => typeof s === "string") : [];
-}
-function screenFromBundleCache(opts = {}) {
-  const baseDir = opts.baseDir ?? defaultBundleBaseDir();
-  let tenant = opts.tenant;
-  if (!tenant) {
-    const dirs = readdirSync(baseDir, { withFileTypes: true }).filter((d) => d.isDirectory() && !d.name.startsWith(".")).map((d) => d.name);
-    if (dirs.length !== 1) {
-      throw new Error(
-        `screen-from-bundle: expected exactly one tenant cache dir under ${baseDir}, found ${dirs.length}`
-      );
-    }
-    tenant = dirs[0];
-  }
-  const cache = readBundleCache(tenant, baseDir);
-  if (!cache) {
-    throw new Error(`screen-from-bundle: no cached bundle for tenant at ${join12(baseDir, tenant)}`);
-  }
-  const tar = gunzipSync(cache.bundleBytes);
-  const dataBytes = untarEntry(tar, "data.json");
-  if (!dataBytes) {
-    throw new Error("screen-from-bundle: bundle has no data.json");
-  }
-  const data = JSON.parse(dataBytes.toString("utf8"));
-  const screen = data.langguard?.screen;
-  if (!screen || typeof screen !== "object") {
-    throw new Error("screen-from-bundle: bundle data has no langguard.screen (older server?)");
-  }
-  const posture = screen.posture && typeof screen.posture === "object" ? screen.posture : {};
-  const rawTier = posture.scope_default_tier;
-  const scopeDefaultTier = typeof rawTier === "string" && RISK_TIERS.has(rawTier) ? rawTier : "medium";
-  return {
-    bundle_revision: cache.revision,
-    banned: strArray(screen.banned),
-    requires_ask: strArray(screen.requires_ask),
-    posture: {
-      compliance_regimes: strArray(posture.compliance_regimes),
-      enforce_not_approved: posture.enforce_not_approved === true,
-      scope_default_tier: scopeDefaultTier
-    },
-    guardrails: strArray(screen.guardrails)
-  };
-}
+// arbiter-core/src/audit/grail-reporter.ts
+var import_undici8 = __toESM(require_undici(), 1);
 
-// arbiter-core/src/decision/local-eval.ts
-var import_undici7 = __toESM(require_undici(), 1);
-var PII_SCAN_MAX_CHARS_FALLBACK = 1e4;
-var LocalOpaClient = class {
-  baseUrl;
-  timeoutMs;
-  constructor(opts = {}) {
-    this.baseUrl = (opts.baseUrl ?? "http://127.0.0.1:8181").replace(/\/$/, "");
-    this.timeoutMs = opts.timeoutMs ?? 500;
-  }
-  /**
-   * Evaluate a Rego package/rule with the given input.
-   * Returns { available: false } when the sidecar is not reachable or the
-   * bundle is not yet loaded (OPA returns 404 for an unknown package).
-   */
-  async evalRule(regoPackage, regoRule, input2) {
-    const path = `${regoPackage.replace(/\./g, "/")}/${regoRule}`;
-    const url2 = `${this.baseUrl}/v1/data/${path}`;
-    let resp;
-    try {
-      resp = await (0, import_undici7.fetch)(url2, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: input2 }),
-        signal: AbortSignal.timeout(this.timeoutMs)
-      });
-    } catch {
-      return { available: false };
-    }
-    if (resp.status === 404) {
-      return { available: false };
-    }
-    if (!resp.ok) {
-      return { available: false };
-    }
-    const data = await resp.json();
-    return { available: true, result: data.result };
-  }
-  /**
-   * Health check — returns true when the OPA sidecar is up.
-   */
-  async isHealthy() {
-    try {
-      const resp = await (0, import_undici7.fetch)(`${this.baseUrl}/health`, {
-        method: "GET",
-        signal: AbortSignal.timeout(2e3)
-      });
-      return resp.ok;
-    } catch {
-      return false;
-    }
-  }
-};
-async function localEval(input2, client) {
-  const phase = input2.phase ? { phase: input2.phase } : {};
-  const tierResult = await client.evalRule("langguard.scope_tier", "tier", {
-    tool: input2.tool,
-    tenant_id: input2.tenant_id,
-    ...phase
-  });
-  if (!tierResult.available) {
-    return { available: false };
-  }
-  const rawTier = tierResult.result;
-  const scopeTier = isRiskTier(rawTier) ? rawTier : null;
-  const violationsInput = {
-    tool: input2.tool,
-    tenant_id: input2.tenant_id,
-    session_actions: input2.session_actions ?? [],
-    ...phase
-  };
-  const violationsResult = await client.evalRule(
-    "langguard.violations",
-    "result",
-    violationsInput
-  );
-  const violations = violationsResult.available ? Array.isArray(violationsResult.result) ? violationsResult.result : [] : [];
-  const approvalResult = await client.evalRule(
-    "langguard.violations",
-    "approval_status",
-    violationsInput
-  );
-  const approvalAuthoritative = approvalResult.available && isApprovalStatus(approvalResult.result);
-  const approvalStatus = approvalAuthoritative ? approvalResult.result : "unresolved";
-  const modeResult = await client.evalRule(
-    "langguard.violations",
-    "effective_mode",
-    violationsInput
-  );
-  const modeAuthoritative = modeResult.available && (modeResult.result === "enforce" || modeResult.result === "permissive");
-  const mode = modeAuthoritative && modeResult.result === "permissive" ? "permissive" : "enforce";
-  const remoteOnlyResult = await client.evalRule(
-    "langguard.violations",
-    "remote_only_classes_active",
-    violationsInput
-  );
-  const remoteOnlyClassesActive = !(remoteOnlyResult.available && remoteOnlyResult.result === false);
-  const windowResult = await client.evalRule(
-    "langguard.violations",
-    "pii_scan_max_chars",
-    violationsInput
-  );
-  const piiScanMaxChars = windowResult.available && typeof windowResult.result === "number" && Number.isFinite(windowResult.result) && windowResult.result > 0 ? windowResult.result : PII_SCAN_MAX_CHARS_FALLBACK;
+// arbiter-core/src/audit/evidence-payload.ts
+function buildOtlpPayload(records) {
+  const logRecords = records.map((r) => ({
+    timeUnixNano: String(BigInt(new Date(r.ts).getTime()) * 1000000n),
+    observedTimeUnixNano: String(BigInt(Date.now()) * 1000000n),
+    severityNumber: r.verdict === "BLOCK" ? 17 : r.verdict === "ASK" ? 13 : 9,
+    severityText: r.verdict,
+    body: { stringValue: JSON.stringify({ verdict: r.verdict, tool: r.tool, reason: r.reason }) },
+    attributes: [
+      { key: "session.id", value: { stringValue: r.session_id } },
+      { key: "arbiter.verdict", value: { stringValue: r.verdict } },
+      { key: "arbiter.applied_rule", value: { stringValue: r.applied_rule } },
+      { key: "arbiter.hook_event", value: { stringValue: r.hook_event } },
+      { key: "arbiter.bundle_revision", value: { stringValue: r.bundle_revision } },
+      { key: "arbiter.tool", value: { stringValue: r.tool } },
+      ...r.seq !== void 0 ? [{ key: "arbiter.seq", value: { intValue: String(r.seq) } }] : [],
+      ...r.user_id !== void 0 && r.user_id !== "" ? [{ key: "user.id", value: { stringValue: r.user_id } }] : []
+    ]
+  }));
   return {
-    available: true,
-    violations,
-    scopeTier,
-    approvalStatus,
-    approvalAuthoritative,
-    mode,
-    modeAuthoritative,
-    remoteOnlyClassesActive,
-    piiScanMaxChars
+    resourceLogs: [
+      {
+        resource: {
+          attributes: [
+            { key: "service.name", value: { stringValue: "langguard-arbiter" } }
+          ]
+        },
+        scopeLogs: [
+          {
+            scope: { name: "@langguard/arbiter-core", version: "0.0.0" },
+            logRecords
+          }
+        ]
+      }
+    ]
   };
-}
-function isRiskTier(value) {
-  return value === "low" || value === "medium" || value === "high" || value === "critical";
-}
-function isApprovalStatus(value) {
-  return value === "approved" || value === "not_approved" || value === "banned" || value === "unresolved";
 }
 
 // arbiter-core/src/audit/grail-reporter.ts
-var import_undici8 = __toESM(require_undici(), 1);
 var GrailReporter = class {
   endpoint;
   tokenProvider;
@@ -59407,42 +61310,6 @@ var GrailReporter = class {
     };
   }
 };
-function buildOtlpPayload(records) {
-  const logRecords = records.map((r) => ({
-    timeUnixNano: String(BigInt(new Date(r.ts).getTime()) * 1000000n),
-    observedTimeUnixNano: String(BigInt(Date.now()) * 1000000n),
-    severityNumber: r.verdict === "BLOCK" ? 17 : r.verdict === "ASK" ? 13 : 9,
-    severityText: r.verdict,
-    body: { stringValue: JSON.stringify({ verdict: r.verdict, tool: r.tool, reason: r.reason }) },
-    attributes: [
-      { key: "session.id", value: { stringValue: r.session_id } },
-      { key: "arbiter.verdict", value: { stringValue: r.verdict } },
-      { key: "arbiter.applied_rule", value: { stringValue: r.applied_rule } },
-      { key: "arbiter.hook_event", value: { stringValue: r.hook_event } },
-      { key: "arbiter.bundle_revision", value: { stringValue: r.bundle_revision } },
-      { key: "arbiter.tool", value: { stringValue: r.tool } },
-      // Per-session sequence for server-side gap detection (present when assigned).
-      ...r.seq !== void 0 ? [{ key: "arbiter.seq", value: { intValue: String(r.seq) } }] : []
-    ]
-  }));
-  return {
-    resourceLogs: [
-      {
-        resource: {
-          attributes: [
-            { key: "service.name", value: { stringValue: "langguard-arbiter" } }
-          ]
-        },
-        scopeLogs: [
-          {
-            scope: { name: "@langguard/arbiter-core", version: "0.0.0" },
-            logRecords
-          }
-        ]
-      }
-    ]
-  };
-}
 
 // arbiter-core/src/daemon/wire-claude-hooks.ts
 var memoizedIdentity;
@@ -59462,7 +61329,7 @@ function resolveArbiterIdentity(env = process.env) {
   }
   if (!userId) {
     try {
-      const name = userInfo().username;
+      const name = userInfo2().username;
       if (name) userId = name;
     } catch {
     }
@@ -59481,7 +61348,6 @@ function buildRemoteWiring(opts) {
   const env = opts.env ?? process.env;
   const log2 = opts.log ?? ((msg) => console.log(msg));
   const serverUrl = opts.serverUrl ?? env["ARBITER_SERVER_URL"] ?? "https://app.langguard.ai";
-  const opaPort = parseInt(env["ARBITER_OPA_PORT"] ?? "8181", 10);
   const grailEndpoint = env["ARBITER_GRAIL_ENDPOINT"] ?? serverUrl;
   const tokenProvider = opts.tokenProviderOverride;
   const credentialProbe = Promise.resolve().then(() => tokenProvider()).catch(() => null);
@@ -59503,14 +61369,13 @@ function buildRemoteWiring(opts) {
       })
     };
   }
-  const localOpa = new LocalOpaClient({ baseUrl: `http://127.0.0.1:${opaPort}` });
   const grail = new GrailReporter({
     endpoint: grailEndpoint,
     tokenProvider,
     ringBufferSize: opts.config.grailRingBufferSize,
     log: (msg) => log2(`[grail] ${msg}`)
   });
-  return { engine, localOpa, grail, serverUrl, tokenProvider, credentialProbe };
+  return { engine, grail, serverUrl, tokenProvider, credentialProbe };
 }
 function makeStubEngine() {
   return {
@@ -59644,6 +61509,13 @@ function composeVerdict(input2) {
   return { verdict: "ASK", reason: "No rule matched; defaulting to ASK", appliedRule: "default_ask" };
 }
 
+// arbiter-core/src/contract/confidence.ts
+function isConfident(appliedRule, flags) {
+  const approvalIsTrustworthy = flags.isNativeTool || flags.approvalAuthoritative && flags.approvalStatus !== "unresolved";
+  const allowIsTrustworthy = approvalIsTrustworthy && !flags.remoteOnlyClassesActive;
+  return appliedRule === "enforce_violation" || approvalIsTrustworthy && (appliedRule === "scope_high" || appliedRule === "banned_entity" || appliedRule === "not_approved" || appliedRule === "scope_medium_not_approved") || flags.modeAuthoritative && appliedRule === "scope_critical" && (flags.mode === "enforce" || approvalIsTrustworthy) || allowIsTrustworthy && (appliedRule === "approved_low_risk" || appliedRule === "notify_only" || appliedRule === "native_auto_allow");
+}
+
 // arbiter-core/src/decision/gate.ts
 function checkIsNativeTool(tool) {
   return !tool.includes(".");
@@ -59655,7 +61527,6 @@ function checkIsCatastrophic(tool, rawTool, denyList) {
 function deriveAiAppId(harness, sessionId) {
   return `${harness || "unknown"}:${sessionId || "unknown"}`;
 }
-var PII_SCAN_MAX_CHARS_FALLBACK2 = 1e4;
 function toContentString(value) {
   if (value === void 0 || value === null) return void 0;
   if (typeof value === "string") return value || void 0;
@@ -59686,6 +61557,35 @@ async function decide(input2, deps) {
   const ts = deps.now?.() ?? (/* @__PURE__ */ new Date()).toISOString();
   const isNativeTool = checkIsNativeTool(input2.tool);
   const isCatastrophic = input2.catastrophicInput === true || checkIsCatastrophic(input2.tool, input2.rawTool, config3.catastrophicDenyList);
+  const deviceContext = deps.deviceContext === void 0 ? activeDeviceContext() : deps.deviceContext;
+  if (deviceContext) {
+    try {
+      deviceContext.noteHarness(input2.agentName);
+      deviceContext.noteUserId(input2.userId);
+    } catch {
+    }
+  }
+  const quarantineStore = deps.quarantine === void 0 ? activeDeviceQuarantine() : deps.quarantine;
+  if (!isCatastrophic && quarantineStore && input2.phase !== "verify") {
+    let marker = null;
+    try {
+      marker = quarantineStore.read();
+    } catch {
+      marker = null;
+    }
+    if (marker) {
+      const out2 = {
+        verdict: "BLOCK",
+        reason: AGENT_QUARANTINE_DEVICE_MESSAGE,
+        appliedRule: QUARANTINE_APPLIED_RULE,
+        evaluated: "local",
+        violations: [],
+        quarantine: { id: marker.id, expiresAt: marker.expiresAt }
+      };
+      recordAndAudit(input2, "BLOCK", out2.appliedRule, out2, store, grail ?? null, hookEvent, ts);
+      return out2;
+    }
+  }
   const nativeShortCircuits = isNativeTool && input2.phase !== "evidence";
   if (isCatastrophic || nativeShortCircuits) {
     const composed = composeVerdict({
@@ -59746,7 +61646,7 @@ async function decide(input2, deps) {
     ...input2.department ? { department: input2.department } : {},
     ...input2.environment ? { environment: input2.environment } : {}
   };
-  const localResult = await localEval(
+  const localResult = !localOpa ? { available: false } : await localEval(
     {
       tool: input2.tool,
       tenant_id: input2.tenantId,
@@ -59755,13 +61655,19 @@ async function decide(input2, deps) {
       // bundle carries ONE copy of the rego for every leg this daemon fires, so
       // the leg has to arrive with the input rather than be baked into the
       // bundle (see the build-time-filter note in bundle-builder.ts).
-      ...checkpoint ? { phase: checkpoint } : {}
+      ...checkpoint ? { phase: checkpoint } : {},
+      // The values of verdictReq: the rego resolves the approval and the agent key of a remembered rule from them.
+      // raw_tool always: the rego gives no approval for an MCP name without it (the input of an older daemon).
+      raw_tool: input2.rawTool || input2.tool,
+      ...agentName ? { agent_name: agentName } : {},
+      ...aiAppId ? { ai_app_id: aiAppId } : {}
     },
     localOpa
   );
   if (localResult.available) {
+    const nativeApproved = isNativeTool && localResult.approvalAuthoritative && localResult.approvalStatus !== "banned";
     const composeInput = {
-      approval_status: isNativeTool ? "approved" : localResult.approvalStatus,
+      approval_status: nativeApproved ? "approved" : localResult.approvalStatus,
       scope_tier: localResult.scopeTier,
       isNativeTool,
       isCatastrophic: false,
@@ -59770,24 +61676,15 @@ async function decide(input2, deps) {
       mode: localResult.mode
     };
     const composed = composeVerdict(composeInput);
-    const approvalIsTrustworthy = isNativeTool || localResult.approvalAuthoritative && localResult.approvalStatus !== "unresolved";
-    const allowIsTrustworthy = approvalIsTrustworthy && !localResult.remoteOnlyClassesActive;
-    const isConfident = (
-      // Mode- and approval-independent: always safe.
-      composed.appliedRule === "enforce_violation" || // rule 4 → BLOCK
-      composed.appliedRule === "scope_high" || // rule 7 → ASK
-      // Approval-derived: only when the catalog actually answered.
-      approvalIsTrustworthy && (composed.appliedRule === "banned_entity" || // rule 3 → BLOCK
-      composed.appliedRule === "not_approved" || // rule 8 → ASK
-      composed.appliedRule === "scope_medium_not_approved") || // rule 9 → ASK
-      // Mode-sensitive: only when the bundle carried the real mode.
-      localResult.modeAuthoritative && composed.appliedRule === "scope_critical" || // rule 6 → BLOCK/ASK
-      // ALLOW-shaped: only when no unseen policy class could overturn it.
-      allowIsTrustworthy && (composed.appliedRule === "approved_low_risk" || // rule 10 → ALLOW
-      composed.appliedRule === "notify_only" || // rule 11 → ALLOW
-      composed.appliedRule === "native_auto_allow")
-    );
-    if (isConfident) {
+    const confident = isConfident(composed.appliedRule, {
+      isNativeTool: isNativeTool && localResult.approvalAuthoritative,
+      approvalStatus: localResult.approvalStatus,
+      approvalAuthoritative: localResult.approvalAuthoritative,
+      modeAuthoritative: localResult.modeAuthoritative,
+      mode: localResult.mode,
+      remoteOnlyClassesActive: localResult.remoteOnlyClassesActive
+    });
+    if (confident) {
       const out2 = {
         verdict: composed.verdict,
         reason: composed.reason,
@@ -59799,7 +61696,7 @@ async function decide(input2, deps) {
       return out2;
     }
   }
-  const scanWindow = localResult.available ? localResult.piiScanMaxChars : PII_SCAN_MAX_CHARS_FALLBACK2;
+  const scanWindow = localResult.available ? localResult.piiScanMaxChars : PII_SCAN_MAX_CHARS_FALLBACK;
   const content = buildVerdictContent(input2, scanWindow);
   if (content) verdictReq.content = content;
   let remoteResult;
@@ -59850,12 +61747,33 @@ async function decide(input2, deps) {
     recordAndAudit(input2, composed.verdict, composed.appliedRule, out2, store, grail ?? null, hookEvent, ts);
     return out2;
   }
+  const quarantineAnswer = parseQuarantineField(remoteResult.quarantine);
+  if (quarantineAnswer !== void 0) {
+    try {
+      quarantineStore?.apply(quarantineAnswer);
+    } catch {
+    }
+    noteQuarantineAnswer(quarantineAnswer);
+  }
+  if (quarantineAnswer) {
+    const out2 = {
+      verdict: "BLOCK",
+      reason: AGENT_QUARANTINE_DEVICE_MESSAGE,
+      appliedRule: QUARANTINE_APPLIED_RULE,
+      evaluated: "remote",
+      violations: remoteResult.violations,
+      quarantine: quarantineAnswer
+    };
+    recordAndAudit(input2, "BLOCK", out2.appliedRule, out2, store, grail ?? null, hookEvent, ts);
+    return out2;
+  }
   const out = {
     verdict: remoteResult.verdict,
     reason: remoteResult.reason,
     appliedRule: "remote_verdict",
     evaluated: "remote",
-    violations: remoteResult.violations
+    violations: remoteResult.violations,
+    ...quarantineAnswer === null ? { quarantine: null } : {}
   };
   cacheAndRecord(input2, out, store, grail ?? null, hookEvent, ts);
   return out;
@@ -59900,7 +61818,9 @@ function recordAndAudit(input2, verdict, appliedRule, out, store, grail, hookEve
 }
 
 // arbiter-core/src/util/args-hash.ts
-import { createHash as createHash4 } from "node:crypto";
+import { createHash as createHash7 } from "node:crypto";
+
+// arbiter-core/src/util/stable-stringify.ts
 function stableStringify(value) {
   return JSON.stringify(sortValue(value)) ?? "undefined";
 }
@@ -59917,8 +61837,10 @@ function sortValue(value) {
   }
   return value;
 }
+
+// arbiter-core/src/util/args-hash.ts
 function hashArgs(args) {
-  return createHash4("sha256").update(stableStringify(args)).digest("hex");
+  return createHash7("sha256").update(stableStringify(args)).digest("hex");
 }
 
 // arbiter-core/src/hosted/client-tokens.ts
@@ -59932,6 +61854,9 @@ var DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
 
 // arbiter-core/src/hosted/http-authz/listener.ts
 var DEFAULT_MAX_BODY = 1024 * 1024;
+
+// arbiter-core/src/bundle/opa-sidecar.ts
+var import_undici10 = __toESM(require_undici(), 1);
 
 // arbiter-codex/src/tool-normalize.ts
 var MCP_PREFIX = "mcp__";
@@ -59987,7 +61912,7 @@ function internalErrorDenyReason(harness) {
   }
   return "Arbiter internal error \u2014 denying (fail-CLOSED)";
 }
-function isCatastrophicMatch(toolName, toolInput, denyList) {
+function isCatastrophicMatch2(toolName, toolInput, denyList) {
   const candidate = `${toolName} ${JSON.stringify(toolInput)}`;
   return denyList.some((entry) => candidate.includes(entry));
 }
@@ -60048,10 +61973,9 @@ function makeScreenHandler(deps, registeredHarness) {
   };
 }
 function makeEnforceHandler(deps, registeredHarness) {
-  const localOpa = deps.localOpa ?? new LocalOpaClient({ baseUrl: "http://127.0.0.1:1" });
   return async (ctx) => {
     try {
-      await enforceInner(ctx, deps, localOpa, registeredHarness);
+      await enforceInner(ctx, deps, registeredHarness);
     } catch {
       const output2 = {
         hookSpecificOutput: {
@@ -60068,7 +61992,7 @@ function makeEnforceHandler(deps, registeredHarness) {
     }
   };
 }
-async function enforceInner(ctx, deps, localOpa, registeredHarness) {
+async function enforceInner(ctx, deps, registeredHarness) {
   const body = ctx.body;
   const sessionId = str2(body?.session_id) ?? "unknown";
   const rawToolName = str2(body?.tool_name) ?? "";
@@ -60097,7 +62021,7 @@ async function enforceInner(ctx, deps, localOpa, registeredHarness) {
     ctx.reply(200, output3);
     return;
   }
-  const catastrophic = isCatastrophicMatch(rawToolName, toolInput, deps.config.catastrophicDenyList);
+  const catastrophic = isCatastrophicMatch2(rawToolName, toolInput, deps.config.catastrophicDenyList);
   if (isNativeTool) {
     const result = composeVerdict({
       approval_status: "approved",
@@ -60135,10 +62059,11 @@ async function enforceInner(ctx, deps, localOpa, registeredHarness) {
   }
   const bundleRevision = deps.getBundleRevision?.() ?? "";
   const tenantId = deps.tenantId ?? "";
+  const localOpa = deps.localOpa?.();
   const gateDeps = {
     store: deps.sessions,
     remoteClient: deps.engine,
-    localOpa,
+    ...localOpa ? { localOpa } : {},
     grail: deps.grail,
     config: deps.config,
     hookEvent: "enforce"
@@ -60210,7 +62135,6 @@ function makeEvidenceHandler(deps, registeredHarness) {
       {
         store: deps.sessions,
         remoteClient: deps.engine,
-        localOpa: deps.localOpa ?? new LocalOpaClient({ baseUrl: "http://127.0.0.1:1" }),
         grail: deps.grail,
         config: deps.config,
         hookEvent: "evidence"
@@ -60283,34 +62207,30 @@ function registerCodexHooks(handle, deps, opts = {}) {
 }
 
 // arbiter-cursor/plugin/lib/daemon-paths.mjs
-import { join as join13 } from "node:path";
-import { homedir as homedir8 } from "node:os";
+import { join as join18 } from "node:path";
+import { homedir as homedir9 } from "node:os";
 function resolveDataDir(env = process.env) {
   const fromEnv = typeof env.ARBITER_DATA_DIR === "string" ? env.ARBITER_DATA_DIR.trim() : "";
   if (fromEnv) return fromEnv;
-  return join13(homedir8(), ".config", "arbiter");
+  return join18(homedir9(), ".config", "arbiter");
 }
 
 // arbiter-cursor/plugin/monitor/launch.mjs
-var __dirname = dirname5(fileURLToPath2(import.meta.url));
 var { values: argv } = parseArgs({
   args: process.argv.slice(2),
   options: {
     host: { type: "string" },
-    "opa-path": { type: "string" },
     "data-dir": { type: "string" },
     "enforcement-mode": { type: "string" }
   },
   strict: false
 });
 var dataDir = argv["data-dir"] ?? resolveDataDir(process.env);
-var opaBinName = process.platform === "win32" ? "opa.exe" : "opa";
-var opaPath = argv["opa-path"] ? join14(dirname5(argv["opa-path"]), opaBinName) : join14(dataDir, "bin", opaBinName);
-mkdirSync6(dataDir, { recursive: true });
-var logFile = join14(dataDir, "arbiter-monitor.log");
+mkdirSync7(dataDir, { recursive: true });
+var logFile = join19(dataDir, "arbiter-monitor.log");
 function log(msg) {
   try {
-    appendFileSync2(logFile, `[${(/* @__PURE__ */ new Date()).toISOString()}] ${msg}
+    appendFileSync3(logFile, `[${(/* @__PURE__ */ new Date()).toISOString()}] ${msg}
 `);
   } catch {
   }
@@ -60337,9 +62257,9 @@ function daemonUrlYamlScalar(text, key) {
 function readDaemonUrl() {
   const envUrl = (process.env.ARBITER_DAEMON_URL ?? "").trim();
   if (envUrl) return envUrl;
-  const path = process.env.ARBITER_GLOBAL_CONFIG ?? join14(homedir9(), ".config", "arbiter", "config.yaml");
+  const path = process.env.ARBITER_GLOBAL_CONFIG ?? join19(homedir10(), ".config", "arbiter", "config.yaml");
   try {
-    return (daemonUrlYamlScalar(readFileSync9(path, "utf8"), "daemonUrl") ?? "").trim();
+    return (daemonUrlYamlScalar(readFileSync14(path, "utf8"), "daemonUrl") ?? "").trim();
   } catch {
     return "";
   }
@@ -60380,26 +62300,10 @@ try {
 } catch (e) {
   log(`proxy dispatcher init failed (continuing): ${String(e)}`);
 }
-var checksums = JSON.parse(
-  readFileSync9(join14(__dirname, "..", "opa", "opa-checksums.json"), "utf8")
-);
-async function download(url2) {
-  const res = await fetch(url2, { redirect: "follow" });
-  if (!res.ok) throw new Error(`OPA download HTTP ${res.status} for ${url2}`);
-  return Buffer.from(await res.arrayBuffer());
-}
-var ensureOpa = async () => {
-  try {
-    return await ensureOpaBinary({ dataDir, checksums, download, log });
-  } catch (e) {
-    log(`OPA provisioning failed (continuing remote-only): ${String(e?.message ?? e)}`);
-    return null;
-  }
-};
 async function registerArbiterCursorHooks(opts) {
   const wireLog = opts.log ?? log;
   const env = opts.env ?? process.env;
-  const { engine, localOpa, grail, serverUrl, tokenProvider } = buildRemoteWiring(opts);
+  const { engine, grail, serverUrl, tokenProvider } = buildRemoteWiring(opts);
   grail.start();
   const identity = resolveArbiterIdentity(env);
   registerCodexHooks(
@@ -60408,9 +62312,9 @@ async function registerArbiterCursorHooks(opts) {
       engine,
       sessions: opts.store,
       config: opts.config,
-      localOpa,
       grail,
       getBundleRevision: () => opts.lockfile.bundle_revision,
+      localOpa: opts.localOpa,
       tenantId: env["ARBITER_TENANT_ID"] ?? "",
       userId: identity.userId,
       aiAppId: identity.aiAppId,
@@ -60427,24 +62331,22 @@ async function registerArbiterCursorHooks(opts) {
   return { serverUrl, tokenProvider, stop: () => grail.stop() };
 }
 var portOverride = Number(process.env.ARBITER_HOOK_DAEMON_PORT) || void 0;
+var opaAssets = pluginOpaAssets(fileURLToPath2(new URL("../opa/", import.meta.url)));
 var monitor;
 try {
   monitor = await assembleMonitor({
     host,
     apiToken,
     dataDir,
-    opaPath,
     enforcementMode,
+    ...opaAssets ? { machineOpa: opaAssets } : {},
     ...portOverride ? { port: portOverride } : {},
     env: process.env,
+    // R26: the daemon.json of the release before the MAC protocol; the launcher stops that daemon.
+    legacyLockfile: process.env.ARBITER_LOCKFILE?.trim() || join19(homedir10(), ".config", "arbiter", "daemon.json"),
     log,
     deps: {
-      ensureOpaBinary: ensureOpa,
       registerArbiterClaudeHooks: registerArbiterCursorHooks,
-      // FIX-0 (crash-loop → frozen opaProvisioning:true): reuse the config THIS launcher
-      // already loaded-or-defaulted above. assembleMonitor must never re-invoke the real
-      // loader — a malformed config.yaml would throw AFTER the port is bound and the
-      // warming state is written, wedging the shim grace table into permanent fail-open.
       loadConfig: () => config2
     }
   });

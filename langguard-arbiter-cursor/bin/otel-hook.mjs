@@ -13,6 +13,10 @@
 //   ~/.config/arbiter/config.yaml  host: / apiKey:
 //   ~/.cursor/hooks/otel_config.json
 //
+// The target must be https://. Plain http:// is refused, with one stderr line, unless the
+// host is loopback AND the target carries no headers: a header bag (or LANGGUARD_API_KEY)
+// holds the credential, and plain http would put it on the wire in cleartext.
+//
 // If CURSOR_OTEL_HOOK or ~/.cursor/hooks/otel_hook.sh is executable, stdin is
 // handed to that script and this file does not POST. That keeps an existing
 // cursor-otel-hook install as the richer exporter without a second hooks.json.
@@ -28,6 +32,7 @@ import { request as httpsRequest } from 'node:https';
 
 const POST_TIMEOUT_MS = 2000;
 const SERVICE_NAME = 'cursor-agent';
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', '[::1]', 'localhost']);
 
 function yamlScalar(text, key) {
   const m = new RegExp(`^${key}:[ \\t]*(.*)$`, 'm').exec(text);
@@ -133,6 +138,21 @@ function resolveExportTarget() {
   }
 
   return null;
+}
+
+/** Returns why `target` must not be sent, or '' when it may. */
+function refusalReason(target) {
+  let url;
+  try {
+    url = new URL(target.url);
+  } catch {
+    return 'the OTLP endpoint is not a valid URL';
+  }
+  if (url.protocol === 'https:') return '';
+  if (url.protocol !== 'http:') return `unsupported protocol ${url.protocol}`;
+  if (!LOOPBACK_HOSTS.has(url.hostname)) return `plain http to non-loopback host ${url.hostname}`;
+  if (Object.keys(target.headers).length > 0) return 'plain http would send the credential headers in cleartext';
+  return '';
 }
 
 function tracesUrl(raw) {
@@ -328,6 +348,11 @@ async function main() {
 
   const target = resolveExportTarget();
   if (!target) return;
+  const refusal = refusalReason(target);
+  if (refusal) {
+    process.stderr.write(`LangGuard otel-hook: refusing to export (${refusal}); use https://\n`);
+    return;
+  }
 
   let body = {};
   try {

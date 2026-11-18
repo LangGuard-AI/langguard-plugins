@@ -22,8 +22,10 @@ Follow these steps:
 1. Check whether `~/.config/arbiter/config.yaml` exists and contains an `apiKey` entry
    (do not print the key value; just report whether one is set and whether it still
    looks like a placeholder such as `lgr_PASTE_YOUR_KEY_HERE`).
-2. Probe the local policy daemon: `GET http://127.0.0.1:52746/health`
-   (e.g. `curl -s -m 2 http://127.0.0.1:52746/health`). A connection failure just means
+2. Probe the local policy daemon: `GET /health`. On macOS and Linux it listens only on
+   its Unix socket: `curl -s -m 2 --unix-socket ~/.config/arbiter/run/S.arbiter.sock
+   http://localhost/health`. On Windows: `curl -s -m 2 http://127.0.0.1:52746/health`.
+   A connection failure (or no socket file) just means
    the daemon has not started yet — it starts automatically on the next Cursor session
    once configuration is in place.
 
@@ -50,7 +52,7 @@ for them and do not reconstruct it in chat.
 After the user confirms:
 
 1. Re-check `~/.config/arbiter/config.yaml` (an `apiKey` is present; still do not print it).
-2. Re-probe `GET http://127.0.0.1:52746/health`. If the daemon is not up yet, note that
+2. Re-probe `GET /health` in the same way. If the daemon is not up yet, note that
    it spawns automatically at the start of the next Cursor session (or on the next MCP
    call), and that this is expected.
 3. Read `enforcementMode` from `~/.config/arbiter/config.yaml` (`strict` or, when absent,
