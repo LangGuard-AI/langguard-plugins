@@ -24,6 +24,7 @@
       { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
     ],
     "preToolUse": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" pretool", "timeout": 30 },
       { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
     ],
     "postToolUse": [
@@ -39,6 +40,7 @@
       { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
     ],
     "beforeSubmitPrompt": [
+      { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/hook.mjs\" prompt", "timeout": 30 },
       { "type": "command", "command": "node \"${PLUGIN_ROOT}/bin/otel-hook.mjs\"", "timeout": 5 }
     ],
     "preCompact": [
