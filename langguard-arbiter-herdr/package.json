@@ -1,0 +1,8 @@
+{
+  "name": "langguard-arbiter-herdr",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
