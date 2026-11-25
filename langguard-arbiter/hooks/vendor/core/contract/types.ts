@@ -305,6 +305,28 @@ export interface VerdictRequest {
   department?: string;
   /** Optional deployment label. */
   environment?: string;
+  /**
+   * Sent only by a hosted gateway arbiter (ext_proc or http-authz), on each
+   * call. Its presence tells the server that a gateway made the call. A
+   * gateway sends no top-level user_id: the end user is attribution only.
+   * Optional and additive; kept in lockstep with the server's
+   * ArbiterVerdictRequest (server/services/arbiter/arbiter-types.ts).
+   */
+  gateway?: GatewayAttribution;
+}
+
+/** Who a hosted gateway arbiter decided a call for. */
+export interface GatewayAttribution {
+  /** The gateway platform from ARBITER_AGENT_TYPE: 'vertex' | 'azure'. */
+  agent_type: string;
+  /** The trusted agent: the authenticated gateway subscription or the Vertex agent. */
+  agent_name?: string;
+  /** The end user that the gateway verified. Sent only with user_source. Attribution only, never an input to policy. */
+  user_id?: string;
+  /** How the gateway verified user_id, for example 'apim-user' or 'token:upn'. Sent only with user_id. */
+  user_source?: string;
+  /** A user that the client states and the gateway did not verify. The server stores it as a claim only. */
+  claimed_user_id?: string;
 }
 
 export interface VerdictResult {
@@ -322,6 +344,12 @@ export interface VerdictResult {
    * an older server (no answer, change nothing).
    */
   quarantine?: { id: string; expiresAt: string | null } | null;
+  /**
+   * The server wrote the blocked trace of this gateway call (or owns it), so the
+   * gateway arbiter tells /api/arbiter/traffic not to write a second one. Set
+   * only for a request that carries `gateway`; absent on an older server.
+   */
+  trace_handled?: true;
 }
 
 // ── HEARTBEAT — POST /api/arbiter/heartbeat (Arbiter Management) ────────────

@@ -17,6 +17,8 @@ export interface InvokeReply {
       evaluated?: 'local' | 'remote';
       /** Agent Quarantine (§8.2): `{ id, expiresAt }` | null; absent on an older server. */
       quarantine?: unknown;
+      /** true: the server wrote (or owns) the blocked trace of this gateway call. */
+      trace_handled?: unknown;
     };
   };
   error?: { code: number; message: string };
@@ -59,6 +61,7 @@ export function buildInvokeRequest(body: VerdictRequest, id: string) {
           ...(body.ai_app_id !== undefined ? { ai_app_id: body.ai_app_id } : {}),
           ...(body.department !== undefined ? { department: body.department } : {}),
           ...(body.environment !== undefined ? { environment: body.environment } : {}),
+          ...(body.gateway !== undefined ? { gateway: body.gateway } : {}),
         },
       },
     },
@@ -93,5 +96,6 @@ export function parseInvokeReply(json: InvokeReply): VerdictResult {
     ...(Object.prototype.hasOwnProperty.call(lg, 'quarantine')
       ? { quarantine: lg.quarantine as VerdictResult['quarantine'] }
       : {}),
+    ...(lg.trace_handled === true ? { trace_handled: true as const } : {}),
   };
 }

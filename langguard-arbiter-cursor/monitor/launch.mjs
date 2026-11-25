@@ -20959,7 +20959,7 @@ var require_fetch = __commonJS({
     function handleFetchDone(response) {
       finalizeAndReportTiming(response, "fetch");
     }
-    function fetch10(input2, init = void 0) {
+    function fetch11(input2, init = void 0) {
       webidl.argumentLengthCheck(arguments, 1, "globalThis.fetch");
       let p = createDeferredPromise();
       let requestObject;
@@ -21989,7 +21989,7 @@ var require_fetch = __commonJS({
       }
     }
     module.exports = {
-      fetch: fetch10,
+      fetch: fetch11,
       Fetch,
       fetching,
       finalizeAndReportTiming
@@ -26243,7 +26243,7 @@ var require_undici = __commonJS({
       err.stack = stack ? `${stack}
 ${captureLines}` : capture.stack;
     }
-    module.exports.fetch = function fetch10(init, options = void 0) {
+    module.exports.fetch = function fetch11(init, options = void 0) {
       return fetchImpl(init, options).catch((err) => {
         if (currentFilename) {
           appendFetchStackTrace(err, currentFilename);
@@ -29352,24 +29352,24 @@ var require_fs = __commonJS({
 var require_fetch2 = __commonJS({
   "node_modules/protobufjs/src/util/fetch.js"(exports, module) {
     "use strict";
-    module.exports = fetch10;
+    module.exports = fetch11;
     var asPromise = require_aspromise();
     var fs = require_fs();
-    function fetch10(filename, options, callback) {
+    function fetch11(filename, options, callback) {
       if (typeof options === "function") {
         callback = options;
         options = {};
       } else if (!options)
         options = {};
       if (!callback)
-        return asPromise(fetch10, this, filename, options);
+        return asPromise(fetch11, this, filename, options);
       if (!options.xhr && fs && fs.readFile)
         return fs.readFile(filename, function fetchReadFileCallback(err, contents) {
-          return err && typeof XMLHttpRequest !== "undefined" ? fetch10.xhr(filename, options, callback) : err ? callback(err) : callback(null, options.binary ? contents : contents.toString("utf8"));
+          return err && typeof XMLHttpRequest !== "undefined" ? fetch11.xhr(filename, options, callback) : err ? callback(err) : callback(null, options.binary ? contents : contents.toString("utf8"));
         });
-      return fetch10.xhr(filename, options, callback);
+      return fetch11.xhr(filename, options, callback);
     }
-    fetch10.xhr = function fetch_xhr(filename, options, callback) {
+    fetch11.xhr = function fetch_xhr(filename, options, callback) {
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function fetchOnReadyStateChange() {
         if (xhr.readyState !== 4)
@@ -31088,12 +31088,12 @@ var require_root = __commonJS({
             if (parsed.imports) {
               for (; i2 < parsed.imports.length; ++i2)
                 if (resolved2 = getBundledFileName(parsed.imports[i2]) || self2.resolvePath(filename2, parsed.imports[i2]))
-                  fetch10(resolved2, false, depth + 1);
+                  fetch11(resolved2, false, depth + 1);
             }
             if (parsed.weakImports) {
               for (i2 = 0; i2 < parsed.weakImports.length; ++i2)
                 if (resolved2 = getBundledFileName(parsed.weakImports[i2]) || self2.resolvePath(filename2, parsed.weakImports[i2]))
-                  fetch10(resolved2, true, depth + 1);
+                  fetch11(resolved2, true, depth + 1);
             }
           }
         } catch (err) {
@@ -31103,7 +31103,7 @@ var require_root = __commonJS({
           finish(null, self2);
         }
       }
-      function fetch10(filename2, weak, depth) {
+      function fetch11(filename2, weak, depth) {
         if (depth === void 0)
           depth = 0;
         filename2 = getBundledFileName(filename2) || filename2;
@@ -31157,7 +31157,7 @@ var require_root = __commonJS({
       }
       for (var i = 0, resolved; i < filename.length; ++i)
         if (resolved = self2.resolvePath("", filename[i]))
-          fetch10(resolved);
+          fetch11(resolved);
       if (sync) {
         self2.resolveAll();
         return self2;
@@ -33823,7 +33823,7 @@ import {
   mkdirSync as mkdirSync6,
   mkdtempSync as mkdtempSync4,
   renameSync as renameSync7,
-  rmSync as rmSync6
+  rmSync as rmSync7
 } from "node:fs";
 import { join as join17 } from "node:path";
 import { randomBytes as randomBytes4, randomUUID as randomUUID2 } from "node:crypto";
@@ -59274,6 +59274,7 @@ var SessionStore = class {
   maxActions;
   stopBlockCap;
   allowTtlMs;
+  maxCachedVerdicts;
   now;
   constructor(opts = {}, now = () => Date.now()) {
     this.maxSessions = opts.maxSessions ?? 50;
@@ -59281,6 +59282,7 @@ var SessionStore = class {
     this.maxActions = opts.maxActions ?? 500;
     this.stopBlockCap = opts.stopBlockCap ?? 2;
     this.allowTtlMs = opts.allowTtlMs ?? 60 * 1e3;
+    this.maxCachedVerdicts = opts.maxCachedVerdicts ?? 1e3;
     this.now = now;
   }
   touch(sessionId) {
@@ -59338,6 +59340,10 @@ var SessionStore = class {
   }
   setCachedVerdict(sessionId, key, value) {
     const e = this.touch(sessionId);
+    if (!e.verdictCache.has(key) && e.verdictCache.size >= this.maxCachedVerdicts) {
+      const oldest = e.verdictCache.keys().next().value;
+      if (oldest !== void 0) e.verdictCache.delete(oldest);
+    }
     e.verdictCache.set(key, { ...value, cachedAt: this.now() });
   }
   /**
@@ -59382,7 +59388,8 @@ import {
   mkdirSync as mkdirSync5,
   renameSync as renameSync5,
   existsSync as existsSync3,
-  mkdtempSync as mkdtempSync3
+  mkdtempSync as mkdtempSync3,
+  rmSync as rmSync6
 } from "node:fs";
 import { join as join14, dirname as dirname7 } from "node:path";
 import { homedir as homedir7 } from "node:os";
@@ -59626,7 +59633,7 @@ var BundleSync = class {
     this.rapid = Date.now() - this.activatedAt < RAPID_ACTIVATION_MS;
     this.activatedAt = Date.now();
     setBundleRevision(newRevision);
-    this.opts.log(`Bundle activated: revision=${newRevision} (${bundleBytes.length} bytes)`);
+    this.opts.log(`Bundle synced: revision=${newRevision} (${bundleBytes.length} bytes)`);
     const bundlePath = `${this.opts.bundleCacheDir}/${this.opts.tenant}/bundle.tar.gz`;
     this.opts.onActivate?.(bundlePath, newRevision);
     return held ? "held" : "plain";
@@ -60496,7 +60503,7 @@ function writeDaemonState(dataDir2, state2) {
   writeFileSync5(tmpFile, JSON.stringify(state2, null, 2), { encoding: "utf8", mode: 384 });
   renameSync7(tmpFile, daemonStatePath(dataDir2));
   try {
-    rmSync6(tmpDir, { recursive: true, force: true });
+    rmSync7(tmpDir, { recursive: true, force: true });
   } catch {
   }
 }
@@ -60956,7 +60963,8 @@ function buildInvokeRequest(body, id) {
           ...body.user_id !== void 0 ? { user_id: body.user_id } : {},
           ...body.ai_app_id !== void 0 ? { ai_app_id: body.ai_app_id } : {},
           ...body.department !== void 0 ? { department: body.department } : {},
-          ...body.environment !== void 0 ? { environment: body.environment } : {}
+          ...body.environment !== void 0 ? { environment: body.environment } : {},
+          ...body.gateway !== void 0 ? { gateway: body.gateway } : {}
         }
       }
     }
@@ -60985,7 +60993,8 @@ function parseInvokeReply(json3) {
     evaluated: lg.evaluated ?? "remote",
     // Pass the raw field on; the gate parses it (parseQuarantineField) and treats a
     // malformed value as "no answer".
-    ...Object.prototype.hasOwnProperty.call(lg, "quarantine") ? { quarantine: lg.quarantine } : {}
+    ...Object.prototype.hasOwnProperty.call(lg, "quarantine") ? { quarantine: lg.quarantine } : {},
+    ...lg.trace_handled === true ? { trace_handled: true } : {}
   };
 }
 
@@ -61644,7 +61653,8 @@ async function decide(input2, deps) {
     ...input2.userId ? { user_id: input2.userId } : {},
     ...aiAppId ? { ai_app_id: aiAppId } : {},
     ...input2.department ? { department: input2.department } : {},
-    ...input2.environment ? { environment: input2.environment } : {}
+    ...input2.environment ? { environment: input2.environment } : {},
+    ...input2.gateway ? { gateway: { ...input2.gateway } } : {}
   };
   const localResult = !localOpa ? { available: false } : await localEval(
     {
@@ -61755,6 +61765,7 @@ async function decide(input2, deps) {
     }
     noteQuarantineAnswer(quarantineAnswer);
   }
+  const traceHandled = remoteResult.trace_handled === true ? { traceHandled: true } : {};
   if (quarantineAnswer) {
     const out2 = {
       verdict: "BLOCK",
@@ -61762,7 +61773,8 @@ async function decide(input2, deps) {
       appliedRule: QUARANTINE_APPLIED_RULE,
       evaluated: "remote",
       violations: remoteResult.violations,
-      quarantine: quarantineAnswer
+      quarantine: quarantineAnswer,
+      ...traceHandled
     };
     recordAndAudit(input2, "BLOCK", out2.appliedRule, out2, store, grail ?? null, hookEvent, ts);
     return out2;
@@ -61773,7 +61785,8 @@ async function decide(input2, deps) {
     appliedRule: "remote_verdict",
     evaluated: "remote",
     violations: remoteResult.violations,
-    ...quarantineAnswer === null ? { quarantine: null } : {}
+    ...quarantineAnswer === null ? { quarantine: null } : {},
+    ...traceHandled
   };
   cacheAndRecord(input2, out, store, grail ?? null, hookEvent, ts);
   return out;
@@ -61855,8 +61868,11 @@ var DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
 // arbiter-core/src/hosted/http-authz/listener.ts
 var DEFAULT_MAX_BODY = 1024 * 1024;
 
-// arbiter-core/src/bundle/opa-sidecar.ts
+// arbiter-core/src/bundle/bundle-key.ts
 var import_undici10 = __toESM(require_undici(), 1);
+
+// arbiter-core/src/bundle/opa-sidecar.ts
+var import_undici11 = __toESM(require_undici(), 1);
 
 // arbiter-codex/src/tool-normalize.ts
 var MCP_PREFIX = "mcp__";
