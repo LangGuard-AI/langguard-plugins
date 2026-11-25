@@ -1,0 +1,13 @@
+{
+  "name": "@langguard/agentcore-gateway-interceptor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AWS Lambda gateway interceptor that applies LangGuard policy to Amazon Bedrock AgentCore Gateway MCP tool calls.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

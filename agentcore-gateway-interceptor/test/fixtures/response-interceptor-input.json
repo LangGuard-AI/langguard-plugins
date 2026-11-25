@@ -1,0 +1,38 @@
+{
+  "interceptorInputVersion": "1.0",
+  "mcp": {
+    "rawGatewayRequest": {
+      "body": "<raw_request_body>"
+    },
+    "gatewayRequest": {
+      "path": "/mcp",
+      "httpMethod": "POST",
+      "headers": {
+        "Accept": "application/json",
+        "Authorization": "<bearer_token>",
+        "SomeHeader": "headerValue1",
+        "Mcp-Session-Id": "<session_id>",
+        "User-Agent": "<client_user_agent>"
+      },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/list"
+      }
+    },
+    "gatewayResponse": {
+      "statusCode": 200,
+      "headers": {
+        "SomeHeader": "headerValue1",
+        "Mcp-Session-Id": "<session_id>"
+      },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "tools": []
+        }
+      }
+    }
+  }
+}

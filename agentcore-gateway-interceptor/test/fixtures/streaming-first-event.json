@@ -1,0 +1,37 @@
+{
+  "interceptorInputVersion": "1.0",
+  "mcp": {
+    "rawGatewayRequest": {
+      "body": "<raw_request_body>"
+    },
+    "gatewayRequest": {
+      "path": "/mcp",
+      "httpMethod": "POST",
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+          "name": "myTool",
+          "arguments": {}
+        }
+      }
+    },
+    "gatewayResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Mcp-Session-Id": "<session_id>"
+      },
+      "isStreamingResponse": true,
+      "body": {
+        "jsonrpc": "2.0",
+        "id": "elicit-1",
+        "method": "elicitation/create",
+        "params": {
+          "message": "Confirm this action?",
+          "requestedSchema": {}
+        }
+      }
+    }
+  }
+}

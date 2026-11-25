@@ -1,0 +1,31 @@
+{
+  "interceptorInputVersion": "1.0",
+  "mcp": {
+    "rawGatewayRequest": {
+      "body": "<raw_request_body>"
+    },
+    "gatewayRequest": {
+      "path": "/mcp",
+      "httpMethod": "POST",
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+          "name": "myTool",
+          "arguments": {}
+        }
+      }
+    },
+    "gatewayResponse": {
+      "isStreamingResponse": true,
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "content": [{ "type": "text", "text": "Tool result" }]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "interceptorInputVersion": "1.0",
+  "http": {
+    "gatewayRequest": {
+      "path": "/my-target-name/invocations",
+      "httpMethod": "POST",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "<bearer_token>"
+      },
+      "body": "<base64_encoded_body>"
+    }
+  }
+}

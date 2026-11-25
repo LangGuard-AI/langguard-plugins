@@ -26,6 +26,12 @@ This marketplace ships:
   built for Antigravity with the ASK verdict rendered as its `force_ask` approval
   prompt ([see below](#langguard-arbiter-on-google-antigravity)).
 
+It also ships one package that is not a harness plugin:
+
+- **`agentcore-gateway-interceptor`** (AWS Lambda) — policy enforcement on each
+  MCP tool call of an Amazon Bedrock AgentCore Gateway
+  ([see below](#agentcore-gateway-interceptor--aws-lambda)).
+
 ## What you get
 
 Installing the `langguard` plugin adds the following to Claude Code:
@@ -512,6 +518,21 @@ uninstall or disable the plugin. Ranked by what is actually available:
 
 Sidecar-style distribution is deliberately unused: it sits behind a manual per-user
 enable, and an enforcement daemon behind an opt-in silently never enforces.
+
+---
+
+# `agentcore-gateway-interceptor` — AWS Lambda
+
+A gateway interceptor for Amazon Bedrock AgentCore Gateway. The gateway calls it
+before each `tools/call` runs and before the result goes back to the agent. It
+sends the call to LangGuard and applies the verdict, so a blocked call does not
+run or its result is replaced. You deploy it in your AWS account with the
+Terraform template in the package. Nothing is installed on developer machines.
+
+See [`agentcore-gateway-interceptor/README.md`](agentcore-gateway-interceptor/README.md)
+for the deploy steps, and the
+[AWS AgentCore integration guide](https://docs.langguard.ai/integrations/aws-agentcore/)
+for the full setup with the LangGuard integration.
 
 ---
 
