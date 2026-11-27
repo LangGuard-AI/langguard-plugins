@@ -1,7 +1,7 @@
 import type { PluginOptions } from 'claude-code'
 import type { ArbiterHealthReason, ArbiterMode } from '../types'
 
-export const MOD_VERSION = '1.48.3'
+export const MOD_VERSION = '1.49.1'
 
 export type ApiKey = { readonly header: () => string; readonly toJSON: () => '[redacted]' }
 
